@@ -5,6 +5,8 @@ animated by one GSAP timeline, seekable frame by frame, looping seamlessly, and 
 source. For screen recordings of websites and apps it goes one step further and builds the real, interactive site
 with GSAP ScrollTrigger. It works with Claude Code, Codex, Cursor, Copilot, Gemini and others.
 
+**See them running live:** [fal-motion-in-code.vercel.app](https://fal-motion-in-code.vercel.app)
+
 | | | |
 |---|---|---|
 | [![Think Big](gallery/think-big/poster.gif)](gallery/think-big/index.html) | [![Eye](gallery/eye/poster.gif)](gallery/eye/index.html) | [![Festival map](gallery/festival-map/poster.gif)](gallery/festival-map/index.html) |
