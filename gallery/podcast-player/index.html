@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Podcast Player</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=block&text=EP12PLAY" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#0F120F;overflow:hidden}
+  svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  text{font-family:'Inter',sans-serif;text-rendering:geometricPrecision}
+</style>
+</head>
+<body>
+<svg id="stage" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(() => {
+'use strict';
+/* Colors sampled per pixel from the video (pure flat fills) */
+const C = {
+  bg: '#0F120F', coral: '#F37448', cream: '#F8EACB', teal: '#006860', lteal: '#A9CCB9',
+  line: '#2C302B', grey: '#8E918A', tip: '#1A1E19', nav: '#E6E1D3', hover: '#3A2219',
+  dim: '#5B2E22', outline: '#8F8D84', sel: '#1A1E19', ink: '#0F120F'
+};
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('stage');
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const set = (e, attrs) => { for (const k in attrs) e.setAttribute(k, attrs[k]); };
+const show = (e, on) => e.setAttribute('display', on ? 'inline' : 'none');
+const easeCache = {};
+const ease = n => easeCache[n] || (easeCache[n] = gsap.parseEase(n));
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const seg = (t, a, b, e = 'power2.inOut') => ease(e)(clamp((t - a) / (b - a)));
+const f1 = v => Math.round(v * 10) / 10;
+const f2 = v => Math.round(v * 100) / 100;
+const hash = (i, j) => { let h = (Math.imul(i + 11, 374761393) + Math.imul(j + 7, 668265263)) >>> 0; h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function rng(seed) { let s = seed >>> 0; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; }
+const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+const mix = (a, b, p) => { const A = hex(a), B = hex(b); return 'rgb(' + A.map((v, i) => Math.round(lerp(v, B[i], p))).join(',') + ')'; };
+
+/* curves sampled frame by frame (24 fps), smoothed with monotone Hermite */
+function mono(pts) {
+  const n = pts.length, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), d = [], m = [];
+  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+  m[0] = d[0]; m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i + 1] / d[i], h = a * a + b * b;
+    if (h > 9) { const k = 3 / Math.sqrt(h); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; }
+  }
+  return t => {
+    if (t <= xs[0]) return ys[0];
+    if (t >= xs[n - 1]) return ys[n - 1];
+    let i = 0; while (t > xs[i + 1]) i++;
+    const h = xs[i + 1] - xs[i], s = (t - xs[i]) / h, s2 = s * s, s3 = s2 * s;
+    return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (3 * s2 - 2 * s3) * ys[i + 1] + (s3 - s2) * h * m[i + 1];
+  };
+}
+
+/* ================= DEFINITIONS ================= */
+const defs = el('defs', {}, svg);
+const clip = (id, shape, attrs) => { const c = el('clipPath', { id }, defs); return el(shape, attrs, c); };
+clip('leftClip', 'rect', { x: 32, y: -200, width: 900, height: 1500 });
+clip('rightClip', 'rect', { x: 960, y: 120, width: 960, height: 958 });
+clip('discClip', 'circle', { cx: 420, cy: 506, r: 368 });
+clip('logoLow', 'rect', { x: 80, y: 81, width: 40, height: 30 });
+
+/* the cover art: flat shapes sampled from the video (circles fitted to the outlines) */
+const HAIR = 'M253,437C248,392 268,352 306,334C340,318 386,320 418,334C444,345 462,364 470,392L446,396C428,392 410,392 400,396C388,402 384,418 381,434C378,450 366,460 348,466L308,472C312,486 314,500 306,513C296,516 284,505 276,490C264,474 255,456 253,437Z';
+const FACE = 'M396,398C420,390 440,392 446,396L452,414C456,426 460,440 466,452L474,467L487,483L476,489L467,494C470,498 474,501 473,505L466,510C470,513 471,516 469,518L467,523C470,530 471,540 470,548L413,553L403,557C398,572 392,590 387,607L360,585L312,548L322,523L322,497L308,472L348,466C366,460 378,450 381,434C384,418 388,404 396,398Z';
+function buildArt(g) {
+  const o = {};
+  o.base = el('circle', { cx: 420, cy: 506, r: 372, fill: C.coral }, g);
+  o.c1 = el('circle', { cx: 640, cy: 640, r: 335, fill: C.cream }, g);
+  o.c2 = el('circle', { cx: 576.5, cy: 308.7, r: 181, fill: C.coral }, g);
+  o.c3 = el('circle', { cx: 239, cy: 364, r: 156, fill: C.cream }, g);
+  o.c4 = el('circle', { cx: 282, cy: 717.5, r: 155, fill: C.coral }, g);
+  o.c5 = el('circle', { cx: 590, cy: 648, r: 159, fill: C.teal }, g);
+  o.head = el('g', {}, g);
+  el('path', { d: FACE, fill: C.ink }, o.head);
+  el('path', { d: HAIR, fill: C.teal }, o.head);
+  return o;
+}
+/* reusable thumbnail (same cover, small) */
+const miniSym = el('symbol', { id: 'mini', viewBox: '-368 -368 736 736' }, defs);
+const miniClip = el('clipPath', { id: 'miniClip' }, defs); el('circle', { cx: 0, cy: 0, r: 368 }, miniClip);
+buildArt(el('g', { transform: 'translate(-420 -506)' }, el('g', { 'clip-path': 'url(#miniClip)' }, miniSym)));
+const mini = (parent, cx, cy, r) => el('use', { href: '#mini', x: cx - r, y: cy - r, width: 2 * r, height: 2 * r }, parent);
+
+const HEART = 'M0,-7C0,-14 -6,-17 -11,-17C-17,-17 -20,-12 -20,-7C-20,3 -8,10 0,17C8,10 20,3 20,-7C20,-12 17,-17 11,-17C6,-17 0,-14 0,-7Z';
+
+/* ================= PAGE ================= */
+el('rect', { width: 1920, height: 1080, fill: C.bg }, svg);
+const page = el('g', {}, svg);
+
+/* ---------- header ---------- */
+const hdr = el('g', {}, page);
+el('circle', { cx: 46, cy: 90.5, r: 10, fill: C.teal }, hdr);
+const pill = (x1, y1, x2, y2, col, p = hdr, extra = {}) => el('line', Object.assign({ x1, y1, x2, y2, stroke: col, 'stroke-width': 19, 'stroke-linecap': 'round' }, extra), p);
+pill(60, 60.5, 76, 94, C.teal);
+pill(88, 60.5, 103, 94, C.cream);
+pill(88, 60.5, 103, 94, C.coral, hdr, { 'clip-path': 'url(#logoLow)' });
+pill(115.5, 60.5, 130.5, 94, C.coral);
+// menu: flat bars in place of the unreadable words
+[[506, 597], [646, 737], [785, 911], [960, 1062], [1111, 1257], [1305, 1378]].forEach(([a, b]) =>
+  el('rect', { x: a, y: 72.5, width: b - a, height: 9, rx: 4.5, fill: C.nav }, hdr));
+// message icon (rounded square + check mark)
+el('rect', { x: 1491, y: 60, width: 34, height: 34, rx: 10, fill: 'none', stroke: C.nav, 'stroke-width': 2.6 }, hdr);
+el('path', { d: 'M1499.5,74L1508,82.5L1516.5,74', fill: 'none', stroke: C.nav, 'stroke-width': 2.6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, hdr);
+// bell + badge
+el('path', { d: 'M1571,89.5H1597L1593.5,84.5V75.5C1593.5,69.5 1589.5,64.5 1584,64.5C1578.5,64.5 1574.5,69.5 1574.5,75.5V84.5Z', fill: 'none', stroke: C.nav, 'stroke-width': 2.6, 'stroke-linejoin': 'round' }, hdr);
+el('circle', { cx: 1584, cy: 95, r: 2.6, fill: C.nav }, hdr);
+el('circle', { cx: 1605, cy: 62, r: 14, fill: C.teal }, hdr);
+el('circle', { cx: 1605, cy: 62, r: 4, fill: C.cream }, hdr);
+// outline button
+el('rect', { x: 1639, y: 48.5, width: 166, height: 58, rx: 29, fill: 'none', stroke: C.outline, 'stroke-width': 2 }, hdr);
+el('rect', { x: 1667, y: 72.5, width: 111, height: 10, rx: 5, fill: C.nav }, hdr);
+// avatar
+mini(hdr, 1856, 77, 30);
+
+/* ---------- left column: cover and player ---------- */
+const left = el('g', { 'clip-path': 'url(#leftClip)' }, page);
+// two teal discs behind the cover: one slides out of frame to the right, the other enters from the left
+const c7 = el('circle', { cx: -200, cy: 308, r: 182, fill: C.teal }, left);
+const c6 = el('circle', { cx: 730, cy: 753, r: 205, fill: C.teal }, left);
+const coverRot = el('g', {}, el('g', { 'clip-path': 'url(#discClip)' }, left));
+const art = buildArt(coverRot);
+const dot = el('circle', { cx: 828, cy: 214, r: 25, fill: C.teal }, left);
+el('path', { d: 'M898,154V186M882,170H914', stroke: C.cream, 'stroke-width': 3, 'stroke-linecap': 'round' }, left);
+// EP 12 (real words from the prompt)
+const tEP = el('text', { x: 36, y: 200, 'font-size': 71.5, fill: C.cream, textLength: 88, lengthAdjust: 'spacingAndGlyphs' }, left); tEP.textContent = 'EP';
+const t12 = el('text', { x: 35, y: 268, 'font-size': 71.5, fill: C.cream, textLength: 67, lengthAdjust: 'spacingAndGlyphs' }, left); t12.textContent = '12';
+// waveform: coral bars + dark gaps
+const waveDark = el('path', { fill: C.bg }, left);
+const waveCoral = el('path', { fill: C.coral }, left);
+// PLAY
+const playG = el('g', {}, left);
+const tPlay = el('text', { x: 36, y: 910, 'font-size': 57.8, fill: C.cream, textLength: 132, lengthAdjust: 'spacingAndGlyphs' }, playG); tPlay.textContent = 'PLAY';
+// speaker
+const spk = el('g', {}, left);
+el('path', { d: 'M868,878H879L893,866V908L879,896H868Z', fill: C.cream }, spk);
+const spkW = el('g', {}, spk);
+const arc1 = el('path', { d: 'M901,881Q905,887 901,893', fill: 'none', stroke: C.cream, 'stroke-width': 3, 'stroke-linecap': 'round' }, spkW);
+const arc2 = el('path', { d: 'M909,876Q916,887 909,898', fill: 'none', stroke: C.cream, 'stroke-width': 3, 'stroke-linecap': 'round' }, spkW);
+// time (bars) + track
+el('rect', { x: 36, y: 951.5, width: 56, height: 9, rx: 4.5, fill: C.grey }, left);
+el('rect', { x: 864, y: 951.5, width: 61, height: 9, rx: 4.5, fill: C.grey }, left);
+el('line', { x1: 120, y1: 956, x2: 838, y2: 956, stroke: C.line, 'stroke-width': 3.5, 'stroke-linecap': 'round' }, left);
+const played = el('line', { x1: 120, y1: 956, x2: 146, y2: 956, stroke: C.cream, 'stroke-width': 4.5, 'stroke-linecap': 'round' }, left);
+const knob = el('circle', { cx: 146, cy: 956, r: 13, fill: C.cream }, left);
+// controls
+const ctl = { fill: 'none', stroke: C.cream, 'stroke-width': 2.6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+el('path', Object.assign({ d: HEART, transform: 'translate(59 1030) scale(0.92)' }, ctl, { 'stroke-width': 2.8 }), left);
+el('rect', { x: 263, y: 1011, width: 5.5, height: 34, rx: 1.5, fill: C.cream }, left);
+el('path', { d: 'M294,1012V1044L270,1028Z', fill: C.cream, 'stroke-linejoin': 'round', stroke: C.cream, 'stroke-width': 2 }, left);
+el('rect', { x: 575.5, y: 1011, width: 5.5, height: 34, rx: 1.5, fill: C.cream }, left);
+el('path', { d: 'M550,1012V1044L574,1028Z', fill: C.cream, stroke: C.cream, 'stroke-width': 2, 'stroke-linejoin': 'round' }, left);
+el('path', Object.assign({ d: 'M833,1015H817C813,1015 810,1018 810,1022V1038C810,1042 813,1045 817,1045H837C841,1045 844,1042 844,1038V1030M826,1031C826,1021 833,1015 845,1015M839,1009L845,1015L839,1021' }, ctl), left);
+el('path', Object.assign({ d: 'M900,1013H893C889,1013 886,1016 886,1020V1027M908,1043H915C919,1043 922,1040 922,1036V1029M913,1009L919,1013L913,1017M895,1039L889,1043L895,1047M886,1033V1036C886,1040 889,1043 893,1043M922,1023V1020C922,1016 919,1013 915,1013' }, ctl), left);
+// pause button
+const pauseRing = el('circle', { cx: 421, cy: 1028, r: 56, fill: 'none', stroke: C.line, 'stroke-width': 9, opacity: 0 }, left);
+const pauseG = el('g', {}, left);
+el('circle', { cx: 421, cy: 1028, r: 46, fill: C.cream }, pauseG);
+el('rect', { x: 407.5, y: 1011, width: 9, height: 34, rx: 2, fill: C.ink }, pauseG);
+el('rect', { x: 425.5, y: 1011, width: 9, height: 34, rx: 2, fill: C.ink }, pauseG);
+// track tooltip
+const tip1 = el('g', {}, left);
+const tip1Box = el('rect', { rx: 10, fill: C.tip }, tip1);
+const tip1Big = el('g', {}, tip1);
+for (let i = 0; i < 26; i++) el('rect', { x: 128 + i * 7, y: 834 + (i % 3 === 0 ? 0 : 2), width: 3, height: i % 3 === 0 ? 10 : 6, rx: 1, fill: i < 14 ? C.coral : C.grey }, tip1Big);
+el('rect', { x: 116, y: 874, width: 44, height: 11, rx: 5.5, fill: C.cream }, tip1Big);
+el('rect', { x: 200, y: 874, width: 84, height: 11, rx: 5.5, fill: C.cream }, tip1Big);
+const tip1Bar = el('rect', { height: 10, rx: 5, fill: C.cream }, tip1);
+
+/* ---------- right column: episodes / transcript ---------- */
+const right = el('g', { 'clip-path': 'url(#rightClip)' }, page);
+el('rect', { x: 989, y: 153, width: 83, height: 8, rx: 4, fill: C.grey }, right);
+el('rect', { x: 1703, y: 152.5, width: 175, height: 9, rx: 4.5, fill: '#D6D1C3' }, right);
+
+const kebab = (p, y) => { const g = el('g', {}, p); for (const d of [-9, 0, 9]) el('circle', { cx: 1853, cy: y + d, r: 2.7, fill: C.cream }, g); return g; };
+const bar = (p, x1, y, x2, col, h = 12) => el('rect', { x: x1, y: y - h / 2, width: x2 - x1, height: h, rx: h / 2, fill: col }, p);
+const COL = { teal: C.teal, cream: C.cream, coral: C.coral };
+const ROWS = [
+  { y: 226, thumb: 'mini', bars: [[209.5, 1410, 'teal'], [237.5, 1250, 'teal']] },
+  { y: 318, thumb: 'coral', bars: [[303, 1511, 'cream'], [332.5, 1278, 'coral']] },
+  { y: 409, thumb: 'a', bars: [[393.5, 1360, 'teal'], [423.5, 1209, 'teal']] },
+  { y: 500, thumb: 'teal', bars: [[485.5, 1604, 'coral'], [512, 1235, 'cream']] },
+  { y: 591.5, thumb: 'b', bars: [[576.5, 1228, 'coral'], [605.5, 1482, 'cream']] },
+  { y: 683, thumb: 'mini', bars: [[667, 1538, 'teal'], [696, 1147, 'teal']] },
+  { y: 774, thumb: 'teal', bars: [[758, 1432, 'coral'], [785.5, 1563, 'cream']] },
+  { y: 865, thumb: 'c', bars: [[850, 1589, 'cream'], [880.5, 1170, 'teal']] }
+];
+const DIV = [272.5, 363.5, 454.5, 545.5, 637.5, 728.5, 819.5];
+let clipN = 0;
+function thumb(p, kind, cx, cy) {
+  const r = 31;
+  if (kind === 'mini') return mini(p, cx, cy, r);
+  const id = 'th' + (clipN++); clip(id, 'circle', { cx, cy, r });
+  const g = el('g', { 'clip-path': `url(#${id})` }, p);
+  if (kind === 'coral' || kind === 'teal') {
+    el('circle', { cx, cy, r, fill: C[kind] }, g);
+    el('rect', { x: cx - 8, y: cy - 2.5, width: 16, height: 5, rx: 2.5, fill: C.cream }, g);
+  } else if (kind === 'a') {
+    el('circle', { cx, cy, r, fill: C.coral }, g);
+    el('circle', { cx: cx + 10, cy: cy - 9, r: 18, fill: C.cream }, g);
+    el('circle', { cx: cx - 10, cy: cy + 10, r: 17, fill: C.teal }, g);
+  } else if (kind === 'b') {
+    el('circle', { cx, cy, r, fill: C.coral }, g);
+    el('circle', { cx: cx - 5, cy: cy + 6, r: 21, fill: C.cream }, g);
+  } else {
+    el('circle', { cx, cy, r, fill: C.teal }, g);
+    el('circle', { cx: cx - 11, cy: cy - 1, r: 23, fill: C.coral }, g);
+    el('circle', { cx: cx + 13, cy: cy + 15, r: 12, fill: C.ink }, g);
+  }
+  return g;
+}
+const list = el('g', {}, right);
+const rowG = ROWS.map((R, i) => {
+  const g = el('g', {}, list);
+  if (i === 0) el('rect', { x: 989, y: 183, width: 896, height: 85, rx: 6, fill: C.coral }, g);
+  else el('rect', { x: 988, y: DIV[i - 1] - 0.75, width: 898, height: 1.5, fill: C.line }, g);
+  if (i === 1) R.hov = el('rect', { x: 988, y: 274, width: 898, height: 88, rx: 6, fill: C.sel, opacity: 0 }, g);
+  if (R.hov) g.insertBefore(R.hov, g.firstChild);
+  thumb(g, R.thumb, 1027, R.y);
+  R.bars.forEach(([y, x2, c]) => bar(g, 1077, y, x2, COL[c]));
+  R.keb = kebab(g, R.y);
+  return g;
+});
+const rowHeart = el('path', { d: HEART, fill: C.cream }, rowG[0]);
+const foot = el('g', {}, list);
+el('rect', { x: 989, y: 934.5, width: 83, height: 9, rx: 4.5, fill: C.grey }, foot);
+el('circle', { cx: 1404, cy: 938, r: 5, fill: '#B8BBAE' }, foot);
+el('circle', { cx: 1432, cy: 938, r: 5, fill: C.coral }, foot);
+
+/* transcript: 7 paragraphs of two lines of thin bars */
+const PX = 989, PITCH = 93.3, PTOP = 183;
+const PARA = [[1613, 1140], [1676, 1307], [1720, 1115], [1765, 1245], [1698, 1128], [1765, 1105], [1758, 1197]];
+const trans = el('g', {}, right);
+function wordBars(p, x0, x1, y, seed, col) {
+  const r = rng(seed); let x = x0;
+  while (x < x1 - 8) {
+    const w = Math.min(x1 - x, 26 + r() * 92);
+    el('rect', { x: f1(x), y: y - 4.5, width: f1(w), height: 9, rx: 4.5, fill: col }, p);
+    x += w + 10;
+  }
+}
+const P = PARA.map(([e1, e2], k) => {
+  const g = el('g', {}, trans);
+  const o = { g };
+  if (k === 1) {
+    o.hov = el('g', { opacity: 0 }, g);
+    el('rect', { x: 0, y: 0, width: 700, height: 78, rx: 4, fill: C.hover }, o.hov);
+    el('rect', { x: 0, y: 0, width: 3, height: 78, fill: C.cream }, o.hov);
+  }
+  const hlCol = [C.coral, null, C.coral, C.teal, C.cream, C.coral, C.coral][k];
+  if (hlCol) {
+    o.h1 = el('rect', { x: 0, y: 0, height: 41, rx: 4, fill: hlCol }, g);
+    o.h2 = el('rect', { x: 0, y: 37, height: 41, rx: 4, fill: hlCol }, g);
+  }
+  if (k === 3) {
+    o.l1 = el('rect', { x: 3, y: 3, height: 36, rx: 3, fill: C.lteal }, g);
+    o.l2 = el('rect', { x: 3, y: 39, height: 36, rx: 3, fill: C.lteal }, g);
+  }
+  const cid = 'pc' + k, cp = el('clipPath', { id: cid }, defs);
+  o.c1 = el('rect', { x: 0, y: 0, height: 39, width: 0 }, cp);
+  o.c2 = el('rect', { x: 0, y: 39, height: 39, width: 0 }, cp);
+  const light = el('g', {}, g), dark = el('g', { 'clip-path': `url(#${cid})` }, g);
+  for (const [grp, col] of [[light, C.cream], [dark, C.ink]]) {
+    wordBars(grp, 10, e1 - PX, 23, 101 + k * 7, col);
+    wordBars(grp, 10, e2 - PX, 58, 202 + k * 7, col);
+  }
+  if (k === 6) o.ring = el('rect', { x: 0, y: 0, width: 781, height: 78, rx: 4, fill: 'none', stroke: C.cream, 'stroke-width': 2.6, opacity: 0 }, g);
+  return o;
+});
+// title block under the transcript
+const titleG = el('g', {}, right);
+el('rect', { x: 988, y: 902, width: 184, height: 1.5, fill: C.line }, titleG);
+el('rect', { x: 989, y: 960, width: 448, height: 34, rx: 17, fill: C.cream }, titleG);
+el('rect', { x: 989, y: 1046.5, width: 246, height: 9, rx: 4.5, fill: C.grey }, titleG);
+el('rect', { x: 1245, y: 1046.5, width: 125, height: 9, rx: 4.5, fill: C.coral }, titleG);
+const semi = el('circle', { cx: 1668, cy: 1078, r: 55, fill: C.teal }, right);
+// "like" heart to the right of the active paragraph
+const likeHeart = el('path', { d: HEART, fill: C.cream }, right);
+// timestamp tooltip
+const tip2 = el('g', {}, right);
+el('rect', { x: 1352, y: 766, width: 88, height: 55, rx: 9, fill: C.tip }, tip2);
+el('rect', { x: 1373, y: 788.5, width: 46, height: 10, rx: 5, fill: C.cream }, tip2);
+// scrollbar
+const sbar = el('rect', { x: 1906, y: 70, width: 6, height: 450, rx: 3, fill: '#3A3E38' }, page);
+// floating button
+const fab = el('g', {}, page);
+el('circle', { cx: 1840, cy: 1025, r: 44, fill: C.teal }, fab);
+el('circle', { cx: 1868, cy: 1058, r: 11, fill: C.teal }, fab);
+el('path', { d: 'M1829,1006C1825,1018 1834,1030 1850,1034', fill: 'none', stroke: C.cream, 'stroke-width': 3.2, 'stroke-linecap': 'round' }, fab);
+el('circle', { cx: 1798, cy: 990, r: 27, fill: C.coral }, fab);
+el('path', { d: 'M1788,993Q1794,986 1801,989M1786,1001Q1796,992 1806,996M1793,982Q1799,978 1805,982', fill: 'none', stroke: C.cream, 'stroke-width': 2.6, 'stroke-linecap': 'round' }, fab);
+
+/* ---------- cursor (screen coordinates, not scrolled) ---------- */
+const curL = el('g', {}, svg);
+const ripples = [0, 1, 2, 3].map(() => el('circle', { fill: 'none', stroke: C.cream, 'stroke-width': 3, opacity: 0 }, curL));
+const arrow = el('path', { d: 'M0,0L0,17.2L4.1,13.4L7,19.9L10,18.6L7.2,12.3L12.4,12.3Z', fill: '#0A0A0A', stroke: '#FFFFFF', 'stroke-width': 1.9, 'stroke-linejoin': 'round', 'paint-order': 'stroke' }, curL);
+const hand = el('g', {}, curL);
+el('path', { d: 'M4,1.6C4,0.7 4.7,0 5.5,0C6.3,0 7,0.7 7,1.6L7,7.6C7.2,7 7.8,6.8 8.4,6.8C9.1,6.8 9.7,7.3 9.8,8C10,7.5 10.6,7.2 11.2,7.2C11.9,7.2 12.5,7.8 12.5,8.5C12.7,8.1 13.2,7.9 13.7,7.9C14.4,7.9 15,8.5 15,9.2L15,14C15,17.5 13,20 9.8,20L8.5,20C6.5,20 5.2,19 4.2,17.4L1.3,12.6C0.8,11.8 1,10.8 1.8,10.4C2.6,10 3.5,10.3 4,11Z', fill: '#FFFFFF', stroke: '#0A0A0A', 'stroke-width': 0.62, 'stroke-linejoin': 'round' }, hand);
+el('path', { d: 'M7,7.6V12.2M9.8,8V12.2M12.5,8.5V12.2', fill: 'none', stroke: '#0A0A0A', 'stroke-width': 0.55, 'stroke-linecap': 'round' }, hand);
+
+/* ================= TIMING (sampled from the video) ================= */
+const DUR = 15;
+// page scroll: 21 px up between 0.58 and 1.0 s; back to 0 to loop
+const SCROLL = mono([[0.58, 0], [0.625, 2], [0.667, 5], [0.708, 8], [0.75, 12], [0.792, 14], [0.833, 17], [0.875, 18.5], [0.917, 20], [0.958, 21], [1.0, 21]]);
+const scrollAt = t => SCROLL(t) * (1 - seg(t, 14.25, 14.92, 'power2.inOut'));
+// cover rotation (color centroids, frame by frame): one turn + bounce
+const ROT = mono([[0, 0], [4.1, 0], [4.25, 1], [4.375, 5.5], [4.5, 10.5], [4.625, 18], [4.75, 26.5], [4.875, 38], [5, 50], [5.125, 63.5], [5.25, 79], [5.375, 93.5], [5.5, 107], [5.625, 120], [5.75, 132], [5.875, 144.5], [6, 157], [6.25, 181], [6.5, 202], [6.75, 220.5], [7, 237.5], [7.25, 253.5], [7.5, 268], [7.75, 281], [8, 293.5], [8.25, 305.5], [8.5, 316], [8.75, 325.5], [9, 334], [9.25, 342], [9.5, 350.5], [9.75, 357], [10, 362.5], [10.25, 367], [10.5, 371.5], [10.75, 375.5], [11, 377.8], [11.4, 378.7], [11.75, 375.4], [12, 366], [12.25, 360.4], [12.4, 360], [15, 360]]);
+// player scrubber
+const KNOB = mono([[0, 146], [2.7, 146], [2.9, 163], [3.17, 224], [3.33, 246], [3.5, 268], [3.67, 288], [3.83, 308], [4, 326], [4.17, 352], [4.33, 380], [4.5, 400], [4.67, 418], [4.83, 437], [5, 456], [5.17, 478], [5.33, 496], [5.5, 510], [5.67, 525], [5.83, 538], [6, 552], [6.5, 588], [7, 618], [7.5, 648], [8, 675], [8.5, 700], [9, 720], [9.5, 738], [10, 751], [10.5, 762], [11, 772], [11.5, 778], [13, 778]]);
+// waveform amplitude
+const AMP = mono([[0, 0], [2.68, 0], [2.8, 80], [3, 190], [3.2, 210], [3.5, 190], [3.9, 170], [4.3, 150], [5, 125], [5.6, 95], [6.2, 58], [7, 38], [8, 32], [9.15, 30], [9.4, 90], [10, 95], [10.3, 48], [10.6, 52], [11, 88], [11.3, 108], [11.85, 112], [12.2, 92], [12.5, 64], [12.8, 38], [13.05, 16], [13.22, 0], [15, 0]]);
+// peak clusters crossing the waveform from right to left (click on the marker, then speed-up)
+const SPIKES = [[9.12, 760, 1550, 370, 120], [10.6, 900, 1650, 330, 105]];
+// pulses: moderate tempo, then faster after the jump (9–12 s)
+const BEATS = [];
+for (let b = 2.8; b < 9.2; b += 0.48) BEATS.push(b);
+for (let b = 9.25; b < 12.6; b += 0.34) BEATS.push(b);
+function pulse(t, off = 0) {
+  t -= off; let last = -1;
+  for (const b of BEATS) { if (b <= t) last = b; else break; }
+  if (last < 0) return 0;
+  const dt = t - last;
+  return Math.min(1, dt / 0.04) * Math.exp(-dt * 6.5);
+}
+const C6X = mono([[4.6, 730], [5, 790], [5.5, 900], [6, 987], [6.5, 1041], [7, 1083], [7.5, 1125], [7.8, 1150], [9.9, 1300]]);
+const C7X = mono([[5.05, -150], [5.25, -130], [5.5, -114], [5.75, -96], [6, -78], [6.25, -56], [6.5, -38], [6.75, -22], [7, -6], [7.25, 14], [7.5, 32], [7.75, 50], [8, 66], [8.25, 80], [8.5, 92], [8.8, 110]]);
+const BOUNCE = mono([[0, 0], [2.85, 0], [3.05, 1], [4, 1], [4.4, 0.22], [9.1, 0.22], [9.35, 0.75], [11, 1], [12.3, 1], [12.6, 0], [15, 0]]);
+// the small dot: drifts, disappears, returns in coral, darkens, returns in teal
+const DX = mono([[0, 828], [3, 828], [4.33, 810], [4.5, 808]]), DY = mono([[0, 214], [3, 214], [4.33, 224], [4.5, 225]]);
+const D2X = mono([[5.45, 913], [6, 910], [6.5, 906], [7, 901], [7.5, 891], [8, 882], [8.5, 873], [9.2, 868]]), D2Y = mono([[5.45, 228], [6, 230], [6.5, 234], [7, 236], [7.5, 238], [8, 239], [8.5, 240], [9.2, 241]]);
+const D3X = mono([[9.5, 772], [10, 785], [10.5, 800], [11, 811], [11.5, 820], [12, 826], [12.35, 828]]), D3Y = mono([[9.5, 246], [10, 238], [10.5, 230], [11, 223], [11.5, 218], [12, 215], [12.35, 214]]);
+// the cursor (tip, in screen pixels)
+const CUR = [[0, 1708, 550], [0.62, 1708, 550], [0.75, 1674, 574], [0.88, 1514, 652], [1, 1268, 742], [1.12, 1046, 788], [1.25, 848, 832], [1.38, 666, 868], [1.5, 516, 884], [1.62, 410, 886], [1.75, 334, 884], [1.88, 278, 879], [2, 248, 877], [2.1, 240, 876], [2.75, 242, 876], [2.9, 250, 880], [3.1, 252, 880], [3.6, 258, 881], [4, 262, 884], [4.12, 420, 826], [4.25, 614, 768], [4.38, 730, 692], [4.5, 826, 646], [4.62, 898, 596], [4.75, 956, 554], [4.88, 1078, 460], [5, 1252, 320], [5.12, 1328, 272], [5.22, 1348, 262], [5.85, 1352, 264], [6, 1418, 300], [6.12, 1452, 318], [6.25, 1480, 320], [6.38, 1500, 312], [6.5, 1505, 309], [7.25, 1506, 308], [7.38, 1510, 344], [7.5, 1510, 404], [7.62, 1494, 438], [7.75, 1485, 473], [7.88, 1476, 500], [8, 1466, 530], [8.12, 1452, 566], [8.25, 1439, 602], [8.38, 1430, 626], [8.5, 1424, 650], [8.62, 1411, 683], [8.75, 1404, 722], [8.88, 1396, 748], [9, 1394, 772], [9.12, 1392, 782], [9.3, 1390, 786], [10.75, 1390, 788], [10.88, 1276, 844], [11, 1054, 902], [11.12, 842, 946], [11.25, 608, 996], [11.38, 516, 1012], [11.5, 466, 1020], [11.62, 440, 1021], [11.75, 432, 1020], [13.2, 432, 1019], [14.25, 436, 1016]];
+const CX = mono(CUR.map(p => [p[0], p[1]])), CY = mono(CUR.map(p => [p[0], p[2]]));
+const HAND = [[2.06, 3.05], [5.18, 5.52], [9.28, 10.82], [11.7, 13.15]];
+const CLICKS = [[2.55, 240, 876], [5.3, 1348, 262], [9.3, 1390, 786], [11.85, 432, 1020]];
+// "like" heart: [start, end, paragraph]
+const SEMI = mono([[5.9, 1712], [7, 1695], [8, 1668], [9.25, 1617], [10, 1600], [11, 1597], [13.3, 1597]]);
+const LIKES = [[6.98, 7.32, 1], [7.45, 7.95, 2], [8.13, 8.55, 3], [8.72, 9.08, 4], [9.98, 10.85, 6]];
+
+/* ================= RENDER ================= */
+const NB = 150, WX = 33, WP = 6, BASE = 852;
+const hs = new Float32Array(NB);
+function waveAt(t) {
+  const A = AMP(t), pl = pulse(t), early = 1 - seg(t, 4.2, 5.2, 'none');
+  const sp = SPIKES.filter(([t0]) => t >= t0 && t < t0 + 0.75).map(([t0, x0, v, a, w]) => [x0 - v * (t - t0), a * Math.min(1, (t - t0) / 0.05), w]);
+  const tick = t * 14, k0 = Math.floor(tick), fr = tick - k0;
+  for (let i = 0; i < NB; i++) {
+    const x = WX + i * WP;
+    const e1 = 0.5 + 0.5 * Math.sin(x * 0.021 + t * 1.9), e2 = 0.5 + 0.5 * Math.sin(x * 0.071 - t * 4.6 + 2), e3 = 0.5 + 0.5 * Math.sin(x * 0.013 - t * 0.8 + 0.7);
+    const nz = lerp(hash(i, k0), hash(i, k0 + 1), fr);
+    const shape = (0.16 + 0.84 * Math.pow(e1, 1.3) * (0.35 + 0.65 * e2)) * (0.55 + 0.45 * nz) * (0.7 + 0.3 * e3);
+    const boost = 1 + early * (1.6 * Math.exp(-(((x - 45) / 75) ** 2)) + 0.5 * Math.exp(-(((x - 230) / 90) ** 2)));
+    let h = A * shape * (0.62 + 0.38 * pl) * boost;
+    for (const [xc, a, w] of sp) h += a * clamp((xc + 120) / 240) * Math.exp(-(((x - xc) / w) ** 2)) * (0.45 + 0.55 * nz);
+    hs[i] = Math.max(1.5, Math.min(h, 430));
+  }
+  let dc = '', dd = '';
+  for (let i = 0; i < NB; i++) {
+    const x = WX + i * WP, h = hs[i];
+    dc += `M${x} ${f1(BASE - h)}h3.2v${f1(h * 1.42)}h-3.2z`;
+    const g = Math.min(h, i < NB - 1 ? hs[i + 1] : h) - 2;
+    if (g > 2) dd += `M${x + 3.2} ${f1(BASE - g)}h2.8v${f1(g * 1.42)}h-2.8z`;
+  }
+  waveCoral.setAttribute('d', dc);
+  waveDark.setAttribute('d', dd || 'M0 0');
+  // speaker: the waves grow with the sound, quiver when it speeds up
+  const lvl = clamp(A / 150), wig = seg(t, 9.25, 9.6) * (1 - seg(t, 11.85, 12.15));
+  set(spkW, { transform: `translate(893 887) rotate(${f2(wig * 9 * Math.sin(t * 31))}) scale(${f2(1 + 0.3 * lvl * (0.4 + 0.6 * pl))}) translate(-893 -887)` });
+  set(spk, { transform: `translate(893 887) rotate(${f2(wig * 5 * Math.sin(t * 23 + 1))}) translate(-893 -887)` });
+}
+
+function coverAt(t) {
+  const R = ROT(t) % 360;
+  set(coverRot, { transform: `rotate(${f2(R)} 420 506)` });
+  const E = BOUNCE(t), p0 = pulse(t), p1 = pulse(t, 0.07), p2 = pulse(t, 0.12);
+  const s4 = 1 + 0.16 * E * p1, s5 = 1 + 0.11 * E * p0, s3 = 1 + 0.05 * E * p2, s2 = 1 + 0.04 * E * p0;
+  set(art.c4, { r: f2(155 * s4), cy: f2(717.5 - (s4 - 1) * 160), cx: f2(282 + (s4 - 1) * 40) });
+  set(art.c5, { r: f2(159 * s5), cy: f2(648 - (s5 - 1) * 70) });
+  set(art.c3, { r: f2(156 * s3) });
+  set(art.c2, { r: f2(181 * s2) });
+  set(art.head, { transform: `translate(0 ${f2(-6 * E * p2)})` });
+  // back disc: leaves to the right (4.6–7.8 s), comes back out from behind the cover (9.9–12.4 s)
+  let x6 = 730, y6 = 753;
+  if (t >= 4.6 && t < 9.9) x6 = C6X(t);
+  else if (t >= 9.9) { const q = seg(t, 9.9, 12.4, 'power2.out'); x6 = lerp(540, 730, q); y6 = lerp(600, 753, q); }
+  set(c6, { cx: f2(x6), cy: f2(y6), r: f2(205 * (1 + 0.05 * E * p1)) });
+  const on7 = t >= 5.05 && t < 8.85;
+  show(c7, on7);
+  if (on7) set(c7, { cx: f2(C7X(t)), cy: f2(lerp(308, 298, seg(t, 8.3, 8.8))), r: f2(182 * (1 - seg(t, 8.3, 8.8, 'power2.in'))) });
+}
+
+function dotAt(t) {
+  let x = 828, y = 214, r = 25, col = C.teal;
+  if (t >= 3 && t < 5.4) { x = DX(t); y = DY(t); r = 25 * (1 - seg(t, 4.33, 4.52, 'back.in(2)')); }
+  else if (t >= 5.4 && t < 9.4) {
+    x = D2X(t); y = D2Y(t);
+    r = lerp(28, 33, seg(t, 5.75, 7, 'sine.inOut')) * seg(t, 5.45, 5.75, 'back.out(2)') * (1 - seg(t, 9.05, 9.22, 'power2.in'));
+    col = mix(C.coral, C.dim, seg(t, 8.55, 9.0));
+  } else if (t >= 9.4 && t < 12.4) { x = D3X(t); y = D3Y(t); r = lerp(23, 25, seg(t, 9.7, 12.3)) * seg(t, 9.5, 9.72, 'back.out(2)'); }
+  set(dot, { cx: f2(x), cy: f2(y), r: f2(Math.max(0, r)), fill: col });
+}
+
+function playerAt(t) {
+  const kx = lerp(KNOB(t), 146, seg(t, 13.0, 13.25, 'power3.inOut') * (t >= 13 ? 1 : 0));
+  set(knob, { cx: f2(kx) }); set(played, { x2: f2(kx) });
+  // PLAY pressed at 2.55 s
+  const pp = Math.max(0, 1 - Math.abs(t - 2.6) / 0.1);
+  set(playG, { transform: `translate(36 910) scale(${f2(1 - 0.05 * pp)}) translate(-36 -910)` });
+  // pause pressed at 11.85 s: ring
+  const pz = Math.max(0, 1 - Math.abs(t - 11.9) / 0.1);
+  set(pauseG, { transform: `translate(421 1028) scale(${f2(1 - 0.07 * pz)}) translate(-421 -1028)` });
+  const ro = seg(t, 11.83, 11.95) * (1 - seg(t, 12.85, 13.05));
+  set(pauseRing, { opacity: f2(ro), r: f2(50 + 6 * seg(t, 11.83, 12.05, 'back.out(2)')) });
+  // track tooltip
+  const vis = seg(t, 2.06, 2.18, 'power2.out') * (1 - seg(t, 3.92, 4.04));
+  show(tip1, vis > 0);
+  if (vis > 0) {
+    const a = seg(t, 2.56, 2.7), b = seg(t, 3.15, 3.3);
+    const x0 = lerp(lerp(100, 208, a), 212, b), x1 = lerp(lerp(335, 292, a), 278, b), y0 = lerp(lerp(826, 840, a), 860, b), y1 = lerp(lerp(911, 904, a), 897, b);
+    set(tip1Box, { x: f2(x0), y: f2(y0), width: f2(x1 - x0), height: f2(y1 - y0) });
+    set(tip1Big, { opacity: f2(1 - seg(t, 2.56, 2.62)) });
+    const bw = (x1 - x0) * 0.5;
+    set(tip1Bar, { x: f2((x0 + x1) / 2 - bw / 2), y: f2((y0 + y1) / 2 - 5), width: f2(bw), opacity: f2(seg(t, 2.62, 2.7)) });
+    const s = lerp(0.9, 1, vis);
+    set(tip1, { opacity: f2(vis), transform: `translate(${f2((x0 + x1) / 2)} ${f2(y1)}) scale(${f2(s)}) translate(${f2(-(x0 + x1) / 2)} ${f2(-y1)})` });
+  }
+}
+
+function listAt(t) {
+  // line 1: fades out when the transcript scrolls up, returns at 13.1 s
+  const v1 = t < 13 ? 1 - seg(t, 6.95, 7.12) : seg(t, 13.02, 13.18, 'power2.out');
+  show(rowG[0], v1 > 0);
+  set(rowG[0], { opacity: f2(v1), transform: `translate(0 ${f2(-18 * (1 - v1))})` });
+  const liked = t >= 5.29 && t < 13.02;
+  show(ROWS[0].keb, !liked); show(rowHeart, liked);
+  if (liked) set(rowHeart, { transform: `translate(1840 226) scale(${f2(0.9 * seg(t, 5.29, 5.44, 'back.out(3)'))})` });
+  // lines 2 to 8: dissolve from bottom to top, return from top to bottom
+  for (let i = 1; i < 8; i++) {
+    const po = seg(t, 5.5 + (7 - i) * 0.045, 5.7 + (7 - i) * 0.045, 'power2.in');
+    const pi = seg(t, 13.06 + (i - 1) * 0.025, 13.24 + (i - 1) * 0.025, 'power2.out');
+    const v = t < 13 ? 1 - po : pi, dy = t < 13 ? -14 * po : 14 * (1 - pi);
+    show(rowG[i], v > 0);
+    set(rowG[i], { opacity: f2(v), transform: `translate(0 ${f2(dy)})` });
+  }
+  set(ROWS[1].hov, { opacity: f2(seg(t, 5.12, 5.22) * (1 - seg(t, 5.42, 5.55))) });
+  const vf = t < 13 ? 1 - seg(t, 5.45, 5.6) : seg(t, 13.28, 13.42);
+  show(foot, vf > 0); set(foot, { opacity: f2(vf) });
+}
+
+function transcriptAt(t) {
+  const on = t >= 5.55 && t < 13.36;
+  show(trans, on); show(titleG, on); show(semi, on); show(likeHeart, false); show(tip2, false);
+  const sb = seg(t, 5.6, 5.8) * (1 - seg(t, 13.1, 13.3));
+  show(sbar, sb > 0); set(sbar, { opacity: f2(sb), y: f2(70 + 50 * seg(t, 6.95, 7.15, 'power3.inOut')) });
+  if (!on) return;
+  const YT = PITCH * (1 - seg(t, 6.95, 7.15, 'power3.inOut'));
+  P.forEach((o, k) => {
+    const inP = seg(t, 5.58 + (6 - k) * 0.04, 5.86 + (6 - k) * 0.04, 'power2.out');
+    const outP = seg(t, 12.98 + k * 0.025, 13.16 + k * 0.025, 'power2.in');
+    const v = inP * (1 - outP);
+    show(o.g, v > 0);
+    set(o.g, { opacity: f2(v), transform: `translate(${PX} ${f2(PTOP + PITCH * k + YT + 22 * (1 - inP) + 10 * outP)})` });
+  });
+  // highlights sweeping left to right, one paragraph after another
+  const W = 896, hl = (o, w1, w2 = w1) => { set(o.h1, { width: f1(w1) }); set(o.h2, { width: f1(w2) }); set(o.c1, { width: f1(w1) }); set(o.c2, { width: f1(w2) }); };
+  const w0 = 636 * seg(t, 6.12, 6.42, 'power2.out') + (W - 636) * seg(t, 6.95, 7.15, 'power3.inOut');
+  hl(P[0], w0);
+  set(P[1].hov, { opacity: f2(seg(t, 6.96, 7.04) * (1 - seg(t, 7.28, 7.38))) });
+  hl(P[2], W * seg(t, 7.28, 7.48));
+  const w3 = W * seg(t, 7.95, 8.12, 'power2.out'), lp = seg(t, 8.0, 8.25);
+  set(P[3].h1, { width: f1(w3) }); set(P[3].h2, { width: f1(w3) });
+  set(P[3].l1, { width: f1(783 * lp) }); set(P[3].l2, { width: f1(535 * lp) });
+  set(P[3].c1, { width: f1(786 * lp) }); set(P[3].c2, { width: f1(538 * lp) });
+  hl(P[4], 719 * seg(t, 8.5, 8.7));
+  const s5 = seg(t, 9.02, 9.18); hl(P[5], 786 * s5, 129 * s5);
+  hl(P[6], 781 * seg(t, 9.72, 9.98));
+  set(P[6].ring, { opacity: f2(seg(t, 9.95, 10.05) * (1 - seg(t, 10.75, 10.9))) });
+  // title block and half-circle
+  const vt = seg(t, 5.85, 6.15, 'power2.out') * (1 - seg(t, 12.98, 13.15));
+  set(titleG, { opacity: f2(vt), transform: `translate(0 ${f2(YT + 24 * (1 - seg(t, 5.85, 6.15, 'power2.out')))})` });
+  const sx = SEMI(t);
+  set(semi, { cx: f2(sx), opacity: f2(vt) });
+  // "like" heart
+  for (const [a, b, k] of LIKES) {
+    if (t >= a && t < b) {
+      const s = seg(t, a, a + 0.15, 'back.out(3)') * (1 - seg(t, b - 0.08, b, 'power2.in'));
+      const y = PTOP + PITCH * k + YT + 39;
+      show(likeHeart, true);
+      set(likeHeart, { transform: `translate(1838 ${f2(y)}) scale(${f2(0.9 * s)})` });
+    }
+  }
+  // timestamp tooltip
+  const v2 = seg(t, 9.12, 9.24, 'back.out(2)') * (1 - seg(t, 10.75, 10.85));
+  if (v2 > 0) { show(tip2, true); set(tip2, { opacity: f2(clamp(v2)), transform: `translate(1396 821) scale(${f2(lerp(0.85, 1, v2))}) translate(-1396 -821)` }); }
+}
+
+function cursorAt(t) {
+  let x, y;
+  if (t < 14.25) { x = CX(t); y = CY(t); }
+  else { // end: the cursor heads back to its opening position to loop
+    const p = seg(t, 14.25, 14.92, 'power3.inOut'), q = 1 - p;
+    x = q * q * 436 + 2 * q * p * 1180 + p * p * 1708; y = q * q * 1016 + 2 * q * p * 960 + p * p * 550;
+  }
+  const isHand = HAND.some(([a, b]) => t >= a && t < b);
+  let press = 0;
+  CLICKS.forEach(([ct, cx, cy], i) => {
+    press = Math.max(press, Math.max(0, 1 - Math.abs(t - ct) / 0.09));
+    const p = clamp((t - ct) / 0.45);
+    const on = t >= ct && p < 1;
+    set(ripples[i], { cx, cy, r: f2(8 + 34 * ease('power2.out')(p)), opacity: on ? f2(0.9 * (1 - p)) : 0 });
+  });
+  const k = 1 - 0.1 * press;
+  show(arrow, !isHand); show(hand, isHand);
+  if (isHand) set(hand, { transform: `translate(${f2(x)} ${f2(y)}) scale(${f2(4.5 * k)}) translate(-5.5 0)` });
+  else set(arrow, { transform: `translate(${f2(x)} ${f2(y)}) scale(${f2(5.2 * k)})` });
+}
+
+function render(t) {
+  t = clamp(t, 0, DUR);
+  set(page, { transform: `translate(0 ${f2(-scrollAt(t))})` });
+  coverAt(t); dotAt(t); waveAt(t); playerAt(t); listAt(t); transcriptAt(t); cursorAt(t);
+}
+
+/* ---------- GSAP clock ---------- */
+const clock = { t: 0 };
+const tl = gsap.timeline({ repeat: -1, paused: true });
+tl.fromTo(clock, { t: 0 }, { t: DUR, duration: DUR, ease: 'none', onUpdate: () => render(clock.t) });
+window.anim = {
+  tl, duration: DUR,
+  seek(t) { t = clamp(t, 0, DUR); tl.pause(); tl.time(t, true); render(t); },
+  play(from = 0) { tl.restart(); tl.time(from); tl.play(); },
+  pause() { tl.pause(); }
+};
+const qs = new URLSearchParams(location.search);
+render(0);
+Promise.all([document.fonts.load('400 72px "Inter"', 'EP12PLAY'), document.fonts.ready]).then(() => {
+  if (qs.has('t')) anim.seek(parseFloat(qs.get('t')));
+  else if (!qs.has('external')) tl.play(0);
+  document.documentElement.dataset.ready = '1';
+});
+})();
+</script>
+</body>
+</html>

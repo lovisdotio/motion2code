@@ -1,0 +1,1430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WAVES FEST</title>
+<meta name="description" content="WAVES FEST music festival: the poster, an interactive festival map from day to night, and tickets.">
+<meta name="theme-color" content="#efebd8">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&display=block&text=WAVESFTMPICK0123456789" rel="stylesheet">
+<style>
+  :root{
+    --cream:#efebd8;--paper:#fbf8ee;--orange:#e56707;--pink:#e3929f;--blue:#0078ba;--ink:#16323a;--gray:#bfbbaa;
+    --u:calc(100vw / 1920);--su:max(var(--u), .56px);
+    --nav:#16323a;--pill:#0078ba;--chat:#0078ba;
+    --lg1:#16323a;--lg2:#16323a;--lg3:#0078ba;--lg4:#16323a;--lg5:#e56707;--lg6:#e56707;--lg7:#0078ba;--lg8:#16323a;--lg9:#0078ba;
+    --sky:#e595a0;--ground:#e594a1;--path:#efebd8;--cloud:#efecdb;--hA:#0079b6;--hB:#006e88;--hC:#003b49;--hD:#066b90;
+    --door:#0877b6;--arch:#1f7cc4;--arch2:#5aadde;--ringL:#0a7ac0;--ringR:#0a7ac0;--win:#0b5c55;--lamp:#12384a;
+  }
+  *{box-sizing:border-box}
+  html{background:var(--cream);scrollbar-width:none;-webkit-text-size-adjust:100%}
+  html::-webkit-scrollbar{display:none}
+  body{margin:0;background:var(--cream);color:var(--ink);font-family:'Outfit',system-ui,sans-serif;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+  .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  a,button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+  button{background:none;border:0;padding:0;margin:0;cursor:pointer;touch-action:manipulation}
+  a{text-decoration:none;touch-action:manipulation}
+  [inert]{pointer-events:none!important}
+  :focus{outline:none}
+  :focus-visible{outline:3px solid var(--ink);outline-offset:4px}
+  svg text{font-family:'Outfit',sans-serif}
+
+  /* ---------- nav bar (1920 px drawing, scaled) ---------- */
+  .nav{position:fixed;left:0;top:0;width:100%;height:calc(128 * var(--u));z-index:60;pointer-events:none}
+  .nav > *{position:absolute;pointer-events:auto}
+  .nav :focus-visible{outline-color:var(--nav)}
+  .logo{left:calc(30 * var(--u));top:calc(26 * var(--u));width:calc(200 * var(--u));height:calc(108 * var(--u));border-radius:10px}
+  .logo svg{width:100%;height:100%;display:block;overflow:visible}
+  .navtxt{position:relative;font-weight:600;font-size:calc(27 * var(--u));line-height:1;color:var(--nav);white-space:nowrap;transition:color .15s}
+  .nav-map{left:calc(250 * var(--u));top:calc(17 * var(--u));width:calc(137 * var(--u));height:calc(94 * var(--u));border-radius:calc(26 * var(--u));display:grid;place-items:center}
+  .nav-map .hov{position:absolute;inset:0;border-radius:inherit;background:#b3c4ce;opacity:0;transition:opacity .15s}
+  .nav-map:hover .hov,.nav-map:focus-visible .hov{opacity:1}
+  .nav-map:active .navtxt{transform:scale(.94)}
+  .nav-tk{left:calc(916 * var(--u));top:calc(40 * var(--u));width:calc(121 * var(--u));height:calc(50 * var(--u));display:grid;place-items:center;border-radius:12px}
+  .nav-tk:hover .navtxt{color:var(--orange)}
+  .nbar{top:calc(40 * var(--u));height:calc(48 * var(--u));display:flex;align-items:center;padding:0 calc(10 * var(--u));border-radius:12px}
+  .nbar i{display:block;width:100%;height:calc(8 * var(--u));min-height:3px;border-radius:99px;background:var(--nav);transition:background .15s,transform .15s}
+  .nbar:hover i{background:var(--orange)}
+  .nbar:active i{transform:scaleX(.92)}
+  .nb1{left:calc(1070 * var(--u));width:calc(83 * var(--u))}
+  .nb2{left:calc(1187 * var(--u));width:calc(86 * var(--u))}
+  .nb3{left:calc(1307 * var(--u));width:calc(154 * var(--u))}
+  .nb4{left:calc(1494 * var(--u));width:calc(91 * var(--u))}
+  .avatar{left:calc(1629 * var(--u));top:calc(38 * var(--u));width:calc(52 * var(--u));height:calc(52 * var(--u));border-radius:50%;transition:transform .12s}
+  .avatar svg{width:100%;height:100%;display:block}
+  .avatar:active{transform:scale(.92)}
+  .pill{left:calc(1707 * var(--u));top:calc(32 * var(--u));width:calc(173 * var(--u));height:calc(65 * var(--u));border-radius:999px;display:grid;place-items:center;transition:transform .12s}
+  .pill::before{content:'';position:absolute;inset:calc(-9 * var(--u));border-radius:999px;background:#d6d1c0;opacity:0;transition:opacity .12s}
+  .pill:active::before{opacity:1}
+  .pill:active{transform:scale(.95)}
+  .pill .bg{position:absolute;inset:0;border-radius:inherit;background:var(--pill)}
+  .pill:hover .bg{filter:brightness(1.08)}
+  .pill .navtxt{color:#fbf3e6}
+  .pill:focus-visible{outline-color:var(--ink)}
+  .badge{position:absolute;right:calc(-8 * var(--u));top:calc(-8 * var(--u));min-width:max(calc(30 * var(--u)), 19px);height:max(calc(30 * var(--u)), 19px);padding:0 5px;border-radius:99px;background:var(--pink);color:var(--ink);font-weight:700;font-size:max(calc(17 * var(--u)),11px);line-height:1;display:grid;place-items:center;transform:scale(0)}
+  .menu-btn{display:none;right:10px;top:10px;width:44px;height:44px;border-radius:12px;place-items:center}
+  .menu-btn i{position:absolute;left:10px;width:24px;height:3.5px;border-radius:3px;background:var(--nav);transition:transform .25s,opacity .2s}
+  .menu-btn i:nth-child(1){top:13px}.menu-btn i:nth-child(2){top:20.25px}.menu-btn i:nth-child(3){top:27.5px}
+  .menu-btn[aria-expanded="true"] i:nth-child(1){transform:translateY(7.25px) rotate(45deg)}
+  .menu-btn[aria-expanded="true"] i:nth-child(2){opacity:0}
+  .menu-btn[aria-expanded="true"] i:nth-child(3){transform:translateY(-7.25px) rotate(-45deg)}
+
+  /* ---------- panels: cart (avatar) and mobile menu ---------- */
+  .panel{position:fixed;z-index:70;background:var(--paper);border-radius:22px;padding:18px;color:var(--ink)}
+  .panel[hidden]{display:none}
+  .acct{top:calc(112 * var(--u));right:calc(36 * var(--u));width:340px}
+  .acct-head{display:flex;align-items:center;gap:12px;padding:2px 2px 14px}
+  .acct-head svg{width:44px;height:44px;flex:none}
+  .acct-head .bars{flex:1;display:grid;gap:8px}
+  .acct-head .bars i,.mbar i{display:block;height:8px;border-radius:99px;background:var(--ink)}
+  .lbl{font-weight:700;font-size:15px;letter-spacing:.02em;margin:6px 2px 10px;color:var(--ink)}
+  .cart{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:260px;overflow:auto}
+  .cart li{display:flex;align-items:center;gap:10px;background:var(--cream);border-radius:14px;padding:8px 8px 8px 10px}
+  .cart li svg.mini{width:120px;height:44px;flex:none}
+  .cart li .grow{flex:1;display:grid;gap:6px}
+  .cart li .grow i{display:block;height:6px;border-radius:99px;background:var(--gray)}
+  .rm{width:36px;height:36px;border-radius:50%;background:var(--paper);display:grid;place-items:center;flex:none;transition:transform .12s,background .15s}
+  .rm:hover{background:var(--pink)}
+  .rm:active{transform:scale(.9)}
+  .rm svg{width:14px;height:14px}
+  .empty{display:flex;align-items:center;gap:12px;padding:8px 2px}
+  .empty svg{width:120px;height:44px;flex:none}
+  .cta{display:inline-grid;place-items:center;height:46px;padding:0 22px;border-radius:999px;background:var(--orange);color:#fbf3e6;font-weight:700;font-size:17px;transition:transform .12s}
+  .cta:active{transform:scale(.95)}
+  .panel .cta{margin-top:14px;width:100%}
+  .menu{top:68px;left:8px;right:8px;padding:14px 18px 20px}
+  .menu nav{display:grid;gap:2px}
+  .mlink{display:flex;align-items:center;height:52px;font-weight:700;font-size:28px;border-radius:12px;padding:0 6px}
+  .mlink:active{transform:scale(.98)}
+  .mbar{display:flex;align-items:center;height:40px;padding:0 6px;border-radius:12px}
+  .mbar i{height:10px}
+  .menu .lbl{margin-top:16px}
+
+  /* ---------- pinned scene ---------- */
+  #festival{position:relative;height:100vh;height:100svh}
+  #stage{position:relative;width:100%;height:100vh;height:100svh;overflow:hidden;background:var(--cream)}
+  #wrap{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+  .layer{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none}
+  #world{perspective:2600px;perspective-origin:960px 540px}
+  .sheet{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-style:preserve-3d;transform-origin:960px 540px}
+  .pnl{position:absolute;top:0;height:1080px;width:640px;transform-style:preserve-3d}
+  .pnl.l{left:0;transform-origin:100% 50%}
+  .pnl.c{left:640px}
+  .pnl.r{left:1280px;transform-origin:0 50%}
+  .face{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .face svg{position:absolute;top:0;width:1920px;height:1080px;display:block}
+  .back{transform:rotateY(180deg);background:#e3929f}
+  .sheet.flat .pnl.l,.sheet.flat .pnl.r{display:none}
+  .sheet.flat .pnl.c{left:0;width:1920px}
+  .sheet.flat .pnl.c .face svg{left:0 !important}
+  svg{overflow:hidden}
+  #stage{touch-action:pan-y}
+  #stage button,#stage a{touch-action:pan-y}
+  #stage.panning{cursor:grabbing}
+
+  /* interactive elements placed on the drawing (1920 x 1080 coordinates) */
+  #sceneUI > *{position:absolute}
+  .hit{pointer-events:auto;cursor:pointer}
+  #sceneUI :focus-visible{outline-width:5px;outline-offset:6px}
+  #posterTk{left:820px;top:792px;width:276px;height:78px;border-radius:16px}
+  #posterTk::after{content:'';position:absolute;left:28px;right:28px;bottom:2px;height:7px;border-radius:4px;background:var(--orange);transform:scaleX(0);transform-origin:left;transition:transform .25s}
+  #posterTk:hover::after,#posterTk:focus-visible::after{transform:scaleX(1)}
+  #stageZone{left:0;top:0;width:0;height:0}
+  #stageZone > *{position:absolute}
+  #stageBtn{left:690px;top:340px;width:540px;height:262px;border-radius:26px}
+  #card{left:745px;top:150px;width:427px;height:258px;visibility:hidden;opacity:0}
+  #card > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .card-tk{position:absolute;left:20px;top:26px;width:150px;height:48px;border-radius:10px}
+  .card-tk::after{content:'';position:absolute;left:9px;width:128px;bottom:2px;height:5px;border-radius:3px;background:var(--orange);transform:scaleX(0);transform-origin:left;transition:transform .2s}
+  .card-tk:hover::after,.card-tk:focus-visible::after{transform:scaleX(1)}
+  .card-play{position:absolute;left:341px;top:151px;width:58px;height:58px;border-radius:50%}
+  .card-play svg,#playBtn svg{width:100%;height:100%;display:block;overflow:visible;transition:transform .12s}
+  .card-play:active svg,#playBtn:active svg{transform:scale(.88)}
+  #playBtn{left:914px;top:422px;width:92px;height:92px;border-radius:50%;visibility:hidden;opacity:0}
+  .i-pause{display:none}
+  [aria-pressed="true"] .i-pause{display:inline}
+  [aria-pressed="true"] .i-play{display:none}
+  #playBtn[aria-pressed="true"] .pc{fill:#fbf8ee}
+  #playBtn[aria-pressed="true"] .pi{fill:#0078ba}
+  .card-play .i-pause{fill:#fbf8ee}
+
+  /* ---------- ticket ---------- */
+  #tkLayer{position:absolute;inset:0;visibility:hidden;pointer-events:none;z-index:3}
+  #tkBox{position:absolute}
+  #tkEnter,#tkFlip{position:absolute;inset:0;transform-style:preserve-3d}
+  .tk-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .tk-back{transform:rotateY(180deg)}
+  .tk-face > svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+  .tk-flipbtn{position:absolute;pointer-events:auto;border-radius:18px;cursor:pointer}
+  .tk-add{position:absolute;pointer-events:auto;border-radius:999px;transition:transform .12s}
+  .tk-add svg{width:100%;height:100%;display:block}
+  .tk-add:hover rect{fill:#f07a1f}
+  .tk-add:active{transform:scale(.94)}
+  .tk-land .tk-flipbtn{left:.67%;top:1.41%;width:88.55%;height:74.65%}
+  .tk-land .tk-add{left:63.43%;top:57.32%;width:21.08%;height:12.11%}
+  .tk-port .tk-flipbtn{left:2.86%;top:1.69%;width:85.71%;height:91.53%}
+  .tk-port .tk-add{left:23.36%;top:83.39%;width:44.71%;height:7.29%}
+
+  /* ---------- day / night slider ---------- */
+  .tod{position:absolute;left:0;right:0;margin:0 auto;bottom:calc(35 * var(--su));width:calc(794 * var(--su));height:calc(82 * var(--su));background:var(--paper);border-radius:calc(24 * var(--su));display:grid;grid-template-columns:calc(20 * var(--su)) calc(64 * var(--su)) calc(43 * var(--su)) 1fr calc(39 * var(--su)) calc(64 * var(--su)) calc(16 * var(--su));align-items:center;z-index:5;visibility:hidden}
+  .tod-ic{width:100%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;transition:transform .12s,background .15s}
+  .tod-ic:hover{background:#efe9d6}
+  .tod-ic:active{transform:scale(.9)}
+  .tod-ic svg{width:62%;height:62%;overflow:visible}
+  .tod-sun{grid-column:2}.tod-moon{grid-column:6}
+  .tod-track{grid-column:4;position:relative;height:100%;cursor:pointer;touch-action:none;border-radius:12px}
+  .tod-track::before{content:'';position:absolute;left:0;right:0;top:50%;height:calc(6 * var(--su));min-height:4px;transform:translateY(-50%);border-radius:3px;background:#ddd8c8}
+  .tod-fill{position:absolute;left:0;top:50%;height:calc(6 * var(--su));min-height:4px;transform:translateY(-50%);border-radius:3px;background:var(--blue);width:0}
+  .tod-knob{position:absolute;top:50%;left:0;width:calc(44 * var(--su));height:calc(44 * var(--su));min-width:28px;min-height:28px;margin:0;transform:translate(-50%,-50%);border-radius:50%;background:var(--blue);border:calc(3 * var(--su)) solid var(--paper);transition:transform .12s}
+  .tod-track.drag .tod-knob{transform:translate(-50%,-50%) scale(1.14)}
+  .tod-track:focus-visible{outline-offset:2px}
+
+  /* ---------- heart bubble ---------- */
+  .chat{position:fixed;z-index:50;right:calc(38 * var(--u));bottom:calc(30 * var(--u));width:max(calc(100 * var(--u)),58px);height:max(calc(104 * var(--u)),60px);border-radius:50%}
+  .chat svg{width:100%;height:100%;display:block;overflow:visible;transition:transform .12s}
+  .chat:active svg{transform:scale(.92)}
+  .heart{transition:fill .2s}
+  .chat[aria-pressed="true"] .heart{fill:var(--pink)}
+  .fly{position:fixed;left:0;top:0;width:60px;height:30px;z-index:90;pointer-events:none}
+
+  /* ---------- mobile ---------- */
+  @media (max-width:820px){
+    .nav{height:64px}
+    .logo{left:12px;top:7px;width:92px;height:50px}
+    .nav-map{left:112px;top:10px;width:62px;height:44px;border-radius:14px}
+    .navtxt{font-size:16px}
+    .nav-tk,.nbar,.avatar{display:none}
+    .pill{left:auto;right:62px;top:12px;width:108px;height:40px}
+    .pill .navtxt{font-size:15px}
+    .badge{right:-6px;top:-6px}
+    .menu-btn{display:grid}
+    .acct{display:none!important}
+    .tod{left:12px;right:84px;margin:0;width:auto;height:60px;bottom:max(16px, env(safe-area-inset-bottom));border-radius:20px;grid-template-columns:6px 44px 10px 1fr 12px 44px 6px}
+    .tod-knob{width:30px;height:30px;border-width:3px}
+    .chat{right:12px;bottom:max(14px, env(safe-area-inset-bottom));width:62px;height:64px}
+  }
+  @media (min-width:821px){ .menu{display:none!important} }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{transition-duration:0s!important}
+  }
+</style>
+</head>
+<body>
+<header class="nav" id="nav">
+  <a class="logo ni" href="#top" data-goto="poster" aria-label="WAVES FEST, back to the poster">
+    <svg viewBox="30 26 200 108" aria-hidden="true">
+      <text x="40" y="80" font-size="57" font-weight="800" textLength="175" lengthAdjust="spacingAndGlyphs" letter-spacing="-1"><tspan style="fill:var(--lg1)">W</tspan><tspan style="fill:var(--lg2)">A</tspan><tspan style="fill:var(--lg3)">V</tspan><tspan style="fill:var(--lg4)">E</tspan><tspan style="fill:var(--lg5)">S</tspan></text>
+      <text x="68" y="125" font-size="57" font-weight="800" textLength="124" lengthAdjust="spacingAndGlyphs" letter-spacing="-1"><tspan style="fill:var(--lg6)">F</tspan><tspan style="fill:var(--lg7)">E</tspan><tspan style="fill:var(--lg8)">S</tspan><tspan style="fill:var(--lg9)">T</tspan></text>
+      <circle cx="219" cy="42" r="3.6" fill="none" style="stroke:var(--lg5)" stroke-width="1.4"/>
+    </svg>
+  </a>
+  <a class="nav-map ni" href="#map" data-goto="map" aria-label="MAP, open the festival map"><span class="hov"></span><span class="navtxt">MAP</span></a>
+  <a class="nav-tk ni" href="#tickets" data-goto="tickets" aria-label="TICKETS"><span class="navtxt">TICKETS</span></a>
+  <a class="nbar nb1 ni" href="#top" data-goto="poster" aria-label="Lineup"><i></i></a>
+  <a class="nbar nb2 ni" href="#map" data-goto="map" aria-label="Stages"><i></i></a>
+  <a class="nbar nb3 ni" href="#tickets" data-goto="tickets" aria-label="Passes"><i></i></a>
+  <a class="nbar nb4 ni" href="#finale" data-goto="finale" aria-label="About the festival"><i></i></a>
+  <button class="avatar ni" id="avatarBtn" type="button" aria-label="Your account and cart" aria-expanded="false" aria-controls="acct">
+    <svg viewBox="1629 38 52 52" aria-hidden="true"><defs><clipPath id="avClip"><circle cx="1655" cy="64" r="26"/></clipPath></defs>
+      <g clip-path="url(#avClip)"><rect x="1625" y="34" width="60" height="60" fill="#8ec3e6"/>
+        <path d="M1632,96C1634,80 1644,74 1655,74C1666,74 1676,80 1678,96Z" fill="#e56707"/>
+        <rect x="1651" y="64" width="8" height="12" fill="#eab48f"/>
+        <ellipse cx="1655" cy="58" rx="10.5" ry="12" fill="#eab48f"/>
+        <path d="M1644,56C1643,44 1650,40 1656,40C1664,40 1668,46 1666,55C1662,49 1656,48 1650,50C1647,51 1646,54 1644,56Z" fill="#7a4a2a"/></g></svg>
+  </button>
+  <a class="pill ni" id="pill" href="#tickets" data-goto="tickets" aria-label="TICKETS"><span class="bg"></span><span class="navtxt">TICKETS</span><span class="badge" id="badge" aria-hidden="true">0</span></a>
+  <button class="menu-btn ni" id="menuBtn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i><i></i><i></i></button>
+</header>
+
+<div class="panel acct" id="acct" hidden>
+  <div class="acct-head"><svg viewBox="1629 38 52 52" aria-hidden="true"><g clip-path="url(#avClip)"><rect x="1625" y="34" width="60" height="60" fill="#8ec3e6"/><path d="M1632,96C1634,80 1644,74 1655,74C1666,74 1676,80 1678,96Z" fill="#e56707"/><rect x="1651" y="64" width="8" height="12" fill="#eab48f"/><ellipse cx="1655" cy="58" rx="10.5" ry="12" fill="#eab48f"/><path d="M1644,56C1643,44 1650,40 1656,40C1664,40 1668,46 1666,55C1662,49 1656,48 1650,50C1647,51 1646,54 1644,56Z" fill="#7a4a2a"/></g></svg>
+    <div class="bars" aria-hidden="true"><i style="width:70%"></i><i style="width:45%;background:var(--gray)"></i></div></div>
+  <p class="lbl" aria-hidden="true">TICKETS</p>
+  <div class="cartbox" data-cart></div>
+</div>
+
+<div class="panel menu" id="menu" hidden>
+  <nav aria-label="Mobile">
+    <a class="mlink" href="#map" data-goto="map">MAP</a>
+    <a class="mlink" href="#tickets" data-goto="tickets">TICKETS</a>
+    <a class="mbar" href="#top" data-goto="poster" aria-label="Lineup"><i style="width:56%"></i></a>
+    <a class="mbar" href="#map" data-goto="map" aria-label="Stages"><i style="width:40%"></i></a>
+    <a class="mbar" href="#tickets" data-goto="tickets" aria-label="Passes"><i style="width:72%"></i></a>
+    <a class="mbar" href="#finale" data-goto="finale" aria-label="About the festival"><i style="width:34%"></i></a>
+  </nav>
+  <p class="lbl" aria-hidden="true">TICKETS</p>
+  <div class="cartbox" data-cart></div>
+</div>
+
+<main id="main">
+  <h1 class="sr-only">WAVES FEST</h1>
+  <section id="festival" aria-label="WAVES FEST: poster, festival map and tickets">
+    <div id="stage">
+      <div id="wrap">
+        <div id="world" class="layer" aria-hidden="true">
+          <div id="posterSheet" class="sheet"></div>
+          <div id="mapSheet" class="sheet"></div>
+        </div>
+        <svg id="ov" class="layer" viewBox="0 0 1920 1080" aria-hidden="true">
+          <g id="beacon"><circle id="bRing" cx="960" cy="471" r="12" fill="none" stroke="#fbf8ee" stroke-width="4"/><circle cx="960" cy="471" r="10" fill="#fbf8ee"/></g>
+          <g id="rings" fill="none" stroke="#fbf8ee" stroke-width="3"></g>
+        </svg>
+        <div id="sceneUI" class="layer">
+          <a id="posterTk" class="hit" href="#tickets" data-goto="tickets" aria-label="TICKETS, see the ticket"></a>
+          <div id="stageZone">
+            <button id="stageBtn" class="hit" type="button" aria-label="Main stage: show details" aria-expanded="false" aria-controls="card"></button>
+            <div id="card" role="group" aria-label="Main stage">
+              <svg viewBox="745 150 427 258" aria-hidden="true">
+                <path d="M767,150H1150Q1172,150 1172,172V360Q1172,382 1150,382H982L960,408L938,382H767Q745,382 745,360V172Q745,150 767,150Z" fill="#fbf8ee"/>
+                <text x="774" y="211" font-size="31" font-weight="700" fill="#16323a" letter-spacing="-0.3">TICKETS</text>
+                <rect x="775" y="242" width="368" height="21" fill="#bfbbaa"/><rect x="775" y="275" width="171" height="19" fill="#bfbbaa"/>
+              </svg>
+              <a class="card-tk hit" href="#tickets" data-goto="tickets" aria-label="TICKETS for the main stage"></a>
+              <button class="card-play hit playtoggle" type="button" aria-label="Play music" aria-pressed="false">
+                <svg viewBox="-29 -29 58 58" aria-hidden="true"><circle class="pc" r="29" fill="#0078ba"/><path class="pi i-play" d="M-9,-13L12,0L-9,13Z" fill="#fbf8ee"/><g class="pi i-pause" fill="#0078ba"><rect x="-10" y="-11" width="7" height="22" rx="2"/><rect x="3" y="-11" width="7" height="22" rx="2"/></g></svg>
+              </button>
+            </div>
+            <button id="playBtn" class="hit playtoggle" type="button" aria-label="Play music" aria-pressed="false">
+              <svg viewBox="-46 -46 92 92" aria-hidden="true"><circle class="pc" r="46" fill="#3d8fd0"/><path class="pi i-play" d="M-12,-19L16,0L-12,19Z" fill="#fbf8ee"/><g class="pi i-pause" fill="#0078ba"><rect x="-15" y="-17" width="10" height="34" rx="3"/><rect x="5" y="-17" width="10" height="34" rx="3"/></g></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tkLayer">
+        <div id="tkBox">
+          <div id="tkEnter">
+            <div id="tkFlip">
+              <div class="tk-face tk-front" id="tkFront">
+                <svg id="tkFrontSvg" aria-hidden="true"></svg>
+                <button class="tk-flipbtn" type="button" aria-label="Flip the ticket over"></button>
+                <button class="tk-add" id="tkAdd" type="button" aria-label="Add a ticket to the cart">
+                  <svg viewBox="0 0 313 86" aria-hidden="true"><rect width="313" height="86" rx="43" fill="#e56707"/><text x="156.5" y="55" text-anchor="middle" font-size="35" font-weight="700" fill="#fbf3e6" letter-spacing="0.5">TICKETS</text></svg>
+                </button>
+              </div>
+              <div class="tk-face tk-back" id="tkBack">
+                <svg id="tkBackSvg" aria-hidden="true"></svg>
+                <button class="tk-flipbtn" type="button" aria-label="Flip the ticket back"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tod" id="tod">
+        <button class="tod-ic tod-sun" id="todSun" type="button" aria-label="Day">
+          <svg viewBox="-20 -20 40 40" aria-hidden="true"><circle r="9" fill="#e56707"/><g fill="#e56707"><rect x="-1.6" y="-17" width="3.2" height="5" rx="1.6"/><rect x="-1.6" y="-17" width="3.2" height="5" rx="1.6" transform="rotate(45)"/><rect x="-1.6" y="-17" width="3.2" height="5" rx="1.6" transform="rotate(90)"/><rect x="-1.6" y="-17" width="3.2" height="5" rx="1.6" transform="rotate(135)"/><rect x="-1.6" y="-17" width="3.2" height="5" rx="1.6" transform="rotate(180)"/><rect x="-1.6" y="-17" width="3.2" height="5" rx="1.6" transform="rotate(225)"/><rect x="-1.6" y="-17" width="3.2" height="5" rx="1.6" transform="rotate(270)"/><rect x="-1.6" y="-17" width="3.2" height="5" rx="1.6" transform="rotate(315)"/></g></svg>
+        </button>
+        <div class="tod-track" id="todTrack" role="slider" tabindex="0" aria-label="Time of day, from day to night" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Day">
+          <div class="tod-fill" id="todFill"></div>
+          <div class="tod-knob" id="todKnob"></div>
+        </div>
+        <button class="tod-ic tod-moon" id="todMoon" type="button" aria-label="Night">
+          <svg viewBox="1289 984 40 40" aria-hidden="true"><path d="M1309,990A15,15 0 1 0 1309,1018A11.5,11.5 0 1 1 1309,990Z" fill="#16323a"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<button class="chat" id="chat" type="button" aria-label="Save WAVES FEST to your favorites" aria-pressed="false">
+  <svg viewBox="1782 946 100 104" aria-hidden="true">
+    <g id="burst"></g>
+    <circle cx="1870" cy="1038" r="9" fill="#768086"/>
+    <circle cx="1828" cy="992" r="38" style="fill:var(--chat)"/>
+    <path class="heart" id="heart" d="M1828,1008C1816,999 1810,992 1810,985C1810,978 1815,974 1820,974C1824,974 1827,976 1828,979C1829,976 1832,974 1836,974C1841,974 1846,978 1846,985C1846,992 1840,999 1828,1008Z" fill="#fbf8ee"/>
+  </svg>
+</button>
+<p class="sr-only" id="live" aria-live="polite"></p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
+<script>
+(() => {
+'use strict';
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+/* ================= palette sampled from the video (same as the replay) ================= */
+const C = {
+  cream: '#efebd8', paper: '#fbf8ee', orange: '#e56707', pink: '#e3929f', blue: '#0078ba',
+  navy: '#003948', green: '#006f5e', gray: '#bfbbaa', ink: '#16323a', deep: '#0e3346',
+  tent: '#f1ead8', tent2: '#d8d0bc', tent3: '#a39d8b', teal: '#1f8a83', skin: '#eab48f'
+};
+const DAY = {
+  sky: '#e595a0', ground: '#e594a1', path: '#efebd8', cloud: '#efecdb',
+  hA: '#0079b6', hB: '#006e88', hC: '#003b49', hD: '#066b90',
+  door: '#0877b6', arch: '#1f7cc4', arch2: '#5aadde', ringL: '#0a7ac0', ringR: '#0a7ac0',
+  win: '#0b5c55', lamp: '#12384a', nav: '#16323a',
+  lg1: '#16323a', lg2: '#16323a', lg3: '#0078ba', lg4: '#16323a', lg5: '#e56707',
+  lg6: '#e56707', lg7: '#0078ba', lg8: '#16323a', lg9: '#0078ba'
+};
+const NIGHT = {
+  sky: '#0b7bc2', ground: '#86b5d5', path: '#dddacb', cloud: '#93bce0',
+  hA: '#3f9aa3', hB: '#02675b', hC: '#083546', hD: '#00615e',
+  door: '#da8692', arch: '#ee7a2a', arch2: '#f2a7b6', ringL: '#e796a1', ringR: '#ef7a2c',
+  win: '#ec9ead', lamp: '#f3a6b5', nav: '#f6f1e2',
+  lg1: '#f6f1e2', lg2: '#e56707', lg3: '#f6f1e2', lg4: '#f6f1e2', lg5: '#eea2b6',
+  lg6: '#eea2b6', lg7: '#f6f1e2', lg8: '#e56707', lg9: '#f6f1e2'
+};
+
+const $ = id => document.getElementById(id);
+const easeCache = {};
+const ease = n => easeCache[n] || (easeCache[n] = gsap.parseEase(n));
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const prog = (t, a, b, e = 'power2.inOut') => ease(e)(clamp((t - a) / (b - a)));
+const mixC = (a, b, p) => p <= 0 ? a : p >= 1 ? b : gsap.utils.interpolate(a, b, p);
+const f2 = v => (Math.round(v * 100) / 100);
+
+/* curves sampled frame by frame from the video, smoothed with monotone Hermite */
+function mono(pts) {
+  const n = pts.length, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), d = [], m = [];
+  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+  m[0] = d[0]; m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i + 1] / d[i], h = a * a + b * b;
+    if (h > 9) { const k = 3 / Math.sqrt(h); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; }
+  }
+  return t => {
+    if (t <= xs[0]) return ys[0];
+    if (t >= xs[n - 1]) return ys[n - 1];
+    let i = 0; while (t > xs[i + 1]) i++;
+    const h = xs[i + 1] - xs[i], s = (t - xs[i]) / h, s2 = s * s, s3 = s2 * s;
+    return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (3 * s2 - 2 * s3) * ys[i + 1] + (s3 - s2) * h * m[i + 1];
+  };
+}
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ================= small flat shapes ================= */
+// cloud / bush: half-ellipses on a flat base
+const cloudPath = (base, bumps) => bumps.map(([cx, rx, ry]) => `M${cx - rx},${base}A${rx},${ry} 0 0 1 ${cx + rx},${base}Z`).join('');
+const rect = (x, y, w, h, fill, extra = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" ${extra}/>`;
+const star = r => `M0,${-r}L${0.2 * r},${-0.2 * r}L${r},0L${0.2 * r},${0.2 * r}L0,${r}L${-0.2 * r},${0.2 * r}L${-r},0L${-0.2 * r},${-0.2 * r}Z`;
+
+/* ================= POSTER (home page) ================= */
+function skyline() {
+  return `
+  <path d="${cloudPath(652, [[-10, 85, 86], [80, 70, 80], [160, 66, 60], [235, 58, 40], [290, 30, 20]])}" fill="${C.navy}"/>
+  <path d="${cloudPath(652, [[1660, 58, 46], [1755, 72, 76], [1855, 72, 66], [1935, 46, 46]])}" fill="${C.green}"/>
+  ${rect(307, 487, 43, 165, C.pink)}
+  <path d="M350,487L373,507V652H350Z" fill="${C.navy}"/>
+  ${rect(395, 487, 233, 20, C.blue)}${rect(605, 487, 23, 131, C.blue)}
+  ${rect(417, 507, 188, 111, C.navy)}${rect(373, 618, 255, 34, C.orange)}
+  <path d="M742.7,612A222,222 0 0 1 1175.3,612Z" fill="${C.cream}"/>
+  <path d="M775.7,612A190,190 0 0 1 1142.3,612Z" fill="${C.blue}"/>
+  <path d="M797,612C805,585 815,563 829,547C860,574 890,596 928,612Z" fill="${C.navy}"/>
+  <path d="M742,407L782,409C806,424 816,470 815,550C800,522 776,502 742,496Z" fill="${C.blue}"/>
+  <path d="M1175,407L1150,411C1122,430 1107,478 1106,550C1124,508 1148,492 1175,486Z" fill="${C.pink}"/>
+  ${rect(687, 407, 55, 245, C.pink)}${rect(1175, 407, 57, 245, C.blue)}${rect(742, 612, 433, 40, C.pink)}
+  ${rect(1290, 487, 233, 20, C.pink)}${rect(1290, 507, 23, 145, C.pink)}${rect(1313, 507, 187, 111, C.blue)}
+  ${rect(1500, 507, 23, 111, C.pink)}${rect(1290, 618, 255, 34, C.pink)}
+  <path d="M1545,507L1570,487V652H1545Z" fill="${C.navy}"/>${rect(1570, 487, 42, 165, C.orange)}`;
+}
+
+/* ================= FESTIVAL MAP ================= */
+const R = rng(199002);
+const pick = a => a[Math.floor(R() * a.length)];
+const TOPS = [C.orange, C.blue, C.pink, '#2a9a8f', '#f6efe0', C.ink, '#e8a8b6', C.orange, C.blue];
+const LEGS = [C.ink, C.blue, C.orange, '#e8a8b6', C.ink, '#f3ece0'];
+const SKIN = ['#f2bc98', '#d99668', '#a8683f', '#e9a77d', '#f5c9a8'];
+const HAIR = ['#16323a', '#5a2e1a', '#16323a', '#c45a12', '#2b1d18', '#16323a'];
+let popRank = 0;
+function person(x, y, s = 1, t0 = null) {
+  const dress = R() < 0.45, top = pick(TOPS), leg = pick(LEGS), skin = pick(SKIN), hair = pick(HAIR), long = R() < 0.5;
+  const pt = t0 == null ? 4.3 + R() * 0.9 : t0;
+  let g = `<g class="pp" data-x="${x}" data-y="${y}" data-s="${s}" data-ph="${R().toFixed(3)}" data-t="${pt.toFixed(3)}" transform="translate(${x} ${y}) scale(${s})">`;
+  g += `<rect x="-4.3" y="-27" width="3.3" height="27" rx="1.3" fill="${leg}"/><rect x="1" y="-27" width="3.3" height="27" rx="1.3" fill="${leg}"/>`;
+  if (long) g += `<rect x="-7.2" y="-64" width="14.4" height="${dress ? 21 : 17}" rx="5" fill="${hair}"/>`;
+  g += `<rect x="-9.6" y="-50" width="3.2" height="22" rx="1.6" fill="${skin}"/><rect x="6.4" y="-50" width="3.2" height="22" rx="1.6" fill="${skin}"/>`;
+  g += dress ? `<path d="M-5.8,-52H5.8L10.5,-21H-10.5Z" fill="${top}"/>` : `<rect x="-6.6" y="-52" width="13.2" height="27" rx="3" fill="${top}"/>`;
+  g += `<rect x="-2" y="-57" width="4" height="6" fill="${skin}"/><circle cx="0" cy="-61.5" r="6.8" fill="${skin}"/>`;
+  g += `<path d="M-7,-61A7,7 0 0 1 7,-61Q0,-64.5 -7,-61Z" fill="${hair}"/></g>`;
+  return g;
+}
+function crowd() {
+  const rows = [[668, 556, 1366], [693, 560, 1356], [718, 590, 1338], [743, 630, 1305], [768, 690, 1262], [792, 770, 1200], [815, 850, 1110], [836, 905, 1010]];
+  const pts = [];
+  for (const [y, a, b] of rows) {
+    const n = Math.max(2, Math.round((b - a) / 45));
+    for (let i = 0; i < n; i++) pts.push([a + (i + 0.5) * (b - a) / n + (R() - 0.5) * 22, y + (R() - 0.5) * 14]);
+  }
+  pts.sort((p, q) => p[1] - q[1]);
+  return pts.map(([x, y]) => person(f2(x), f2(y), 1.1)).join('');
+}
+// element that pops in while the map unfolds
+const pop = (t, ox, oy, inner, mode = 'pop') => `<g class="pop" data-t="${t}" data-ox="${ox}" data-oy="${oy}" data-m="${mode}">${inner}</g>`;
+function tree(cx, cy, rx, ry, cl, cr, trunk) {
+  return `<rect x="${cx - 2.5}" y="${cy + ry - 8}" width="5" height="${trunk}" fill="#23423f"/>
+  <path d="M${cx},${cy - ry}A${rx},${ry} 0 0 0 ${cx},${cy + ry}Z" fill="${cl}"/><path d="M${cx},${cy - ry}A${rx},${ry} 0 0 1 ${cx},${cy + ry}Z" fill="${cr}"/>`;
+}
+function wheel(x, y, r) { return `<circle cx="${x}" cy="${y}" r="${r}" fill="${C.deep}"/><circle cx="${x}" cy="${y}" r="${r * 0.38}" fill="#e9e2cf"/>`; }
+function umbrella(cx, top, rx, ry, base) {
+  let s = `<rect x="${cx - 1.5}" y="${top + ry - 2}" width="3" height="${base - top - ry + 2}" fill="#5b4a3a"/>`;
+  const n = 6;
+  for (let i = 0; i < n; i++) {
+    const x0 = cx - rx + i * 2 * rx / n, x1 = x0 + 2 * rx / n;
+    s += `<path d="M${cx},${top}L${f2(x0)},${top + ry}L${f2(x1)},${top + ry}Z" fill="${i % 2 ? '#f6efe0' : C.orange}"/>`;
+    s += `<path d="M${f2(x0)},${top + ry}A${f2(rx / n)},${f2(rx / n * 0.6)} 0 0 0 ${f2(x1)},${top + ry}Z" fill="${i % 2 ? '#f6efe0' : C.orange}"/>`;
+  }
+  return s;
+}
+function mapMarkup() {
+  popRank = 0;
+  const truss = (x, y, w, h, vertical) => {
+    let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#12384a" stroke-width="4"/>`;
+    let p = '';
+    if (vertical) { for (let yy = y, k = 0; yy <= y + h; yy += 14, k++) p += `${k ? 'L' : 'M'}${k % 2 ? x + w : x},${yy}`; }
+    else { for (let xx = x, k = 0; xx <= x + w; xx += 16, k++) p += `${k ? 'L' : 'M'}${xx},${k % 2 ? y + h : y}`; }
+    return s + `<path d="${p}" fill="none" stroke="#12384a" stroke-width="3"/>`;
+  };
+  const speaker = (x, side) => {
+    let s = rect(x, 390, 53, 202, '#11384a');
+    for (const y of [420, 467, 515, 562]) s += `<circle cx="${x + 26.5}" cy="${y}" r="15" fill="none" stroke="var(--ring${side})" stroke-width="6"/>`;
+    s += `<circle class="lamp" cx="${x + 26.5}" cy="420" r="9" fill="var(--lamp)"/>`;
+    return s;
+  };
+  let deckZ = '';
+  for (let xx = 752, k = 0; xx <= 1168; xx += 21, k++) deckZ += `${k ? 'L' : 'M'}${xx},${k % 2 ? 586 : 558}`;
+  // stars (night)
+  const STARS = [[527, 78, 15], [338, 112, 8], [145, 157, 13], [433, 236, 14], [648, 228, 8], [520, 310, 9], [242, 352, 8], [790, 272, 7], [728, 88, 7],
+    [1192, 247, 9], [1325, 177, 14], [1365, 322, 8], [1510, 318, 14], [1540, 118, 12], [1625, 196, 13], [1757, 116, 9], [1815, 188, 8], [1255, 93, 7],
+    [90, 330, 7], [880, 140, 6], [1050, 120, 6], [1880, 300, 8], [300, 30, 6], [1690, 40, 7]];
+  const stars = STARS.map(([x, y, r], i) => `<path class="star" data-x="${x}" data-y="${y}" data-i="${i}" d="${star(r)}" fill="#f6f1e2" transform="translate(${x} ${y}) scale(0)"/>`).join('');
+  const beam = (cls, px) => `<path class="${cls}" d="M-16,0L16,0L160,-1250L-160,-1250Z" fill="#ffffff" opacity="0" transform="translate(${px} 380)"/>`;
+  const pbeam = (cls, px, py, len, w) => `<path class="${cls}" d="M0,-8L0,8L${len},${w}L${len},${-w}Z" fill="#f7a9bb" opacity="0" transform="translate(${px} ${py})"/>`;
+  return `
+  <rect width="1920" height="1080" fill="var(--sky)"/>
+  <g class="mcl" data-k="1"><path d="${cloudPath(183, [[330, 32, 18], [402, 62, 64], [472, 50, 40], [540, 44, 30], [600, 30, 12]])}" fill="var(--cloud)"/></g>
+  <g class="mcl" data-k="-0.8"><path d="${cloudPath(300, [[0, 72, 92], [100, 62, 62], [182, 56, 40], [252, 40, 18]])}" fill="var(--cloud)"/></g>
+  <g class="mcl" data-k="-1"><path d="${cloudPath(247, [[1488, 30, 14], [1560, 62, 46], [1662, 82, 92], [1782, 92, 134], [1882, 72, 110], [1935, 40, 80]])}" fill="var(--cloud)"/></g>
+  <g class="mcl" data-k="0.7"><path d="${cloudPath(413, [[350, 24, 12], [412, 52, 46], [472, 40, 24], [506, 20, 8]])}" fill="var(--cloud)"/></g>
+  <g class="mcl" data-k="1.2"><path d="${cloudPath(440, [[1290, 30, 14], [1362, 56, 40], [1442, 62, 60], [1512, 46, 30], [1556, 20, 10]])}" fill="var(--cloud)"/></g>
+  <g class="stars">${stars}</g>
+  <circle class="moon" cx="960" cy="560" r="92" fill="#f7cb51" opacity="0"/>
+  ${beam('beamL', 800)}${beam('beamR', 1120)}
+  ${pop(4.5, 0, 0, `<path d="M0,620V415C110,392 250,384 370,410C480,435 600,505 730,620Z" fill="var(--hB)"/>
+     <path d="M0,620V393C80,384 180,386 250,400C330,418 350,470 300,522C250,572 150,602 0,620Z" fill="var(--hA)"/>
+     <path d="M0,620V468C60,462 130,475 178,500V620Z" fill="var(--hC)"/>`, 'rise')}
+  ${pop(4.56, 0, 0, `<path d="M1200,620C1330,540 1480,450 1640,398C1740,366 1840,360 1920,368V620Z" fill="var(--hC)"/>
+     <path d="M1205,612C1300,545 1420,478 1530,452C1580,442 1620,446 1640,452C1530,490 1400,548 1290,620Z" fill="var(--hD)"/>`, 'rise')}
+  <path d="M0,594C400,586 800,590 960,592C1300,590 1600,586 1920,580V1080H0Z" fill="var(--ground)"/>
+  <g fill="var(--path)">
+    <path d="M548,594H1372C1396,630 1392,680 1352,712C1290,762 1150,812 1068,846C1058,920 1068,1000 1080,1080H866C880,1000 882,920 862,858C760,826 640,780 590,735C540,690 532,640 548,594Z"/>
+    <path d="M0,708C150,703 330,688 460,640L560,604L585,692C450,724 300,752 0,772Z"/>
+    <path d="M300,652L560,618L572,662L340,694Z"/>
+    <path d="M1330,690C1450,688 1600,690 1920,676V742C1700,748 1500,752 1320,764Z"/>
+    <path d="M1380,652H1840L1850,700L1372,706Z"/>
+    <path d="M1230,782C1320,752 1420,800 1530,812L1532,858C1410,850 1310,834 1206,848Z"/>
+    <path d="M0,872C140,902 232,1000 304,1080H232C170,1010 100,954 0,934Z"/>
+  </g>
+  <path d="M210,795C330,780 470,800 560,790C680,780 790,820 800,880C810,940 720,990 600,995C500,1000 420,985 360,960C300,940 220,920 160,900C120,885 125,840 150,820C170,805 190,798 210,795Z" fill="${C.blue}" stroke="var(--path)" stroke-width="52" stroke-linejoin="round"/>
+  <path d="M210,795C330,780 470,800 560,790C680,780 790,820 800,880C810,940 720,990 600,995C500,1000 420,985 360,960C300,940 220,920 160,900C120,885 125,840 150,820C170,805 190,798 210,795Z" fill="#0177b8"/>
+  <g fill="none" stroke="#bfe0f2" stroke-width="2.5" stroke-linecap="round">
+    <path d="M240,842q12,-7 24,0t24,0t24,0t24,0"/><path d="M298,876q10,-6 20,0t20,0t20,0"/><path d="M440,906q10,-6 20,0t20,0t20,0"/><path d="M530,942q11,-6 22,0t22,0t22,0"/>
+  </g>
+  ${pop(4.9, 0, 0, tree(115, 545, 36, 56, '#0d3a45', '#0d3a45', 80) + tree(74, 580, 20, 46, '#1d7a6c', '#1d7a6c', 50) + tree(535, 555, 24, 46, '#1d7a6c', '#0f5c52', 55) + tree(1365, 552, 21, 46, '#1d7a6c', '#1d7a6c', 60))}
+  ${pop(4.95, 1850, 560, `<path d="${cloudPath(568, [[1800, 38, 40], [1860, 50, 62], [1925, 40, 50]])}" fill="#0f6a5f"/>`)}
+  ${pop(4.28, 300, 655, `
+    <path d="M85,655C120,610 150,575 175,555C205,520 225,470 232,442C250,490 300,525 330,532C352,505 375,470 388,447C405,490 440,530 470,560C490,590 505,620 520,655Z" fill="${C.tent}"/>
+    <path d="M232,442C228,500 215,560 205,655H182C200,580 222,500 232,442Z" fill="${C.tent2}"/>
+    <path d="M388,447C392,520 410,600 425,655H446C425,590 400,520 388,447Z" fill="${C.tent2}"/>
+    <path d="M85,655C120,610 150,575 175,555L190,560C165,590 140,620 118,655Z" fill="${C.tent2}"/>
+    <path d="M235,655C238,606 270,586 307,586C344,586 377,606 380,655Z" fill="var(--door)"/>
+    <path d="M262,655L292,610L320,655Z" fill="${C.deep}"/>
+    <path d="M420,655L440,598L460,655Z" fill="${C.deep}"/>
+    <rect x="230.5" y="400" width="3" height="44" fill="#7e7a6e"/><rect x="386.5" y="410" width="3" height="40" fill="#7e7a6e"/>
+    <path d="M234,401L264,407L234,415Z" fill="${C.blue}"/><path d="M390,411L426,416L390,428Z" fill="${C.orange}"/>`)}
+  ${pop(4.33, 1610, 660, `
+    <path d="M1400,660C1430,615 1455,585 1475,565C1500,530 1522,475 1530,445C1548,490 1600,525 1622,532C1645,505 1672,470 1685,440C1700,485 1740,530 1770,560C1790,590 1805,625 1820,660Z" fill="${C.tent}"/>
+    <path d="M1530,445C1526,505 1512,585 1500,660H1480C1498,585 1520,505 1530,445Z" fill="${C.tent2}"/>
+    <path d="M1685,440C1690,515 1702,590 1716,660H1696C1690,590 1684,515 1685,440Z" fill="${C.tent2}"/>
+    <path d="M1420,660C1425,612 1450,590 1470,590C1495,590 1515,612 1520,660Z" fill="${C.deep}"/>
+    <path d="M1540,660C1545,610 1570,588 1595,588C1625,588 1648,610 1652,660Z" fill="var(--door)"/>
+    <path d="M1700,660C1705,615 1725,595 1750,595C1775,595 1795,615 1800,660Z" fill="${C.tent3}"/>
+    <rect x="1528.5" y="402" width="3" height="45" fill="#7e7a6e"/><rect x="1683.5" y="398" width="3" height="44" fill="#7e7a6e"/>
+    <path d="M1532,403L1566,409L1532,418Z" fill="${C.pink}"/><path d="M1687,399L1722,405L1687,414Z" fill="${C.orange}"/>`)}
+  ${pop(4.18, 960, 592, `${truss(750, 368, 28, 186, true)}${truss(1140, 368, 28, 186, true)}${truss(778, 368, 362, 26, false)}
+    <rect x="748" y="552" width="424" height="40" fill="#11384a"/><path d="${deckZ}" fill="none" stroke="#2c6f88" stroke-width="3"/>`)}
+  ${pop(4.45, 960, 592, speaker(695, 'L') + speaker(1172, 'R'))}
+  ${pop(4.6, 960, 548, `<rect x="818" y="395" width="284" height="153" fill="#10394a"/>
+    <rect class="scrO" x="818" y="548" width="284" height="0" fill="${C.orange}"/>
+    <rect class="scrB" x="818" y="548" width="284" height="0" fill="${C.blue}"/>
+    <rect class="scrN" x="818" y="395" width="284" height="153" fill="#e796a1" opacity="0"/>`)}
+  ${pop(4.55, 0, 0, `<path d="M774,548C778,430 860,346 960,342C1060,346 1140,420 1150,536" fill="none" stroke="var(--arch)" stroke-width="34" stroke-linecap="butt"/>
+    <path d="M790,548C795,450 865,368 960,362C1035,366 1100,410 1124,470" fill="none" stroke="var(--arch2)" stroke-width="9"/>`, 'dash')}
+  <rect class="lampL" x="782" y="508" width="16" height="12" rx="3" fill="#dfe6ea"/><rect class="lampR" x="1122" y="508" width="16" height="12" rx="3" fill="#dfe6ea"/>
+  ${pop(4.9, 0, 0, person(310, 652, 0.96, 4.9) + person(338, 648, 0.96, 4.95) + person(440, 652, 0.96, 5.0) + person(484, 652, 0.96, 5.05))}
+  ${pop(4.95, 0, 0, person(1440, 650, 0.96, 4.95) + person(1466, 650, 0.96, 5.0) + person(1612, 655, 0.96, 5.05) + person(1636, 655, 0.96, 5.1) + person(1590, 640, 0.9, 5.12))}
+  ${crowd()}
+  ${person(488, 742, 1, 4.85)}${person(1360, 690, 0.95, 5.0)}${person(826, 912, 1, 5.05)}${person(1462, 908, 1, 5.2)}${person(1526, 905, 1, 5.22)}
+  ${pop(4.62, 220, 752, `${rect(105, 658, 158, 94, C.orange, 'rx="6"')}${rect(122, 673, 126, 40, '#f6efe0', 'rx="6"')}
+    <ellipse cx="150" cy="693" rx="18" ry="9" fill="#3b8fd0"/><ellipse cx="186" cy="693" rx="16" ry="8" fill="#f2a35e"/><ellipse cx="222" cy="693" rx="18" ry="9" fill="#e8a0b0"/>
+    <path d="M263,680H312C322,680 330,692 335,705V752H263Z" fill="${C.orange}"/><path d="M272,690H310C318,690 323,700 326,712H272Z" fill="${C.deep}"/>
+    ${rect(105, 740, 230, 12, '#c85a06')}${wheel(160, 754, 17)}${wheel(292, 754, 17)}`)}
+  ${pop(4.7, 1000, 790, `<path d="${cloudPath(782, [[460, 30, 24], [500, 38, 36], [540, 30, 22]])}" fill="#0d3a45"/><path d="${cloudPath(783, [[478, 26, 16], [520, 26, 20]])}" fill="#1d7a6c"/>
+    <path d="${cloudPath(832, [[680, 22, 20], [712, 30, 28], [742, 22, 14]])}" fill="#0f5c52"/><path d="${cloudPath(806, [[150, 18, 12], [176, 24, 18]])}" fill="#0f5c52"/>
+    <path d="${cloudPath(936, [[130, 22, 18], [160, 30, 28], [190, 22, 14]])}" fill="#0d3a45"/><path d="${cloudPath(872, [[52, 28, 28], [90, 32, 40], [120, 22, 18]])}" fill="#1d7a6c"/>`)}
+  ${pop(4.95, 700, 900, `<path d="M640,884H762C754,904 736,916 700,916C664,916 648,904 640,884Z" fill="${C.orange}"/><path d="M660,884H740C734,893 720,898 700,898C680,898 666,893 660,884Z" fill="#f6efe0"/>
+    <path d="M641,885C636,870 640,860 648,852" fill="none" stroke="${C.orange}" stroke-width="5" stroke-linecap="round"/>`)}
+  ${pop(5.1, 50, 840, tree(52, 742, 38, 86, C.deep, '#1d7a6c', 100))}
+  ${pop(5.15, 1840, 690, tree(1838, 598, 32, 62, C.deep, '#1d7a6c', 95))}
+  ${pop(5.2, 1845, 955, tree(1845, 866, 38, 86, C.deep, '#1d7a6c', 90))}
+  ${pop(4.4, 1700, 895, `<path d="M1505,895L1565,775L1690,700H1920V895Z" fill="#ebe5d4"/><path d="M1690,700L1792,895H1920V700Z" fill="#d6cfbc"/>
+    <path d="M1690,700L1792,895" stroke="#a39d8b" stroke-width="3"/>
+    ${rect(1525, 800, 148, 82, C.orange)}${rect(1542, 818, 114, 64, '#c85a06')}
+    ${Array.from({ length: 8 }, (_, i) => `${rect(1512 + i * 21.25, 778, 21.25, 24, i % 2 ? '#f6efe0' : C.orange)}<path d="M${1512 + i * 21.25},801a10.625,9 0 0 0 21.25,0Z" fill="${i % 2 ? '#f6efe0' : C.orange}"/>`).join('')}
+    <g stroke="#f6efe0" stroke-width="3"><path d="M1548,846H1586M1554,846L1550,884M1580,846L1584,884M1600,850H1640M1606,850L1602,886M1634,850L1638,886"/></g>`)}
+  ${pop(4.72, 1160, 935, `<rect x="1070" y="872" width="96" height="14" rx="4" fill="#f2a35e"/><circle cx="1096" cy="866" r="7" fill="#d99668"/><circle cx="1140" cy="864" r="7" fill="#f2bc98"/>
+    ${rect(1065, 886, 116, 44, C.blue, 'rx="3"')}<path d="M1180,930V868C1180,862 1185,858 1192,858H1228C1238,858 1246,872 1252,890L1262,895V930Z" fill="${C.blue}"/>
+    <path d="M1190,868H1226C1232,868 1238,880 1240,892H1190Z" fill="#9cc8ea"/>${wheel(1100, 934, 15)}${wheel(1226, 934, 15)}`)}
+  ${pop(4.78, 1120, 880, umbrella(1120, 812, 48, 26, 880))}
+  ${pop(4.84, 1200, 872, umbrella(1200, 806, 40, 22, 872))}
+  ${pop(5.12, 1420, 812, `${rect(1340, 732, 92, 80, '#f2ebd9', 'rx="5"')}${rect(1350, 742, 70, 43, C.deep, 'rx="3"')}
+    <path d="M1432,812V748H1478C1490,748 1498,760 1505,775V812Z" fill="${C.orange}"/><path d="M1442,756H1475C1482,756 1488,765 1492,776H1442Z" fill="${C.deep}"/>
+    ${rect(1358, 722, 52, 10, C.orange, 'rx="3"')}${rect(1440, 724, 58, 10, C.blue, 'rx="3"')}${wheel(1376, 814, 14)}${wheel(1470, 814, 14)}`)}
+  ${pop(5.2, 1410, 998, `<path d="M1320,998V955C1320,945 1328,940 1338,940H1365L1385,918H1450C1460,918 1468,925 1475,940L1490,945C1498,948 1502,955 1502,965V998Z" fill="${C.orange}"/>
+    <path d="M1372,942L1388,925H1415V942Z" fill="${C.deep}"/><path d="M1422,925H1448C1455,925 1460,932 1465,942H1422Z" fill="${C.deep}"/>
+    ${rect(1330, 952, 40, 6, '#f6efe0')}${rect(1330, 962, 40, 6, C.pink)}${wheel(1360, 998, 16)}${wheel(1468, 998, 16)}`)}
+  ${pop(5.26, 1398, 918, umbrella(1398, 860, 48, 26, 918))}
+  ${pop(5.3, 1640, 1000, `<path d="M1520,1000V940C1520,925 1530,912 1545,905L1580,898H1755C1762,898 1766,903 1766,910V1000Z" fill="#f2ebd9"/>
+    <path d="M1535,940L1548,915L1590,912V940Z" fill="#9cc8ea"/>${rect(1610, 912, 145, 33, 'var(--win)', 'rx="4"')}
+    ${rect(1520, 966, 246, 5, C.orange)}${wheel(1570, 1000, 17)}${wheel(1712, 1000, 17)}`)}
+  ${pop(4.75, 140, 1080, `<path d="${cloudPath(1090, [[30, 90, 130], [150, 80, 92], [262, 50, 46]])}" fill="${C.deep}"/><path d="${cloudPath(1092, [[-10, 70, 80], [104, 70, 60], [200, 46, 36]])}" fill="#0f6a5f"/>`)}
+  ${pop(4.8, 1800, 1080, `<path d="${cloudPath(1090, [[1640, 60, 60], [1725, 80, 84], [1830, 72, 100], [1920, 60, 76]])}" fill="${C.deep}"/><path d="${cloudPath(1092, [[1700, 50, 40], [1880, 60, 60]])}" fill="#0f6a5f"/>`)}
+  ${pbeam('pbL', 721, 420, -560, 150)}${pbeam('pbR', 1198, 420, 560, 150)}
+  <path class="dbL" d="M-10,0L10,0L90,330L-90,330Z" fill="#f7a9bb" opacity="0" transform="translate(790 518)"/>
+  <path class="dbR" d="M-10,0L10,0L90,330L-90,330Z" fill="#f7a9bb" opacity="0" transform="translate(1130 518)"/>`;
+}
+
+/* ================= POSTER: same shapes as the replay, bars tagged for the entrance ================= */
+const LB_LAND = [
+  [46, 698, 878, 54, C.orange, 'l'], [978, 698, 894, 54, C.pink, 'r'],
+  [46, 785, 636, 55, C.orange, 'l'], [1236, 785, 636, 55, C.pink, 'r'],
+  [46, 872, 532, 55, C.pink, 'l'], [1236, 872, 636, 55, C.orange, 'r'],
+  [46, 982, 212, 55, C.pink, 'l'], [316, 982, 563, 55, C.orange, 'l'], [990, 982, 882, 55, C.orange, 'r']
+];
+let LB = LB_LAND;
+function posterMarkup() {
+  return `
+  ${rect(0, 0, 1920, 1080, C.cream)}
+  <g class="pcl" data-k="1"><path d="${cloudPath(233, [[240, 34, 24], [300, 50, 52], [370, 64, 83], [455, 52, 46], [530, 42, 24], [576, 22, 10]])}" fill="${C.pink}"/></g>
+  <g class="pcl" data-k="-0.7"><path d="${cloudPath(446, [[10, 70, 106], [110, 56, 70], [182, 52, 48], [255, 46, 30], [316, 26, 12]])}" fill="${C.pink}"/></g>
+  <g class="pcl" data-k="0.6"><path d="${cloudPath(200, [[1338, 28, 14], [1392, 40, 30], [1440, 48, 42], [1496, 32, 18]])}" fill="${C.pink}"/></g>
+  <g class="pcl" data-k="-1"><path d="${cloudPath(383, [[1418, 30, 18], [1490, 66, 58], [1610, 88, 112], [1755, 108, 155], [1880, 84, 128], [1935, 30, 100]])}" fill="${C.pink}"/>
+    <rect x="1668" y="378" width="68" height="40" rx="12" fill="${C.pink}"/></g>
+  <g class="psun"><circle cx="959" cy="491" r="361" fill="${C.orange}"/></g>
+  ${rect(0, 652, 1920, 428, C.cream)}
+  ${skyline()}
+  ${LB_LAND.map(([x, y, w, h, f]) => `<rect class="lb" x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}"/>`).join('')}
+  <g class="ptx">${rect(735, 883, 449, 23, C.gray)}${rect(735, 918, 257, 23, C.gray)}
+  <text x="958" y="848" text-anchor="middle" font-size="60" font-weight="700" fill="${C.ink}" letter-spacing="-0.6">TICKETS</text></g>`;
+}
+
+// portrait screen: the same poster recomposed in the visible window (x0 -> x0 + wv), program stacked
+function posterPortrait(wv) {
+  const x0 = 960 - wv / 2, f = clamp(wv / 950, 0.3, 1), m = 0.05 * wv, g = 0.035 * wv, k = clamp(wv / 560, 0.8, 1.6);
+  const cl = (base, xL, bumps) => `<path d="${cloudPath(base, bumps.map(([dx, rx, ry]) => [f2(xL + dx * k), f2(rx * k), f2(ry * k)]))}" fill="${C.pink}"/>`;
+  const rows = [[636, [[0.55, C.orange], [0.45, C.pink]]], [690, [[0.38, C.orange], [0.62, C.pink]]],
+    [884, [[0.45, C.pink], [0.55, C.orange]]], [938, [[0.62, C.orange], [0.38, C.pink]]], [992, [[0.2, C.pink], [0.34, C.orange], [0.46, C.orange]]]];
+  const bars = [];
+  for (const [y, parts] of rows) {
+    const free = wv - 2 * m - g * (parts.length - 1); let x = x0 + m;
+    parts.forEach(([fr, col], i) => { const w = free * fr; bars.push([f2(x), y, f2(w), 40, col, i === parts.length - 1 && i > 0 ? 'r' : 'l']); x += w + g; });
+  }
+  const markup = `
+  ${rect(0, 0, 1920, 1080, C.cream)}
+  <g class="pcl" data-k="0.8">${cl(262, x0 + 0.03 * wv, [[0, 22, 14], [40, 34, 30], [86, 30, 20], [118, 14, 6]])}</g>
+  <g class="pcl" data-k="-0.6">${cl(176, x0 + 0.6 * wv, [[0, 18, 10], [30, 26, 22], [64, 22, 14], [88, 10, 5]])}</g>
+  <g class="pcl" data-k="1">${cl(372, x0 + 0.74 * wv, [[0, 26, 16], [44, 40, 40], [96, 34, 26], [130, 20, 8]])}</g>
+  <g transform="translate(960 600) scale(${f2(f)}) translate(-959 -652)">
+    <g class="pcl" data-k="-1"><path d="${cloudPath(383, [[1418, 30, 18], [1490, 66, 58], [1610, 88, 112], [1755, 108, 155], [1880, 84, 128], [1935, 30, 100]])}" fill="${C.pink}"/></g>
+    <g class="pcl" data-k="1"><path d="${cloudPath(446, [[10, 70, 106], [110, 56, 70], [182, 52, 48], [255, 46, 30], [316, 26, 12]])}" fill="${C.pink}"/></g>
+    <g class="psun"><circle cx="959" cy="491" r="361" fill="${C.orange}"/></g>
+    ${rect(-400, 652, 2720, 2400, C.cream)}
+    ${skyline()}
+  </g>
+  ${bars.map(([x, y, w, h, c]) => `<rect class="lb" x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`).join('')}
+  <g class="ptx">${rect(f2(960 - 0.31 * wv), 806, f2(0.62 * wv), 18, C.gray)}${rect(f2(960 - 0.31 * wv), 834, f2(0.36 * wv), 18, C.gray)}
+  <text x="960" y="786" text-anchor="middle" font-size="56" font-weight="700" fill="${C.ink}" letter-spacing="-0.6">TICKETS</text></g>`;
+  return { markup, bars, tk: [820, 728, 280, 76] };
+}
+
+/* ================= TICKET: front / back, landscape (desktop) and portrait (phone) ================= */
+function tPathLand(px, bigL, bigR) {
+  const L = 300, Rr = 1615, T = 310, B = 840, rc = 16;
+  const small = [345, 380, 415, 450, 485, 665, 700, 735, 770, 805];
+  const bR = small.map(y => [y, 9]).concat([[575, bigR]]).sort((a, b) => a[0] - b[0]);
+  const bL = small.map(y => [y, 9]).concat([[575, bigL]]).sort((a, b) => a[0] - b[0]);
+  let d = `M${L + rc},${T}H${px - 30}A30,30 0 0 0 ${px + 30},${T}H${Rr - rc}Q${Rr},${T} ${Rr},${T + rc}`;
+  for (const [cy, r] of bR) d += `V${cy - r}A${r},${r} 0 0 0 ${Rr},${cy + r}`;
+  d += `V${B - rc}Q${Rr},${B} ${Rr - rc},${B}H${px + 30}A30,30 0 0 0 ${px - 30},${B}H${L + rc}Q${L},${B} ${L},${B - rc}`;
+  for (const [cy, r] of bL.slice().reverse()) d += `V${cy + r}A${r},${r} 0 0 0 ${L},${cy - r}`;
+  return d + `V${T + rc}Q${L},${T} ${L + rc},${T}Z`;
+}
+function tPathPort(py, bigT, bigB) {
+  const L = 40, Rr = 640, T = 40, B = 1120, rc = 16;
+  const small = [75, 110, 145, 180, 215, 465, 500, 535, 570, 605];
+  const bT = small.map(x => [x, 9]).concat([[340, bigT]]).sort((a, b) => a[0] - b[0]);
+  const bB = small.map(x => [x, 9]).concat([[340, bigB]]).sort((a, b) => a[0] - b[0]);
+  let d = `M${L + rc},${T}`;
+  for (const [cx, r] of bT) d += `H${cx - r}A${r},${r} 0 0 0 ${cx + r},${T}`;
+  d += `H${Rr - rc}Q${Rr},${T} ${Rr},${T + rc}V${py - 30}A30,30 0 0 0 ${Rr},${py + 30}V${B - rc}Q${Rr},${B} ${Rr - rc},${B}`;
+  for (const [cx, r] of bB.slice().reverse()) d += `H${cx + r}A${r},${r} 0 0 0 ${cx - r},${B}`;
+  return d + `H${L + rc}Q${L},${B} ${L},${B - rc}V${py + 30}A30,30 0 0 0 ${L},${py - 30}V${T + rc}Q${L},${T} ${L + rc},${T}Z`;
+}
+const wavesWord = (x, y, size, l1, l2, cols1, cols2, gap) => `
+  <text x="${x}" y="${y}" font-size="${size}" font-weight="800" letter-spacing="-3" textLength="${l1}" lengthAdjust="spacingAndGlyphs">${'WAVES'.split('').map((c, i) => `<tspan fill="${cols1[i]}">${c}</tspan>`).join('')}</text>
+  <text x="${x}" y="${y + gap}" font-size="${size}" font-weight="800" letter-spacing="-3" textLength="${l2}" lengthAdjust="spacingAndGlyphs">${'FEST'.split('').map((c, i) => `<tspan fill="${cols2[i]}">${c}</tspan>`).join('')}</text>`;
+const FRONT1 = [C.ink, C.orange, C.ink, C.teal, C.orange], FRONT2 = [C.orange, C.teal, C.ink, C.teal];
+const BACK1 = [C.ink, C.paper, C.blue, C.ink, C.paper], BACK2 = [C.paper, C.ink, C.blue, C.ink];
+function barcode(x0, x1, y, h, seed) {
+  const r = rng(seed); let s = '', x = x0;
+  while (true) { const w = [3, 5, 8, 12][Math.floor(r() * 4)]; if (x + w > x1) break; s += rect(f2(x), y, w, h, C.ink); x += w + 4 + Math.floor(r() * 6); }
+  return s;
+}
+const sunArt = (tx, ty, s) => `<g transform="translate(${tx} ${ty}) scale(${s}) translate(-959 -652)"><circle cx="959" cy="491" r="361" fill="${C.orange}"/>${skyline()}</g>`;
+const seal = (cx, cy, r) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${C.orange}"/>
+  <path d="M${cx - r * 0.72},${cy + r * 0.3}A${r * 0.72},${r * 0.72} 0 0 1 ${cx + r * 0.72},${cy + r * 0.3}Z" fill="${C.blue}"/>
+  <path d="M${cx - r * 0.42},${cy + r * 0.3}A${r * 0.42},${r * 0.42} 0 0 1 ${cx + r * 0.42},${cy + r * 0.3}Z" fill="${C.cream}"/>
+  ${rect(f2(cx - r * 0.8), f2(cy + r * 0.3), f2(r * 1.6), f2(r * 0.18), C.pink)}`;
+
+function tkFrontLand() {
+  const tp = tPathLand(617, 46, 60);
+  const dash = Array.from({ length: 13 }, (_, i) => rect(614, 352 + i * 36, 6, 18, [C.orange, C.blue, C.pink][i % 3], 'rx="3"')).join('');
+  return `<defs><clipPath id="tkcF"><path d="${tp}"/></clipPath><clipPath id="tkaF"><rect x="668" y="352" width="532" height="316"/></clipPath></defs>
+  <path d="M330,840L1600,840L1615,330L1775,500L1775,1010L500,1010Z" fill="#e4dfcb"/>
+  <path d="${tp}" fill="#f4f0e1"/>
+  <g clip-path="url(#tkcF)">${rect(290, 300, 250, 560, C.pink)}</g>
+  <path d="${tp}" fill="none" stroke="#a7a293" stroke-width="3.5" stroke-linejoin="round"/>
+  ${dash}
+  <g clip-path="url(#tkaF)">
+    <path d="${cloudPath(415, [[690, 22, 14], [722, 34, 30], [770, 30, 18], [800, 14, 6]])}" fill="${C.pink}"/>
+    <path d="${cloudPath(385, [[1110, 16, 10], [1135, 22, 14], [1158, 12, 6]])}" fill="${C.pink}"/>
+    <path d="${cloudPath(467, [[1112, 18, 12], [1150, 30, 30], [1190, 20, 16]])}" fill="${C.pink}"/>
+    <path d="${cloudPath(560, [[680, 20, 14], [712, 30, 30], [750, 22, 14]])}" fill="${C.pink}"/>
+    ${sunArt(955, 668, 0.54)}
+  </g>
+  ${rect(1233, 370, 302, 30, C.orange)}${rect(1233, 418, 300, 30, C.orange)}${rect(1233, 474, 302, 29, C.pink)}${rect(1233, 532, 282, 31, C.pink)}
+  <circle cx="1262" cy="630" r="28" fill="${C.orange}"/>${rect(1320, 623, 110, 14, C.ink, 'rx="4"')}
+  ${rect(668, 720, 524, 28, C.gray)}${rect(668, 762, 382, 28, C.pink)}
+  <g transform="translate(482 792) rotate(-90)">${wavesWord(0, 0, 132, 432, 322, FRONT1, FRONT2, 98)}</g>`;
+}
+function tkBackLand() {
+  const tp = tPathLand(1298, 60, 46);
+  const dash = Array.from({ length: 13 }, (_, i) => rect(1295, 352 + i * 36, 6, 18, [C.paper, C.blue, C.orange][i % 3], 'rx="3"')).join('');
+  return `<defs><clipPath id="tkcB"><path d="${tp}"/></clipPath></defs>
+  <path d="M330,840L1600,840L1615,330L1775,500L1775,1010L500,1010Z" fill="#e4dfcb"/>
+  <path d="${tp}" fill="${C.pink}"/>
+  <g clip-path="url(#tkcB)">${rect(1375, 300, 250, 560, '#f4f0e1')}</g>
+  <path d="${tp}" fill="none" stroke="#a7a293" stroke-width="3.5" stroke-linejoin="round"/>
+  ${dash}
+  ${wavesWord(362, 500, 132, 432, 322, BACK1, BACK2, 98)}
+  ${seal(1120, 455, 100)}
+  ${rect(362, 660, 600, 22, C.paper, 'rx="4"')}${rect(362, 700, 500, 22, C.paper, 'rx="4"')}${rect(362, 740, 320, 22, C.paper, 'rx="4"')}
+  ${rect(1010, 668, 200, 14, C.ink, 'rx="4"')}${rect(1010, 698, 140, 14, C.ink, 'rx="4"')}
+  ${barcode(1405, 1585, 372, 330, 7)}
+  ${rect(1405, 730, 150, 14, C.ink, 'rx="4"')}${rect(1405, 760, 96, 14, C.ink, 'rx="4"')}`;
+}
+function tkFrontPort() {
+  const tp = tPathPort(300, 46, 60);
+  const dash = Array.from({ length: 14 }, (_, i) => rect(97 + i * 36, 297, 18, 6, [C.orange, C.blue, C.pink][i % 3], 'rx="3"')).join('');
+  return `<defs><clipPath id="tkcF"><path d="${tp}"/></clipPath><clipPath id="tkaF"><rect x="90" y="340" width="500" height="300"/></clipPath></defs>
+  <path d="M70,1120L630,1120L640,90L700,150L700,1180L130,1180Z" fill="#e4dfcb"/>
+  <path d="${tp}" fill="#f4f0e1"/>
+  <g clip-path="url(#tkcF)">${rect(20, 20, 700, 244, C.pink)}</g>
+  <path d="${tp}" fill="none" stroke="#a7a293" stroke-width="3.5" stroke-linejoin="round"/>
+  ${dash}
+  <g clip-path="url(#tkaF)">
+    <path d="${cloudPath(405, [[112, 22, 14], [144, 34, 30], [192, 30, 18], [222, 14, 6]])}" fill="${C.pink}"/>
+    <path d="${cloudPath(378, [[500, 16, 10], [525, 22, 14], [548, 12, 6]])}" fill="${C.pink}"/>
+    <path d="${cloudPath(460, [[505, 18, 12], [543, 30, 30], [580, 20, 16]])}" fill="${C.pink}"/>
+    <path d="${cloudPath(545, [[100, 20, 14], [132, 30, 30], [170, 22, 14]])}" fill="${C.pink}"/>
+    ${sunArt(345, 640, 0.52)}
+  </g>
+  ${rect(90, 676, 470, 28, C.orange)}${rect(90, 718, 420, 28, C.orange)}${rect(90, 764, 440, 28, C.pink)}${rect(90, 806, 360, 28, C.pink)}
+  <circle cx="116" cy="874" r="26" fill="${C.orange}"/>${rect(160, 867, 110, 14, C.ink, 'rx="4"')}
+  ${rect(90, 918, 500, 26, C.gray)}${rect(90, 956, 360, 26, C.pink)}
+  ${wavesWord(90, 152, 112, 372, 278, FRONT1, FRONT2, 92)}`;
+}
+function tkBackPort() {
+  const tp = tPathPort(300, 46, 60);
+  const dash = Array.from({ length: 14 }, (_, i) => rect(97 + i * 36, 297, 18, 6, [C.paper, C.blue, C.orange][i % 3], 'rx="3"')).join('');
+  return `<defs><clipPath id="tkcB"><path d="${tp}"/></clipPath><clipPath id="tkaB"><rect x="90" y="868" width="500" height="186" rx="10"/></clipPath></defs>
+  <path d="M70,1120L630,1120L640,90L700,150L700,1180L130,1180Z" fill="#e4dfcb"/>
+  <path d="${tp}" fill="${C.pink}"/>
+  <g clip-path="url(#tkcB)">${rect(20, 20, 700, 244, '#f4f0e1')}</g>
+  <path d="${tp}" fill="none" stroke="#a7a293" stroke-width="3.5" stroke-linejoin="round"/>
+  ${dash}
+  ${barcode(92, 588, 84, 120, 11)}${rect(92, 222, 180, 14, C.ink, 'rx="4"')}
+  ${wavesWord(90, 450, 118, 392, 292, BACK1, BACK2, 100)}
+  ${seal(522, 528, 60)}
+  ${rect(90, 640, 500, 22, C.paper, 'rx="4"')}${rect(90, 680, 420, 22, C.paper, 'rx="4"')}${rect(90, 720, 260, 22, C.paper, 'rx="4"')}
+  ${rect(90, 790, 200, 14, C.ink, 'rx="4"')}${rect(90, 820, 140, 14, C.ink, 'rx="4"')}
+  <g clip-path="url(#tkaB)">${rect(90, 868, 500, 186, '#f4f0e1')}${sunArt(340, 1054, 0.4)}</g>`;
+}
+
+/* ================= DOM construction ================= */
+function buildSheet(host, markup) {
+  const nodes = [];
+  [['l', 0], ['c', 640], ['r', 1280]].forEach(([k, off]) => {
+    const p = document.createElement('div'); p.className = 'pnl ' + k;
+    p.innerHTML = `<div class="face"><svg viewBox="0 0 1920 1080" width="1920" height="1080" style="left:${-off}px">${markup}</svg></div><div class="face back"></div>`;
+    host.appendChild(p); nodes.push(p);
+  });
+  return nodes;
+}
+const posterHost = $('posterSheet'), mapHost = $('mapSheet');
+let posterP = buildSheet(posterHost, posterMarkup());
+const mapP = buildSheet(mapHost, mapMarkup());
+
+// each animated element exists in 3 copies (one per fold panel)
+function roles(host, sel) {
+  const all = [...host.querySelectorAll(sel)], n = all.length / 3;
+  return Array.from({ length: n }, (_, k) => [all[k], all[k + n], all[k + 2 * n]]);
+}
+const setOne = (n, name, v) => { if (n['_' + name] !== v) { n.setAttribute(name, v); n['_' + name] = v; } };
+function setA(nodes, name, v) { for (const n of nodes) setOne(n, name, v); }
+// flat map: only the center panel is shown, so only it is updated
+let mapFlat = false;
+function setM(g, name, v) { setOne(g[1], name, v); if (!mapFlat) { setOne(g[0], name, v); setOne(g[2], name, v); } }
+let PSUN = roles(posterHost, '.psun')[0], PCL = roles(posterHost, '.pcl'), PLB = roles(posterHost, '.lb'), PTX = roles(posterHost, '.ptx')[0];
+let posterKey = 'l';
+function buildPoster(key, wv) {
+  posterKey = key;
+  let markup, tk;
+  if (key === 'l') { markup = posterMarkup(); LB = LB_LAND; tk = [820, 792, 276, 78]; }
+  else { const r = posterPortrait(wv); markup = r.markup; LB = r.bars; tk = r.tk; }
+  posterHost.innerHTML = ''; posterHost._flat = undefined; posterHost._tf = undefined;
+  posterP = buildSheet(posterHost, markup);
+  PSUN = roles(posterHost, '.psun')[0]; PCL = roles(posterHost, '.pcl'); PLB = roles(posterHost, '.lb'); PTX = roles(posterHost, '.ptx')[0];
+  if (introDone) PTX.forEach(n => n.setAttribute('opacity', '1'));
+  const a = $('posterTk'); a.style.left = tk[0] + 'px'; a.style.top = tk[1] + 'px'; a.style.width = tk[2] + 'px'; a.style.height = tk[3] + 'px';
+}
+const MCL = roles(mapHost, '.mcl'), STARS = roles(mapHost, '.star'), MOON = roles(mapHost, '.moon')[0];
+const BL = roles(mapHost, '.beamL')[0], BR = roles(mapHost, '.beamR')[0];
+const PBL = roles(mapHost, '.pbL')[0], PBR = roles(mapHost, '.pbR')[0], DBL = roles(mapHost, '.dbL')[0], DBR = roles(mapHost, '.dbR')[0];
+const SCRO = roles(mapHost, '.scrO')[0], SCRB = roles(mapHost, '.scrB')[0], SCRN = roles(mapHost, '.scrN')[0];
+const POPS = roles(mapHost, '.pop').map(g => ({ g, t: +g[0].dataset.t, ox: +g[0].dataset.ox, oy: +g[0].dataset.oy, m: g[0].dataset.m }));
+const PEOPLE = roles(mapHost, '.pp').map(g => ({ g, x: +g[0].dataset.x, y: +g[0].dataset.y, s: +g[0].dataset.s, ph: +g[0].dataset.ph, t: +g[0].dataset.t }));
+POPS.filter(p => p.m === 'dash').forEach(p => p.g.forEach(g => g.querySelectorAll('path').forEach(e => { e.setAttribute('pathLength', '1'); e.setAttribute('stroke-dasharray', '1 1'); })));
+const STAR_TH = STARS.map((_, i) => 0.42 + ((i * 7) % 24) / 24 * 0.45);
+
+// sound waves (10 reused circles, one pair per beat)
+const RING_N = 10;
+for (let i = 0; i < RING_N; i++) $('rings').insertAdjacentHTML('beforeend', `<circle cx="${i % 2 ? 1198.5 : 721.5}" cy="455" r="0" opacity="0"/>`);
+const ringEls = [...$('rings').children];
+const ringBorn = new Array(RING_N).fill(-9);
+let ringIdx = 0;
+function spawnRings(now) { for (let k = 0; k < 2; k++) { ringBorn[ringIdx] = now; ringIdx = (ringIdx + 1) % RING_N; } }
+
+const stageEl = $('stage'), wrap = $('wrap'), rootEl = document.documentElement;
+const setT = (el, v) => { if (el._tf !== v) { el.style.transform = v; el._tf = v; } };
+const setD = (el, on) => { const v = on ? '' : 'none'; if (el._d !== v) { el.style.display = v; el._d = v; } };
+const setVar = (k, v) => { if (rootEl['_' + k] !== v) { rootEl.style.setProperty('--' + k, v); rootEl['_' + k] = v; } };
+const setStyle = (el, k, v) => { if (el['_s' + k] !== v) { el.style[k] = v; el['_s' + k] = v; } };
+
+/* ================= state ================= */
+const S = { intro: RM ? 9 : 0, v: 0, night: 0, energy: 0, hover: 0, playing: false, beat: 0, pan: 0 };
+let introDone = false;
+const maxPan = () => Math.max(0, (1920 - WV) / 2 - 10);
+
+/* ================= ticket: built according to orientation ================= */
+const tkBox = $('tkBox'), tkEnter = $('tkEnter'), tkFlip = $('tkFlip'), tkFront = $('tkFront'), tkBack = $('tkBack');
+let tkMode = '';
+function buildTicket(mode) {
+  tkMode = mode;
+  tkBox.classList.toggle('tk-land', mode === 'land'); tkBox.classList.toggle('tk-port', mode === 'port');
+  const vb = mode === 'land' ? '290 300 1485 710' : '20 20 700 1180';
+  $('tkFrontSvg').setAttribute('viewBox', vb); $('tkBackSvg').setAttribute('viewBox', vb);
+  $('tkFrontSvg').innerHTML = mode === 'land' ? tkFrontLand() : tkFrontPort();
+  $('tkBackSvg').innerHTML = mode === 'land' ? tkBackLand() : tkBackPort();
+}
+
+/* ================= layout: the 1920x1080 scene covers the screen ================= */
+let TKW = 1, SC = 1, BX = 0, BY = 0, WV = 1920;
+function layout() {
+  const vw = stageEl.clientWidth, vh = stageEl.clientHeight;
+  const s = Math.max(vw / 1920, vh / 1080);
+  SC = s; BX = (vw - 1920 * s) / 2; BY = (vh - 1080 * s) / 2; WV = vw / s;
+  const key = WV < 1250 ? 'p' + Math.round(WV / 16) : 'l';
+  if (key !== posterKey) buildPoster(key, WV);
+  S.pan = clamp(S.pan, -maxPan(), maxPan());
+  const mode = vw / vh < 0.95 ? 'port' : 'land';
+  if (mode !== tkMode) buildTicket(mode);
+  let W, H, L, T;
+  if (mode === 'land') {
+    const k = Math.min(vw / 1920, vh / 1080);
+    W = 1485 * k; H = 710 * k; L = (vw - 1920 * k) / 2 + 290 * k; T = (vh - 1080 * k) / 2 + 300 * k;
+  } else {
+    const top = vw <= 820 ? 84 : Math.max(84, 128 * vw / 1920 + 24), bot = 24, ah = vh - top - bot;
+    W = Math.min(vw - 28, ah * 700 / 1180); H = W * 1180 / 700;
+    L = vw / 2 - W * (320 / 700); T = top + (ah - H) / 2;
+  }
+  Object.assign(tkBox.style, { left: f2(L) + 'px', top: f2(T) + 'px', width: f2(W) + 'px', height: f2(H) + 'px' });
+  TKW = W;
+  $('tkLayer').style.perspective = f2(W * 1.75) + 'px';
+}
+
+/* ================= scrolling: one pinned scene, split into chapters ================= */
+// each segment advances the replay "time" (t, in video seconds); len = screen heights
+const SEG = [
+  { len: 0.6, a: 0, b: 3.85 },                     // poster
+  { len: 1.1, a: 3.85, b: 5.7 },                   // the poster folds, the map unfolds
+  { len: 1.2, a: 5.7, b: 5.7, label: 'map' },      // map (interactive)
+  { len: 1.0, a: 11.85, b: 12.66 },                // the map folds back, the ticket slides out and flips
+  { len: 1.0, a: 12.66, b: 12.66, label: 'tickets' }, // ticket (interactive)
+  { len: 1.2, a: 13.15, b: 14.45 },                // the ticket flies away, the poster returns, the sun rises
+  { len: 0.4, a: 14.45, b: 14.999 }                // exact return to the opening view
+];
+const TOTAL = SEG.reduce((a, s) => a + s.len, 0);
+function tOf(p) { let x = p * TOTAL; for (const s of SEG) { if (x <= s.len) return lerp(s.a, s.b, x / s.len); x -= s.len; } return 14.999; }
+const P = { p: 0 };
+ScrollTrigger.config({ ignoreMobileResize: true });
+layout();
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: '#festival', pin: true, start: 'top top', end: () => '+=' + Math.round(TOTAL * innerHeight),
+    scrub: RM ? true : 0.5, anticipatePin: 1,
+    snap: RM ? false : { snapTo: 'labelsDirectional', duration: { min: 0.25, max: 0.9 }, delay: 0.12, ease: 'power1.inOut', inertia: false }
+  }
+});
+tl.to(P, { p: 1, duration: TOTAL, ease: 'none' });
+tl.addLabel('poster', 0);
+{ let acc = 0; for (const s of SEG) { if (s.label) tl.addLabel(s.label, acc + s.len / 2); acc += s.len; } }
+tl.addLabel('finale', TOTAL);
+const ST = tl.scrollTrigger;
+
+/* ================= frame-by-frame render ================= */
+const S_OUT = mono([[3.88, 1], [3.96, 0.93], [4.04, 0.79], [4.1, 0.63], [4.17, 0.48]]);
+const S_MAPIN = mono([[4.17, 0.48], [4.25, 0.57], [4.33, 0.72], [4.42, 0.84], [4.5, 0.92], [4.58, 1]]);
+const S_MAPOUT = mono([[11.9, 1], [11.97, 0.95], [12.04, 0.84], [12.1, 0.62], [12.17, 0.5]]);
+const S_POSTIN = mono([[13.36, 0.5], [13.45, 0.62], [13.53, 0.72], [13.6, 0.8], [13.68, 0.88], [13.75, 0.93], [13.85, 0.97], [13.95, 0.993], [14.0, 1]]);
+const S_TICK = mono([[12.15, 0.55], [12.27, 0.82], [12.35, 0.92], [12.5, 0.98], [12.62, 1]]);
+const SUN_DY = mono([[13.45, 560], [13.6, 400], [13.75, 200], [13.875, 95], [14.0, 42], [14.125, 18], [14.25, 6], [14.4, 0]]);
+
+function sheetPose(host, Pn, s, tx, ty, rx, rz, ry, fL, fR) {
+  const flat = s === 1 && !tx && !ty && !rx && !rz && !ry && !fL && !fR;
+  if (host._flat !== flat) { host.classList.toggle('flat', flat); host._flat = flat; }
+  setT(host, flat ? 'none' : `translate3d(${f2(tx)}px,${f2(ty)}px,0) rotateX(${f2(rx)}deg) rotateY(${f2(ry)}deg) rotateZ(${f2(rz)}deg) scale(${s.toFixed(4)})`);
+  setT(Pn[0], fL ? `translateZ(${-2 * Math.min(1, fL * 8)}px) rotateY(${f2(-180 * fL)}deg)` : 'none');
+  setT(Pn[2], fR ? `translateZ(${2 * Math.min(1, fR * 8)}px) rotateY(${f2(-180 * fR)}deg)` : 'none');
+}
+let posterOn = true, mapOn = false;
+function renderSheets(t) {
+  if (RM) { // reduced motion: simple fades, no rotation
+    const po = t < 9 ? 1 - prog(t, 3.88, 4.3, 'none') : prog(t, 13.36, 13.9, 'none');
+    const mo = prog(t, 4.0, 4.4, 'none') * (1 - prog(t, 11.9, 12.25, 'none'));
+    posterOn = po > 0; mapOn = mo > 0;
+    setD(posterHost, posterOn); setD(mapHost, mapOn);
+    setStyle(posterHost, 'opacity', po.toFixed(3)); setStyle(mapHost, 'opacity', mo.toFixed(3));
+    sheetPose(posterHost, posterP, 1, 0, 0, 0, 0, 0, 0, 0); sheetPose(mapHost, mapP, 1, 0, 0, 0, 0, 0, 0, 0);
+    mapFlat = true; return;
+  }
+  posterOn = t < 4.17 || t >= 13.36; mapOn = t >= 4.17 && t < 12.22;
+  setD(posterHost, posterOn); setD(mapHost, mapOn);
+  if (posterOn) {
+    if (t < 3.88 || t >= 14.0) sheetPose(posterHost, posterP, 1, 0, 0, 0, 0, 0, 0, 0);
+    else if (t < 4.17) {
+      const a = clamp((t - 3.88) / 0.29), w = Math.sin(Math.PI * a);
+      sheetPose(posterHost, posterP, S_OUT(t), 0, -10 * w, 9 * w, -1.5 * w, 0, prog(t, 4.0, 4.165, 'power2.in'), prog(t, 3.97, 4.15, 'power2.in'));
+    } else {
+      const a = prog(t, 13.36, 14.0, 'power2.out');
+      sheetPose(posterHost, posterP, S_POSTIN(t), lerp(60, 0, a), lerp(-20, 0, a), lerp(10, 0, a), lerp(2, 0, a), 0,
+        1 - prog(t, 13.4, 13.7, 'power2.inOut'), 1 - prog(t, 13.36, 13.52, 'power2.out'));
+    }
+  }
+  if (mapOn) {
+    if (t < 4.58) {
+      const a = prog(t, 4.17, 4.58, 'power2.out');
+      sheetPose(mapHost, mapP, S_MAPIN(t), 0, lerp(-14, 0, a), lerp(10, 0, a), lerp(1.2, 0, a), 0, 1 - prog(t, 4.2, 4.42, 'power2.out'), 1 - prog(t, 4.17, 4.33, 'power2.out'));
+    } else if (t < 11.9) sheetPose(mapHost, mapP, 1, 0, 0, 0, 0, 0, 0, 0);
+    else {
+      const a = clamp((t - 11.9) / 0.3), w = Math.sin(Math.PI * Math.min(1, a * 1.2));
+      sheetPose(mapHost, mapP, S_MAPOUT(t), lerp(0, -60, a), -12 * w, 9 * w, 1.5 * w, 90 * prog(t, 12.1, 12.2, 'power2.in'),
+        prog(t, 12.0, 12.14, 'power2.in'), prog(t, 11.97, 12.12, 'power2.in'));
+    }
+  }
+  mapFlat = !!mapHost._flat;
+}
+
+// poster: the sun rises (at the opening and end of page), the program bars enter, the clouds drift
+function renderPoster(t, now) {
+  const introDY = S.intro < 0.95 ? SUN_DY(13.45 + S.intro) : 0;
+  const finDY = !RM && t > 13 ? SUN_DY(t) : 0;
+  const dy = RM ? 0 : Math.max(introDY, finDY);
+  setA(PSUN, 'transform', dy ? `translate(0 ${f2(dy)})` : '');
+  const drift = RM ? 0 : 14 * Math.sin(Math.PI * t / 15) ** 2;
+  PCL.forEach((g, i) => { const k = +g[0].dataset.k, amb = RM ? 0 : 6 * Math.sin(now * 0.35 + i * 1.7); setA(g, 'transform', `translate(${f2(drift * k + amb)} 0)`); });
+  if (!introDone) {
+    PLB.forEach((g, i) => {
+      const [x, , w, , , o] = LB[i], ox = o === 'l' ? x : x + w;
+      const s = ease('power3.out')(clamp((S.intro - 0.25 - i * 0.045) / 0.55));
+      setA(g, 'transform', s >= 1 ? '' : `translate(${ox} 0) scale(${s.toFixed(4)} 1) translate(${-ox} 0)`);
+    });
+    const o = clamp((S.intro - 0.7) / 0.35);
+    setA(PTX, 'opacity', o.toFixed(3)); setA(PTX, 'transform', o >= 1 ? '' : `translate(0 ${f2(16 * (1 - o))})`);
+    if (S.intro >= 1.8) introDone = true;
+  }
+}
+
+// map: appears during the unfold, crowd sways and jumps to the beat, night
+let popsFinal = false;
+function renderMap(t, now) {
+  const ft = RM ? 99 : t;
+  if (!(popsFinal && ft >= 5.7)) {
+    for (const p of POPS) {
+      if (p.m === 'dash') { const s = prog(ft, p.t, p.t + 0.35, 'power2.out'); p.g.forEach(g => g.querySelectorAll('path').forEach(e => setOne(e, 'stroke-dashoffset', (1 - s).toFixed(3)))); continue; }
+      let v = '';
+      if (p.m === 'rise') { const s = prog(ft, p.t, p.t + 0.3, 'power3.out'); if (s < 1) v = `translate(0 ${f2((1 - s) * 140)})`; }
+      else { const s = ease('back.out(1.7)')(clamp((ft - p.t) / 0.3)); if (s < 1) v = `translate(${p.ox} ${p.oy}) scale(${s.toFixed(4)}) translate(${-p.ox} ${-p.oy})`; }
+      setA(p.g, 'transform', v);
+    }
+    popsFinal = ft >= 5.7 && mapFlat;
+  }
+  const e = S.energy, beat = S.beat;
+  for (const p of PEOPLE) {
+    const s = ease('back.out(2)')(clamp((ft - p.t) / 0.26)) * p.s;
+    const jump = RM ? 0 : 13 * e * Math.abs(Math.sin(Math.PI * (beat + p.ph * 0.35)));
+    const sx = RM ? 0 : 1.6 * Math.sin(2 * Math.PI * (0.8 * now + p.ph));
+    setM(p.g, 'transform', s <= 0 ? 'translate(-99 -99) scale(0)' : `translate(${f2(p.x + sx)} ${f2(p.y - jump)}) scale(${s.toFixed(3)})`);
+  }
+  MCL.forEach((g, i) => setM(g, 'transform', RM ? '' : `translate(${f2(+g[0].dataset.k * 16 * Math.sin(now * 0.18 + i * 1.3))} 0)`));
+  // stage screen: orange on hover, blue when playing, pink at night
+  const ho = 153 * S.hover, pl = 153 * e;
+  setM(SCRO, 'height', f2(ho)); setM(SCRO, 'y', f2(548 - ho));
+  setM(SCRB, 'height', f2(pl)); setM(SCRB, 'y', f2(548 - pl));
+  const n = S.night;
+  setM(SCRN, 'opacity', n.toFixed(3));
+  // night: moon, stars, sweeping light beams
+  const mo = ease('power2.out')(clamp((n - 0.35) / 0.65));
+  setM(MOON, 'cy', f2(lerp(580, 177, mo))); setM(MOON, 'opacity', n > 0.3 ? '1' : '0');
+  STARS.forEach((g, i) => {
+    const tw = RM ? 1 : 1 + 0.18 * Math.sin(2 * Math.PI * (1.3 * now + i * 0.37));
+    const s = ease('back.out(3)')(clamp((n - STAR_TH[i]) / 0.12)) * tw;
+    setM(g, 'transform', `translate(${g[0].dataset.x} ${g[0].dataset.y}) scale(${s.toFixed(3)})`);
+  });
+  const bo = clamp((n - 0.3) / 0.3), a = RM ? 20 : -5 + 42 * Math.sin(2 * Math.PI * now / 5.5);
+  setM(BL, 'opacity', (0.2 * bo).toFixed(3)); setM(BR, 'opacity', (0.2 * bo).toFixed(3));
+  setM(BL, 'transform', `translate(800 380) rotate(${f2(a)})`); setM(BR, 'transform', `translate(1120 380) rotate(${f2(-a)})`);
+  const pa = RM ? 0 : 7 * Math.sin(2 * Math.PI * now / 2.4), po = (0.22 * clamp((n - 0.5) / 0.3)).toFixed(3);
+  setM(PBL, 'opacity', po); setM(PBR, 'opacity', po);
+  setM(PBL, 'transform', `translate(721 420) rotate(${f2(-14 + pa)})`); setM(PBR, 'transform', `translate(1198 420) rotate(${f2(14 - pa)})`);
+  const da = RM ? 0 : 16 * Math.sin(2 * Math.PI * now / 2.0), dop = (0.26 * clamp((n - 0.55) / 0.3)).toFixed(3);
+  setM(DBL, 'opacity', dop); setM(DBR, 'opacity', dop);
+  setM(DBL, 'transform', `translate(790 518) rotate(${f2(18 + da)})`); setM(DBR, 'transform', `translate(1130 518) rotate(${f2(-18 - da)})`);
+}
+
+// day / night colors (CSS variables); the top bar only switches to night on the map
+const mapShown = t => prog(t, 4.1, 4.2, 'none') * (1 - prog(t, 11.92, 12.1, 'none'));
+function renderColors(t) {
+  const n = S.night, m = mapShown(t), nn = n * m;
+  for (const k in DAY) setVar(k, mixC(DAY[k], NIGHT[k], k === 'nav' || k.startsWith('lg') ? nn : n));
+  const pc = mixC(C.blue, C.orange, m);
+  setVar('pill', pc); setVar('chat', pc);
+}
+
+// map layer: marker, sound waves
+const ovEl = $('ov'), beaconEl = $('beacon'), bRing = $('bRing');
+function renderOverlay(now) {
+  const on = chapter === 'map';
+  setD(ovEl, on);
+  if (!on) return;
+  const showB = !cardOpen && !S.playing;
+  setOne(beaconEl, 'opacity', showB ? '1' : '0');
+  if (showB) {
+    const a = RM ? 0.5 : (now % 1.6) / 1.6;
+    setOne(bRing, 'r', f2(12 + 34 * ease('power1.out')(a))); setOne(bRing, 'opacity', (RM ? 0.6 : 0.9 * (1 - a)).toFixed(3));
+  }
+  ringEls.forEach((c, i) => {
+    let r = 0, o = 0;
+    if (RM) { if (S.playing) { r = i < 4 ? [80, 140][i >> 1] : 0; o = r ? 0.5 : 0; } }
+    else { const a = (now - ringBorn[i]) / 0.92; if (a >= 0 && a < 1) { r = 36 + 230 * ease('power1.out')(a); o = 0.95 * (1 - a); } }
+    setOne(c, 'r', f2(r)); setOne(c, 'opacity', o.toFixed(3));
+  });
+}
+
+// ticket: slides out and flips, then flies away around its left edge
+const tkLayer = $('tkLayer');
+function renderTicket(t) {
+  const on = RM ? (t >= 12.15 && t < 13.5) : (t >= 12.15 && t < 13.58);
+  setStyle(tkLayer, 'visibility', on ? 'visible' : 'hidden');
+  if (!on) return;
+  if (RM) { setStyle(tkEnter, 'opacity', (prog(t, 12.15, 12.45, 'none') * (1 - prog(t, 13.2, 13.5, 'none'))).toFixed(3)); return; }
+  const land = tkMode === 'land', ox = land ? 44.9 : 45.7, oy = land ? 38.7 : 47.5, lx = land ? 0.67 : 2.86;
+  let tf, org;
+  if (t < 13.2) {
+    org = `${ox}% ${oy}%`;
+    const a = prog(t, 12.15, 12.6, 'power3.out');
+    tf = `translate3d(${f2(-0.108 * TKW * (1 - a))}px,${f2(-0.02 * TKW * (1 - a))}px,0) rotateY(${f2(lerp(-90, 0, prog(t, 12.15, 12.36, 'power2.out')))}deg) rotateZ(${f2(lerp(-7, 0, prog(t, 12.18, 12.64, 'power2.out')))}deg) scale(${S_TICK(t).toFixed(4)})`;
+  } else {
+    org = `${lx}% ${oy}%`;
+    const a = prog(t, 13.2, 13.56, 'power1.in');
+    tf = `translate3d(${f2(-0.222 * TKW * a)}px,${f2(-0.012 * TKW * a)}px,${f2(0.027 * TKW * a)}px) rotateY(${f2(88 * a)}deg) rotateZ(${f2(-2.5 * Math.sin(Math.PI * clamp((t - 13.2) / 0.36)))}deg)`;
+  }
+  setStyle(tkEnter, 'transformOrigin', org);
+  setT(tkEnter, tf === 'translate3d(0px,0px,0) rotateY(0deg) rotateZ(0deg) scale(1.0000)' ? 'none' : tf);
+}
+
+// day / night slider
+const tod = $('tod'), track = $('todTrack'), knob = $('todKnob'), todFill = $('todFill');
+function renderTod() {
+  const pc = f2(S.v * 100) + '%';
+  setStyle(knob, 'left', pc); setStyle(todFill, 'width', pc);
+  const now = Math.round(S.v * 100);
+  if (track._v !== now) {
+    track._v = now; track.setAttribute('aria-valuenow', now);
+    track.setAttribute('aria-valuetext', now < 34 ? 'Day' : now < 67 ? 'Sunset' : 'Night');
+  }
+}
+
+/* ================= chapters: what is clickable when ================= */
+let chapter = '', pendingFocus = null;
+const chapterOf = t => t < 3.86 || t >= 14.0 ? 'poster' : t >= 4.58 && t < 11.9 ? 'map' : t >= 12.62 && t < 13.2 ? 'tickets' : 'move';
+const posterTk = $('posterTk'), stageZone = $('stageZone'), stageBtn = $('stageBtn'), card = $('card'), playBtn = $('playBtn');
+const navMap = document.querySelector('.nav-map'), pill = $('pill');
+function setInert(el, v) { if (el.inert !== v) el.inert = v; }
+function onChapter(c, prev) {
+  setInert(posterTk, c !== 'poster');
+  setInert(stageZone, c !== 'map');
+  setInert(tod, c !== 'map');
+  syncTicketInert();
+  if (c === 'map') navMap.setAttribute('aria-current', 'location'); else navMap.removeAttribute('aria-current');
+  if (c === 'tickets') pill.setAttribute('aria-current', 'location'); else pill.removeAttribute('aria-current');
+  if (prev === 'map') { closeCard(true); setPlaying(false); if (S.pan) gsap.to(S, { pan: 0, duration: RM ? 0 : 0.5, ease: 'power2.inOut', overwrite: true }); }
+  if (prev === 'tickets' && flipped) flip(false);
+  // day / night slider: rises when the map is shown, goes back down otherwise
+  if ((c === 'map') !== (prev === 'map')) {
+    gsap.to(tod, c === 'map' ? { autoAlpha: 1, y: 0, duration: RM ? 0 : 0.45, ease: 'power3.out', overwrite: true }
+      : { autoAlpha: 0, y: 140, duration: RM ? 0 : 0.3, ease: 'power2.in', overwrite: true });
+  }
+  updatePlayVis();
+  applyPendingFocus();
+}
+function applyPendingFocus() {
+  if (!pendingFocus) return;
+  const want = { poster: 'poster', finale: 'poster', map: 'map', tickets: 'tickets' }[pendingFocus];
+  if (want !== chapter) return;
+  const el = chapter === 'map' ? stageBtn : chapter === 'tickets' ? (flipped ? tkBack : tkFront).querySelector('.tk-flipbtn') : posterTk;
+  el.focus({ preventScroll: true }); pendingFocus = null;
+}
+
+/* ================= navigation: links to the chapters ================= */
+function goto(label, kb) {
+  const y = Math.round(ST.labelToScroll(label));
+  try { history.replaceState(null, '', label === 'poster' ? location.pathname + location.search : '#' + label); } catch (e) { /* file:// */ }
+  pendingFocus = kb ? label : null;
+  const d = Math.abs(y - scrollY);
+  if (d < 2) { applyPendingFocus(); return; }
+  if (RM) { window.scrollTo(0, y); return; }
+  gsap.to(window, { scrollTo: { y, autoKill: true }, duration: clamp(0.5 + d / innerHeight * 0.22, 0.7, 2.0), ease: 'power2.inOut', overwrite: 'auto' });
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-goto]');
+  if (!a) return;
+  e.preventDefault(); closePanels(); goto(a.dataset.goto, e.detail === 0);
+});
+
+/* ================= stage: hover, map, playback ================= */
+let cardOpen = false, cardPinned = false, zoneHover = false, closeTimer = 0, playVis = false;
+gsap.set(card, { autoAlpha: 0, scale: 0.3, transformOrigin: '215px 320px' }); card.inert = true;
+gsap.set(playBtn, { autoAlpha: 0, scale: 0.2, transformOrigin: '50% 50%' }); playBtn.inert = true;
+function openCard(pin) {
+  clearTimeout(closeTimer);
+  if (pin) cardPinned = true;
+  if (cardOpen) return;
+  cardOpen = true; card.inert = false; stageBtn.setAttribute('aria-expanded', 'true');
+  gsap.to(card, { autoAlpha: 1, scale: 1, duration: RM ? 0 : 0.34, ease: 'back.out(1.6)', overwrite: true });
+  gsap.to(S, { hover: 1, duration: RM ? 0 : 0.22, ease: 'power2.out', overwrite: 'auto' });
+  updatePlayVis();
+}
+function closeCard(now) {
+  clearTimeout(closeTimer); cardPinned = false;
+  if (!cardOpen) return;
+  if (card.contains(document.activeElement)) stageBtn.focus({ preventScroll: true });
+  cardOpen = false; card.inert = true; stageBtn.setAttribute('aria-expanded', 'false');
+  gsap.to(card, { autoAlpha: 0, scale: 0.3, duration: now || RM ? 0 : 0.2, ease: 'power2.in', overwrite: true });
+  gsap.to(S, { hover: 0, duration: now || RM ? 0 : 0.2, overwrite: 'auto' });
+  updatePlayVis();
+}
+function updatePlayVis() {
+  const v = chapter === 'map' && (cardOpen || S.playing);
+  if (v === playVis) return;
+  playVis = v;
+  if (!v && playBtn.contains(document.activeElement)) stageBtn.focus({ preventScroll: true });
+  playBtn.inert = !v;
+  gsap.to(playBtn, { autoAlpha: v ? 1 : 0, scale: v ? 1 : 0.2, duration: RM ? 0 : v ? 0.3 : 0.18, ease: v ? 'back.out(2)' : 'power2.in', overwrite: true });
+}
+stageZone.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { zoneHover = true; openCard(false); } });
+stageZone.addEventListener('pointerleave', e => {
+  if (e.pointerType !== 'mouse') return;
+  zoneHover = false;
+  if (!cardPinned && !stageZone.contains(document.activeElement)) closeTimer = setTimeout(() => closeCard(), 240);
+});
+stageBtn.addEventListener('click', () => { if (cardOpen && (cardPinned || !zoneHover)) closeCard(); else openCard(true); });
+stageZone.addEventListener('focusout', e => {
+  if (stageZone.contains(e.relatedTarget)) return;
+  setTimeout(() => { if (!stageZone.contains(document.activeElement) && !zoneHover) closeCard(); }, 0);
+});
+document.addEventListener('pointerdown', e => {
+  if (cardOpen && !stageZone.contains(e.target)) closeCard();
+  if (openPanel && !openPanel.contains(e.target) && !openBtn.contains(e.target)) closePanels();
+});
+
+// music: a small synthesized beat (Web Audio), nothing to download
+const Music = (() => {
+  let ctx = null, master = null, timer = 0, next = 0, step = 0, t0 = 0, f0 = 0, noise = null;
+  const SPB = 0.5, ST8 = SPB / 2;
+  const BASS = [55, 0, 55, 65.41, 0, 55, 73.42, 0, 55, 0, 55, 65.41, 0, 82.41, 73.42, 65.41];
+  function init() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    try { ctx = new AC(); } catch (e) { return false; }
+    master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+    noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.2), ctx.sampleRate);
+    const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return true;
+  }
+  const env = (g, t, a, peak, dec) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dec); };
+  function kick(t) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.16); env(g, t, 0.004, 0.9, 0.42); o.connect(g).connect(master); o.start(t); o.stop(t + 0.45); }
+  function hat(t) { const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = noise; f.type = 'highpass'; f.frequency.value = 7500; env(g, t, 0.002, 0.14, 0.06); s.connect(f).connect(g).connect(master); s.start(t); s.stop(t + 0.08); }
+  function bass(t, fr) { const o = ctx.createOscillator(), fl = ctx.createBiquadFilter(), g = ctx.createGain(); o.type = 'sawtooth'; o.frequency.value = fr; fl.type = 'lowpass'; fl.frequency.setValueAtTime(900, t); fl.frequency.exponentialRampToValueAtTime(180, t + 0.2); env(g, t, 0.005, 0.22, 0.24); o.connect(fl).connect(g).connect(master); o.start(t); o.stop(t + 0.26); }
+  function stab(t) { [220, 261.63, 329.63].forEach(fr => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = fr; env(g, t, 0.004, 0.07, 0.2); o.connect(g).connect(master); o.start(t); o.stop(t + 0.22); }); }
+  function tick() {
+    while (next < ctx.currentTime + 0.12) {
+      const s = step % 16;
+      if (s % 2 === 0) kick(next); else hat(next);
+      if (BASS[s]) bass(next, BASS[s]);
+      if (s === 4 || s === 12) stab(next);
+      next += ST8; step++;
+    }
+  }
+  return {
+    start() {
+      if (!ctx && !init()) { f0 = performance.now() / 1000; return; }
+      if (ctx.state === 'suspended') ctx.resume();
+      const n = ctx.currentTime;
+      master.gain.cancelScheduledValues(n); master.gain.setValueAtTime(master.gain.value, n); master.gain.linearRampToValueAtTime(0.32, n + 0.15);
+      next = n + 0.06; t0 = next; step = 0;
+      clearInterval(timer); timer = setInterval(tick, 25); tick();
+    },
+    stop() {
+      clearInterval(timer); timer = 0;
+      if (!ctx) return;
+      const n = ctx.currentTime;
+      master.gain.cancelScheduledValues(n); master.gain.setValueAtTime(master.gain.value, n); master.gain.linearRampToValueAtTime(0, n + 0.25);
+    },
+    beat() { return ctx ? (ctx.currentTime - t0) / SPB : (performance.now() / 1000 - f0) / SPB; }
+  };
+})();
+let lastBeat = -1;
+function setPlaying(on) {
+  if (S.playing === on) return;
+  S.playing = on;
+  if (on) { Music.start(); lastBeat = -1; } else Music.stop();
+  gsap.to(S, { energy: on ? 1 : 0, duration: RM ? 0 : on ? 0.35 : 0.5, overwrite: true });
+  document.querySelectorAll('.playtoggle').forEach(b => { b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.setAttribute('aria-label', on ? 'Pause music' : 'Play music'); });
+  if (!RM) document.querySelectorAll('.playtoggle .pi').forEach(el => gsap.fromTo(el, { scale: 0.4, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.3, ease: 'back.out(3)' }));
+  updatePlayVis();
+}
+document.querySelectorAll('.playtoggle').forEach(b => b.addEventListener('click', () => setPlaying(!S.playing)));
+
+/* ================= map: drag it sideways when the screen is narrow ================= */
+let panDrag = null, panMoved = false;
+stageEl.addEventListener('pointerdown', e => {
+  if (chapter !== 'map' || maxPan() < 4 || e.button > 0 || e.target.closest('.tod, #card, #playBtn')) return;
+  gsap.killTweensOf(S, 'pan');
+  panDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, p: S.pan, lx: e.clientX, lt: performance.now(), vx: 0, on: false };
+  panMoved = false;
+});
+stageEl.addEventListener('pointermove', e => {
+  const d = panDrag; if (!d || e.pointerId !== d.id) return;
+  const dx = e.clientX - d.x;
+  if (!d.on) {
+    if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(e.clientY - d.y)) return;
+    d.on = true; panMoved = true; stageEl.setPointerCapture(e.pointerId); stageEl.classList.add('panning');
+  }
+  const now = performance.now(); d.vx = (e.clientX - d.lx) / Math.max(1, now - d.lt); d.lx = e.clientX; d.lt = now;
+  S.pan = clamp(d.p - dx / SC, -maxPan(), maxPan());
+});
+const endPan = e => {
+  const d = panDrag; if (!d || (e && e.pointerId !== d.id)) return;
+  panDrag = null; stageEl.classList.remove('panning');
+  if (d.on && !RM) gsap.to(S, { pan: clamp(S.pan - d.vx * 260 / SC, -maxPan(), maxPan()), duration: 0.6, ease: 'power3.out' });
+};
+stageEl.addEventListener('pointerup', endPan); stageEl.addEventListener('pointercancel', endPan);
+stageEl.addEventListener('click', e => { if (panMoved) { panMoved = false; e.preventDefault(); e.stopPropagation(); } }, true);
+
+/* ================= day / night slider: drag with mouse, finger or keyboard ================= */
+function setV(v, animate) {
+  v = clamp(v);
+  if (animate && !RM) gsap.to(S, { v, duration: 0.8, ease: 'power2.inOut', overwrite: true });
+  else { gsap.killTweensOf(S, 'v'); S.v = v; }
+}
+let dragging = false;
+const vFromX = x => { const r = track.getBoundingClientRect(); return (x - r.left) / r.width; };
+track.addEventListener('pointerdown', e => {
+  if (e.button > 0) return;
+  dragging = true; track.setPointerCapture(e.pointerId); track.classList.add('drag');
+  track.focus({ preventScroll: true }); setV(vFromX(e.clientX)); e.preventDefault();
+});
+track.addEventListener('pointermove', e => { if (dragging) setV(vFromX(e.clientX)); });
+const endDrag = () => { dragging = false; track.classList.remove('drag'); };
+track.addEventListener('pointerup', endDrag); track.addEventListener('pointercancel', endDrag); track.addEventListener('lostpointercapture', endDrag);
+track.addEventListener('keydown', e => {
+  const k = e.key, step = { ArrowRight: 0.05, ArrowUp: 0.05, ArrowLeft: -0.05, ArrowDown: -0.05, PageUp: 0.2, PageDown: -0.2 }[k];
+  if (step !== undefined) setV(S.v + step);
+  else if (k === 'Home') setV(0, true);
+  else if (k === 'End') setV(1, true);
+  else return;
+  e.preventDefault();
+});
+$('todSun').addEventListener('click', () => setV(0, true));
+$('todMoon').addEventListener('click', () => setV(1, true));
+gsap.set(tod, { autoAlpha: 0, y: 140 });
+
+/* ================= ticket: flip, add to cart ================= */
+let flipped = false;
+function syncTicketInert() {
+  const on = chapter === 'tickets';
+  setInert(tkFront, !on || flipped); setInert(tkBack, !on || !flipped);
+}
+function flip(to, kb) {
+  flipped = to; syncTicketInert();
+  const d = RM ? 0 : 0.75;
+  gsap.to(tkFlip, { rotationY: to ? 180 : 0, duration: d, ease: 'power3.inOut', overwrite: true });
+  if (!RM) gsap.fromTo(tkFlip, { z: 0 }, { z: 0.06 * TKW, duration: d / 2, yoyo: true, repeat: 1, ease: 'sine.inOut' });
+  if (kb) (to ? tkBack : tkFront).querySelector('.tk-flipbtn').focus({ preventScroll: true });
+}
+document.querySelectorAll('.tk-flipbtn').forEach(b => b.addEventListener('click', e => flip(!flipped, e.detail === 0)));
+
+let cart = 0;
+const badge = $('badge'), live = $('live');
+function renderCart(bump) {
+  badge.textContent = cart;
+  gsap.to(badge, { scale: cart ? 1 : 0, duration: RM ? 0 : 0.35, ease: cart ? 'back.out(3)' : 'power2.in', overwrite: true });
+  if (bump && !RM && cart) gsap.fromTo(badge, { scale: 1.6 }, { scale: 1, duration: 0.45, ease: 'back.out(3)' });
+  pill.setAttribute('aria-label', cart ? `TICKETS, ${cart} in the cart` : 'TICKETS');
+  const mini = (i) => `<svg class="mini" viewBox="0 0 120 44" aria-hidden="true"><rect x="1" y="1" width="118" height="42" rx="6" fill="#f4f0e1" stroke="#a7a293" stroke-width="2"/><path d="M7,1H32V43H7Q1,43 1,37V7Q1,1 7,1Z" fill="${C.pink}"/>${[0, 1, 2, 3].map(k => `<rect x="35" y="${5 + k * 9.5}" width="2.5" height="5" rx="1" fill="${[C.orange, C.blue, C.pink][k % 3]}"/>`).join('')}<circle cx="54" cy="22" r="9" fill="${C.orange}"/><rect x="70" y="13" width="40" height="6" fill="${C.orange}"/><rect x="70" y="25" width="${18 + (i * 7) % 20}" height="6" fill="${C.pink}"/></svg>`;
+  const html = cart
+    ? `<ul class="cart">${Array.from({ length: cart }, (_, i) => `<li>${mini(i)}<span class="grow" aria-hidden="true"><i style="width:80%"></i><i style="width:50%"></i></span><button class="rm" type="button" data-rm="${i}" aria-label="Remove ticket ${i + 1}"><svg viewBox="-7 -7 14 14" aria-hidden="true"><path d="M-5,-5L5,5M5,-5L-5,5" stroke="${C.ink}" stroke-width="2.4" stroke-linecap="round"/></svg></button></li>`).join('')}</ul>`
+    : `<div class="empty" aria-label="The cart is empty"><svg viewBox="0 0 120 44" aria-hidden="true"><rect x="2" y="2" width="116" height="40" rx="6" fill="none" stroke="#bfbbaa" stroke-width="2.5" stroke-dasharray="6 5"/></svg><span class="grow" aria-hidden="true" style="flex:1;display:grid;gap:6px"><i style="display:block;height:6px;width:70%;border-radius:9px;background:#bfbbaa"></i></span></div>`;
+  document.querySelectorAll('[data-cart]').forEach(box => { box.innerHTML = html + `<a class="cta" href="#tickets" data-goto="tickets">TICKETS</a>`; });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-rm]');
+  if (!b) return;
+  const panel = b.closest('.panel');
+  cart = Math.max(0, cart - 1); renderCart(false);
+  live.textContent = cart === 1 ? '1 ticket in the cart' : `${cart} tickets in the cart`;
+  const nb = panel && panel.querySelector('.rm'); (nb || (panel && panel.querySelector('.cta')))?.focus({ preventScroll: true });
+});
+$('tkAdd').addEventListener('click', e => {
+  const done = () => { cart++; renderCart(true); live.textContent = cart === 1 ? '1 ticket in the cart' : `${cart} tickets in the cart`; };
+  if (RM) return done();
+  const from = e.currentTarget.getBoundingClientRect(), to = pill.getBoundingClientRect();
+  const fly = document.createElement('div'); fly.className = 'fly';
+  fly.innerHTML = `<svg viewBox="0 0 60 30" width="60" height="30"><rect x="1" y="1" width="58" height="28" rx="4" fill="#f4f0e1" stroke="#a7a293" stroke-width="2"/><path d="M5,1H18V29H5Q1,29 1,25V5Q1,1 5,1Z" fill="${C.pink}"/><circle cx="30" cy="15" r="6" fill="${C.orange}"/><rect x="40" y="9" width="14" height="4" fill="${C.orange}"/><rect x="40" y="17" width="10" height="4" fill="${C.pink}"/></svg>`;
+  document.body.appendChild(fly);
+  const x0 = from.left + from.width / 2 - 30, y0 = from.top + from.height / 2 - 15, x1 = to.right - 30, y1 = to.top - 4;
+  gsap.set(fly, { x: x0, y: y0, rotation: -12, scale: 1.2 });
+  gsap.timeline({ onComplete: () => { fly.remove(); done(); } })
+    .to(fly, { x: x1, duration: 0.7, ease: 'power1.inOut' }, 0)
+    .to(fly, { y: y1, duration: 0.7, ease: 'back.in(1.2)' }, 0)
+    .to(fly, { rotation: 18, scale: 0.45, duration: 0.7, ease: 'power2.in' }, 0);
+});
+
+/* ================= panels: cart (avatar) and mobile menu ================= */
+let openPanel = null, openBtn = null;
+function togglePanel(btn, panel) {
+  const was = openPanel === panel;
+  closePanels();
+  if (was) return;
+  openPanel = panel; openBtn = btn; panel.hidden = false; btn.setAttribute('aria-expanded', 'true');
+  if (!RM) gsap.fromTo(panel, { y: -14, opacity: 0, scale: 0.97 }, { y: 0, opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out', transformOrigin: '90% 0%' });
+  const first = panel.querySelector('a,button'); first && first.focus({ preventScroll: true });
+}
+function closePanels(returnFocus) {
+  if (!openPanel) return;
+  const p = openPanel, b = openBtn;
+  openPanel = openBtn = null; b.setAttribute('aria-expanded', 'false'); p.hidden = true;
+  if (returnFocus) b.focus({ preventScroll: true });
+}
+$('avatarBtn').addEventListener('click', e => togglePanel(e.currentTarget, $('acct')));
+$('menuBtn').addEventListener('click', e => togglePanel(e.currentTarget, $('menu')));
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (openPanel) closePanels(true);
+  else if (cardOpen) { closeCard(); stageBtn.focus({ preventScroll: true }); }
+});
+addEventListener('resize', () => { if (openPanel && innerWidth > 820 && openPanel.id === 'menu') closePanels(); });
+
+/* ================= heart: favorite ================= */
+const chatBtn = $('chat'), burst = $('burst');
+for (let i = 0; i < 8; i++) burst.insertAdjacentHTML('beforeend', `<circle cx="1828" cy="992" r="${i % 2 ? 4 : 5.5}" fill="${[C.pink, C.orange, C.paper, C.blue][i % 4]}" opacity="0"/>`);
+chatBtn.addEventListener('click', () => {
+  const on = chatBtn.getAttribute('aria-pressed') !== 'true';
+  chatBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  live.textContent = on ? 'Saved to your favorites' : 'Removed from your favorites';
+  if (RM) return;
+  gsap.fromTo('#heart', { scale: 0.5, transformOrigin: '50% 60%' }, { scale: 1, duration: 0.45, ease: 'back.out(3)' });
+  if (on) [...burst.children].forEach((c, i) => {
+    const a = i / 8 * Math.PI * 2 - Math.PI / 2;
+    gsap.fromTo(c, { attr: { cx: 1828, cy: 992 }, opacity: 1 }, { attr: { cx: 1828 + Math.cos(a) * 64, cy: 992 + Math.sin(a) * 64 }, opacity: 0, duration: 0.6, ease: 'power2.out' });
+  });
+});
+
+/* ================= render loop ================= */
+function frame() {
+  const now = gsap.ticker.time;
+  const t = Math.min(14.999, tOf(P.p));
+  const c = chapterOf(t);
+  if (c !== chapter) { const prev = chapter; chapter = c; onChapter(c, prev); }
+  if (S.playing || S.energy > 0) {
+    S.beat = Music.beat();
+    const bi = Math.floor(S.beat);
+    if (S.playing && bi >= 0 && bi !== lastBeat) { lastBeat = bi; spawnRings(now); }
+  }
+  S.night = RM ? S.v : ease('power1.inOut')(S.v);
+  setT(wrap, `translate(${f2(BX - S.pan * SC)}px,${f2(BY)}px) scale(${SC.toFixed(5)})`);
+  renderColors(t);
+  renderSheets(t);
+  if (posterOn) renderPoster(t, now);
+  if (mapOn) renderMap(t, now);
+  renderOverlay(now);
+  renderTicket(t);
+  renderTod();
+}
+renderCart(false);
+frame();
+gsap.ticker.add(frame);
+addEventListener('resize', layout);
+
+/* ================= opening ================= */
+const hashLabel = { '#map': 'map', '#tickets': 'tickets', '#finale': 'finale' }[location.hash];
+const fontsReady = Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]);
+fontsReady.then(() => {
+  ScrollTrigger.refresh();
+  if (hashLabel) {
+    S.intro = 9;
+    window.scrollTo(0, Math.round(ST.labelToScroll(hashLabel)));
+    ST.update(); const tw = ST.getTween && ST.getTween(); if (tw) tw.progress(1);
+  } else if (!RM) {
+    gsap.to(S, { intro: 1.8, duration: 1.8, ease: 'none' });
+    gsap.from('.ni', { y: -24, opacity: 0, duration: 0.5, stagger: 0.05, delay: 0.15, ease: 'power2.out', clearProps: 'transform,opacity' });
+    gsap.from(chatBtn, { scale: 0, duration: 0.5, delay: 1.1, ease: 'back.out(2)', clearProps: 'transform' });
+  }
+  rootEl.dataset.ready = '1';
+});
+window.site = { S, goto, get chapter() { return chapter; }, get cart() { return cart; }, ST };
+})();
+</script>
+</body>
+</html>

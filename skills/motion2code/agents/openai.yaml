@@ -1,0 +1,5 @@
+interface:
+  display_name: "Motion2Code"
+  short_description: "Rebuild a motion design video as looping SVG + GSAP code, checked against the source"
+  brand_color: "#E8FF5A"
+  default_prompt: "Use $motion2code to rebuild this video as a self-contained SVG + GSAP animation that loops seamlessly, verified frame by frame against the source."

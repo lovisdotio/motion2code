@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video vs code</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg:#111; --fg:#EEF0ED; --muted:#9a9a92; --accent:#E8FF5A; --accent-ink:#000; --track:#2a2a2a }
+  * { box-sizing: border-box }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.4 system-ui,-apple-system,sans-serif; padding:20px 16px }
+  h1 { font-size:18px; font-weight:600; margin:0 0 14px }
+  .labels { display:grid; grid-template-columns:1fr 1fr; gap:16px; color:var(--muted); font-size:13px; margin-bottom:6px }
+  .stage { position:relative; display:grid; grid-template-columns:1fr 1fr; gap:16px }
+  .panel { position:relative; width:100%; aspect-ratio:var(--ar,16/9); background:#000; overflow:hidden; border-radius:6px }
+  .panel video, .panel iframe { position:absolute; inset:0; width:100%; height:100%; border:0; display:block }
+  /* onion skin: the code sits over the video at 50 % (same DOM, only CSS changes: the iframe never reloads) */
+  .onion .labels { display:none }
+  .onion .stage { grid-template-columns:1fr; max-width:min(100%, 1100px) }
+  .onion #codePanel { position:absolute; inset:0; background:transparent }
+  .onion #codePanel iframe { opacity:.5 }
+  .bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:16px }
+  button { background:var(--accent); color:var(--accent-ink); border:0; border-radius:6px; padding:8px 16px; font:600 14px system-ui; cursor:pointer }
+  button.ghost { background:var(--track); color:var(--fg) }
+  .track { flex:1 1 240px; height:10px; background:var(--track); border-radius:5px; cursor:pointer; position:relative }
+  .fill { position:absolute; left:0; top:0; bottom:0; background:var(--fg); border-radius:5px; width:0 }
+  .time { font-variant-numeric:tabular-nums; min-width:110px; text-align:right; color:var(--muted) }
+  @media (max-width:700px) { .stage, .labels { grid-template-columns:1fr } }
+</style>
+</head>
+<body>
+<!-- Usage: put next to index.html and set SOURCE (or open compare.html?src=path/to/source.mp4).
+     The code follows the video clock frame by frame: anim.seek(video.currentTime). -->
+<h1 id="title">AI video → coded animation</h1>
+<div class="labels"><span>AI video (source)</span><span>Code · SVG + GSAP</span></div>
+<div class="stage" id="stage">
+  <div class="panel"><video id="vid" muted playsinline preload="auto"></video></div>
+  <div class="panel" id="codePanel"><iframe id="code" src="index.html?external=1" title="Coded animation"></iframe></div>
+</div>
+<div class="bar">
+  <button id="play">Play</button>
+  <button id="pause" class="ghost">Pause</button>
+  <button id="prev" class="ghost" aria-label="Previous frame">Prev frame</button>
+  <button id="next" class="ghost" aria-label="Next frame">Next frame</button>
+  <button id="onion" class="ghost" aria-pressed="false">Onion skin</button>
+  <div class="track" id="track"><div class="fill" id="fill"></div></div>
+  <span class="time" id="time">0.00 / 0.00 s</span>
+</div>
+<script>
+const SOURCE = new URLSearchParams(location.search).get('src') || 'source.mp4';
+const FPS = 24;
+const vid = document.getElementById('vid'), frame = document.getElementById('code');
+const fill = document.getElementById('fill'), time = document.getElementById('time'), track = document.getElementById('track');
+const anim = () => frame.contentWindow && frame.contentWindow.anim;
+let DUR = 0;
+
+vid.src = SOURCE;
+vid.addEventListener('loadedmetadata', () => {
+  document.documentElement.style.setProperty('--ar', `${vid.videoWidth}/${vid.videoHeight}`);
+  if (vid.videoHeight > vid.videoWidth) document.getElementById('stage').style.maxWidth = '900px';
+});
+// the animation duration is the reference: a 15.10 s source wraps at 15.00 s like the code
+function duration() { return DUR || (anim() && (DUR = anim().duration)) || vid.duration || 0; }
+
+function tick() {
+  const d = duration();
+  if (d && vid.currentTime >= d) { vid.currentTime = 0; if (!vid.paused) vid.play(); }
+  const t = Math.min(vid.currentTime, d || Infinity);
+  if (anim()) anim().seek(t);
+  if (d) fill.style.width = (t / d * 100) + '%';
+  time.textContent = `${t.toFixed(2)} / ${(d || 0).toFixed(2)} s`;
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+const step = n => { vid.pause(); vid.currentTime = Math.max(0, Math.min(duration() - 1 / FPS, vid.currentTime + n / FPS)); };
+document.getElementById('play').onclick = () => { vid.currentTime = 0; vid.play(); };
+document.getElementById('pause').onclick = () => vid.paused ? vid.play() : vid.pause();
+document.getElementById('prev').onclick = () => step(-1);
+document.getElementById('next').onclick = () => step(1);
+document.getElementById('onion').onclick = e => {
+  const on = document.body.classList.toggle('onion'); e.currentTarget.setAttribute('aria-pressed', on);
+};
+track.onclick = e => { const r = track.getBoundingClientRect(); vid.currentTime = (e.clientX - r.left) / r.width * duration(); };
+addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'ArrowRight') step(1);
+  if (e.key === ' ') { e.preventDefault(); vid.paused ? vid.play() : vid.pause(); }
+});
+// servers without Range requests (python -m http.server) block seeking: load the clip as a blob
+fetch(SOURCE).then(r => r.ok ? r.blob() : Promise.reject()).then(b => {
+  const t = vid.currentTime; vid.src = URL.createObjectURL(b); vid.currentTime = t;
+}).catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Festival Map</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&display=block&text=WAVESFTMPICK" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#efebd8;overflow:hidden}
+  #wrap{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+  #stage{position:absolute;inset:0;overflow:hidden;background:#efebd8}
+  .layer{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none}
+  #world{perspective:2600px;perspective-origin:960px 540px}
+  .sheet{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-style:preserve-3d;transform-origin:960px 540px}
+  .pnl{position:absolute;top:0;height:1080px;width:640px;transform-style:preserve-3d}
+  .pnl.l{left:0;transform-origin:100% 50%}
+  .pnl.c{left:640px}
+  .pnl.r{left:1280px;transform-origin:0 50%}
+  .face{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .face svg{position:absolute;top:0;width:1920px;height:1080px;display:block}
+  .back{transform:rotateY(180deg);background:#e3929f}
+  /* flat: a single panel covers the full width (no seam between panels) */
+  .sheet.flat .pnl.l,.sheet.flat .pnl.r{display:none}
+  .sheet.flat .pnl.c{left:0;width:1920px}
+  .sheet.flat .pnl.c .face svg{left:0 !important}
+  #ticket{position:absolute;left:0;top:0;width:1920px;height:1080px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  svg{overflow:hidden}
+  svg text{font-family:'Outfit',sans-serif}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div id="world" class="layer">
+    <div id="posterSheet" class="sheet"></div>
+    <div id="mapSheet" class="sheet"></div>
+    <div id="ticket"><svg id="ticketSvg" viewBox="0 0 1920 1080" width="1920" height="1080"></svg></div>
+  </div>
+  <svg id="ov" class="layer" viewBox="0 0 1920 1080"></svg>
+  <svg id="ui" class="layer" viewBox="0 0 1920 1080"></svg>
+  <svg id="cur" class="layer" viewBox="0 0 1920 1080"></svg>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(() => {
+'use strict';
+/* ================= palette sampled from the video (Pillow) ================= */
+const C = {
+  cream: '#efebd8', paper: '#fbf8ee', orange: '#e56707', pink: '#e3929f', blue: '#0078ba',
+  navy: '#003948', green: '#006f5e', gray: '#bfbbaa', ink: '#16323a', deep: '#0e3346',
+  tent: '#f1ead8', tent2: '#d8d0bc', tent3: '#a39d8b', teal: '#1f8a83', skin: '#eab48f'
+};
+const DAY = {
+  sky: '#e595a0', ground: '#e594a1', path: '#efebd8', cloud: '#efecdb',
+  hA: '#0079b6', hB: '#006e88', hC: '#003b49', hD: '#066b90',
+  door: '#0877b6', arch: '#1f7cc4', arch2: '#5aadde', ringL: '#0a7ac0', ringR: '#0a7ac0',
+  win: '#0b5c55', lamp: '#12384a', nav: '#16323a',
+  lg1: '#16323a', lg2: '#16323a', lg3: '#0078ba', lg4: '#16323a', lg5: '#e56707',
+  lg6: '#e56707', lg7: '#0078ba', lg8: '#16323a', lg9: '#0078ba'
+};
+const NIGHT = {
+  sky: '#0b7bc2', ground: '#86b5d5', path: '#dddacb', cloud: '#93bce0',
+  hA: '#3f9aa3', hB: '#02675b', hC: '#083546', hD: '#00615e',
+  door: '#da8692', arch: '#ee7a2a', arch2: '#f2a7b6', ringL: '#e796a1', ringR: '#ef7a2c',
+  win: '#ec9ead', lamp: '#f3a6b5', nav: '#f6f1e2',
+  lg1: '#f6f1e2', lg2: '#e56707', lg3: '#f6f1e2', lg4: '#f6f1e2', lg5: '#eea2b6',
+  lg6: '#eea2b6', lg7: '#f6f1e2', lg8: '#e56707', lg9: '#f6f1e2'
+};
+
+const $ = id => document.getElementById(id);
+const easeCache = {};
+const ease = n => easeCache[n] || (easeCache[n] = gsap.parseEase(n));
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const prog = (t, a, b, e = 'power2.inOut') => ease(e)(clamp((t - a) / (b - a)));
+const mixC = (a, b, p) => p <= 0 ? a : p >= 1 ? b : gsap.utils.interpolate(a, b, p);
+const f2 = v => (Math.round(v * 100) / 100);
+
+/* curves sampled frame by frame, smoothed with monotone Hermite */
+function mono(pts) {
+  const n = pts.length, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), d = [], m = [];
+  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+  m[0] = d[0]; m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i + 1] / d[i], h = a * a + b * b;
+    if (h > 9) { const k = 3 / Math.sqrt(h); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; }
+  }
+  return t => {
+    if (t <= xs[0]) return ys[0];
+    if (t >= xs[n - 1]) return ys[n - 1];
+    let i = 0; while (t > xs[i + 1]) i++;
+    const h = xs[i + 1] - xs[i], s = (t - xs[i]) / h, s2 = s * s, s3 = s2 * s;
+    return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (3 * s2 - 2 * s3) * ys[i + 1] + (s3 - s2) * h * m[i + 1];
+  };
+}
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ================= small flat shapes ================= */
+// cloud / bush: half-ellipses on a flat base
+const cloudPath = (base, bumps) => bumps.map(([cx, rx, ry]) => `M${cx - rx},${base}A${rx},${ry} 0 0 1 ${cx + rx},${base}Z`).join('');
+const rect = (x, y, w, h, fill, extra = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" ${extra}/>`;
+const star = r => `M0,${-r}L${0.2 * r},${-0.2 * r}L${r},0L${0.2 * r},${0.2 * r}L0,${r}L${-0.2 * r},${0.2 * r}L${-r},0L${-0.2 * r},${-0.2 * r}Z`;
+
+/* ================= POSTER (home page) ================= */
+function skyline() {
+  return `
+  <path d="${cloudPath(652, [[-10, 85, 86], [80, 70, 80], [160, 66, 60], [235, 58, 40], [290, 30, 20]])}" fill="${C.navy}"/>
+  <path d="${cloudPath(652, [[1660, 58, 46], [1755, 72, 76], [1855, 72, 66], [1935, 46, 46]])}" fill="${C.green}"/>
+  ${rect(307, 487, 43, 165, C.pink)}
+  <path d="M350,487L373,507V652H350Z" fill="${C.navy}"/>
+  ${rect(395, 487, 233, 20, C.blue)}${rect(605, 487, 23, 131, C.blue)}
+  ${rect(417, 507, 188, 111, C.navy)}${rect(373, 618, 255, 34, C.orange)}
+  <path d="M742.7,612A222,222 0 0 1 1175.3,612Z" fill="${C.cream}"/>
+  <path d="M775.7,612A190,190 0 0 1 1142.3,612Z" fill="${C.blue}"/>
+  <path d="M797,612C805,585 815,563 829,547C860,574 890,596 928,612Z" fill="${C.navy}"/>
+  <path d="M742,407L782,409C806,424 816,470 815,550C800,522 776,502 742,496Z" fill="${C.blue}"/>
+  <path d="M1175,407L1150,411C1122,430 1107,478 1106,550C1124,508 1148,492 1175,486Z" fill="${C.pink}"/>
+  ${rect(687, 407, 55, 245, C.pink)}${rect(1175, 407, 57, 245, C.blue)}${rect(742, 612, 433, 40, C.pink)}
+  ${rect(1290, 487, 233, 20, C.pink)}${rect(1290, 507, 23, 145, C.pink)}${rect(1313, 507, 187, 111, C.blue)}
+  ${rect(1500, 507, 23, 111, C.pink)}${rect(1290, 618, 255, 34, C.pink)}
+  <path d="M1545,507L1570,487V652H1545Z" fill="${C.navy}"/>${rect(1570, 487, 42, 165, C.orange)}`;
+}
+function posterMarkup() {
+  return `
+  ${rect(0, 0, 1920, 1080, C.cream)}
+  <g class="pcl" data-k="1"><path d="${cloudPath(233, [[240, 34, 24], [300, 50, 52], [370, 64, 83], [455, 52, 46], [530, 42, 24], [576, 22, 10]])}" fill="${C.pink}"/></g>
+  <g class="pcl" data-k="-0.7"><path d="${cloudPath(446, [[10, 70, 106], [110, 56, 70], [182, 52, 48], [255, 46, 30], [316, 26, 12]])}" fill="${C.pink}"/></g>
+  <g class="pcl" data-k="0.6"><path d="${cloudPath(200, [[1338, 28, 14], [1392, 40, 30], [1440, 48, 42], [1496, 32, 18]])}" fill="${C.pink}"/></g>
+  <g class="pcl" data-k="-1"><path d="${cloudPath(383, [[1418, 30, 18], [1490, 66, 58], [1610, 88, 112], [1755, 108, 155], [1880, 84, 128], [1935, 30, 100]])}" fill="${C.pink}"/>
+    <rect x="1668" y="378" width="68" height="40" rx="12" fill="${C.pink}"/></g>
+  <g class="psun"><circle cx="959" cy="491" r="361" fill="${C.orange}"/></g>
+  ${rect(0, 652, 1920, 428, C.cream)}
+  ${skyline()}
+  ${rect(46, 698, 878, 54, C.orange)}${rect(978, 698, 894, 54, C.pink)}
+  ${rect(46, 785, 636, 55, C.orange)}${rect(1236, 785, 636, 55, C.pink)}
+  ${rect(46, 872, 532, 55, C.pink)}${rect(1236, 872, 636, 55, C.orange)}
+  ${rect(735, 883, 449, 23, C.gray)}${rect(735, 918, 257, 23, C.gray)}
+  ${rect(46, 982, 212, 55, C.pink)}${rect(316, 982, 563, 55, C.orange)}${rect(990, 982, 882, 55, C.orange)}
+  <text x="958" y="848" text-anchor="middle" font-size="60" font-weight="700" fill="${C.ink}" letter-spacing="-0.6">TICKETS</text>`;
+}
+
+/* ================= FESTIVAL MAP ================= */
+const R = rng(199002);
+const pick = a => a[Math.floor(R() * a.length)];
+const TOPS = [C.orange, C.blue, C.pink, '#2a9a8f', '#f6efe0', C.ink, '#e8a8b6', C.orange, C.blue];
+const LEGS = [C.ink, C.blue, C.orange, '#e8a8b6', C.ink, '#f3ece0'];
+const SKIN = ['#f2bc98', '#d99668', '#a8683f', '#e9a77d', '#f5c9a8'];
+const HAIR = ['#16323a', '#5a2e1a', '#16323a', '#c45a12', '#2b1d18', '#16323a'];
+let popRank = 0;
+function person(x, y, s = 1, t0 = null) {
+  const dress = R() < 0.45, top = pick(TOPS), leg = pick(LEGS), skin = pick(SKIN), hair = pick(HAIR), long = R() < 0.5;
+  const pt = t0 == null ? 4.3 + R() * 0.9 : t0;
+  let g = `<g class="pp" data-x="${x}" data-y="${y}" data-s="${s}" data-ph="${R().toFixed(3)}" data-t="${pt.toFixed(3)}" transform="translate(${x} ${y}) scale(${s})">`;
+  g += `<rect x="-4.3" y="-27" width="3.3" height="27" rx="1.3" fill="${leg}"/><rect x="1" y="-27" width="3.3" height="27" rx="1.3" fill="${leg}"/>`;
+  if (long) g += `<rect x="-7.2" y="-64" width="14.4" height="${dress ? 21 : 17}" rx="5" fill="${hair}"/>`;
+  g += `<rect x="-9.6" y="-50" width="3.2" height="22" rx="1.6" fill="${skin}"/><rect x="6.4" y="-50" width="3.2" height="22" rx="1.6" fill="${skin}"/>`;
+  g += dress ? `<path d="M-5.8,-52H5.8L10.5,-21H-10.5Z" fill="${top}"/>` : `<rect x="-6.6" y="-52" width="13.2" height="27" rx="3" fill="${top}"/>`;
+  g += `<rect x="-2" y="-57" width="4" height="6" fill="${skin}"/><circle cx="0" cy="-61.5" r="6.8" fill="${skin}"/>`;
+  g += `<path d="M-7,-61A7,7 0 0 1 7,-61Q0,-64.5 -7,-61Z" fill="${hair}"/></g>`;
+  return g;
+}
+function crowd() {
+  const rows = [[668, 556, 1366], [693, 560, 1356], [718, 590, 1338], [743, 630, 1305], [768, 690, 1262], [792, 770, 1200], [815, 850, 1110], [836, 905, 1010]];
+  const pts = [];
+  for (const [y, a, b] of rows) {
+    const n = Math.max(2, Math.round((b - a) / 45));
+    for (let i = 0; i < n; i++) pts.push([a + (i + 0.5) * (b - a) / n + (R() - 0.5) * 22, y + (R() - 0.5) * 14]);
+  }
+  pts.sort((p, q) => p[1] - q[1]);
+  return pts.map(([x, y]) => person(f2(x), f2(y), 1.1)).join('');
+}
+// element that pops in while the map unfolds
+const pop = (t, ox, oy, inner, mode = 'pop') => `<g class="pop" data-t="${t}" data-ox="${ox}" data-oy="${oy}" data-m="${mode}">${inner}</g>`;
+function tree(cx, cy, rx, ry, cl, cr, trunk) {
+  return `<rect x="${cx - 2.5}" y="${cy + ry - 8}" width="5" height="${trunk}" fill="#23423f"/>
+  <path d="M${cx},${cy - ry}A${rx},${ry} 0 0 0 ${cx},${cy + ry}Z" fill="${cl}"/><path d="M${cx},${cy - ry}A${rx},${ry} 0 0 1 ${cx},${cy + ry}Z" fill="${cr}"/>`;
+}
+function wheel(x, y, r) { return `<circle cx="${x}" cy="${y}" r="${r}" fill="${C.deep}"/><circle cx="${x}" cy="${y}" r="${r * 0.38}" fill="#e9e2cf"/>`; }
+function umbrella(cx, top, rx, ry, base) {
+  let s = `<rect x="${cx - 1.5}" y="${top + ry - 2}" width="3" height="${base - top - ry + 2}" fill="#5b4a3a"/>`;
+  const n = 6;
+  for (let i = 0; i < n; i++) {
+    const x0 = cx - rx + i * 2 * rx / n, x1 = x0 + 2 * rx / n;
+    s += `<path d="M${cx},${top}L${f2(x0)},${top + ry}L${f2(x1)},${top + ry}Z" fill="${i % 2 ? '#f6efe0' : C.orange}"/>`;
+    s += `<path d="M${f2(x0)},${top + ry}A${f2(rx / n)},${f2(rx / n * 0.6)} 0 0 0 ${f2(x1)},${top + ry}Z" fill="${i % 2 ? '#f6efe0' : C.orange}"/>`;
+  }
+  return s;
+}
+function mapMarkup() {
+  popRank = 0;
+  const truss = (x, y, w, h, vertical) => {
+    let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#12384a" stroke-width="4"/>`;
+    let p = '';
+    if (vertical) { for (let yy = y, k = 0; yy <= y + h; yy += 14, k++) p += `${k ? 'L' : 'M'}${k % 2 ? x + w : x},${yy}`; }
+    else { for (let xx = x, k = 0; xx <= x + w; xx += 16, k++) p += `${k ? 'L' : 'M'}${xx},${k % 2 ? y + h : y}`; }
+    return s + `<path d="${p}" fill="none" stroke="#12384a" stroke-width="3"/>`;
+  };
+  const speaker = (x, side) => {
+    let s = rect(x, 390, 53, 202, '#11384a');
+    for (const y of [420, 467, 515, 562]) s += `<circle cx="${x + 26.5}" cy="${y}" r="15" fill="none" stroke="var(--ring${side})" stroke-width="6"/>`;
+    s += `<circle class="lamp" cx="${x + 26.5}" cy="420" r="9" fill="var(--lamp)"/>`;
+    return s;
+  };
+  let deckZ = '';
+  for (let xx = 752, k = 0; xx <= 1168; xx += 21, k++) deckZ += `${k ? 'L' : 'M'}${xx},${k % 2 ? 586 : 558}`;
+  // stars (night)
+  const STARS = [[527, 78, 15], [338, 112, 8], [145, 157, 13], [433, 236, 14], [648, 228, 8], [520, 310, 9], [242, 352, 8], [790, 272, 7], [728, 88, 7],
+    [1192, 247, 9], [1325, 177, 14], [1365, 322, 8], [1510, 318, 14], [1540, 118, 12], [1625, 196, 13], [1757, 116, 9], [1815, 188, 8], [1255, 93, 7],
+    [90, 330, 7], [880, 140, 6], [1050, 120, 6], [1880, 300, 8], [300, 30, 6], [1690, 40, 7]];
+  const stars = STARS.map(([x, y, r], i) => `<path class="star" data-x="${x}" data-y="${y}" data-i="${i}" d="${star(r)}" fill="#f6f1e2" transform="translate(${x} ${y}) scale(0)"/>`).join('');
+  const beam = (cls, px) => `<path class="${cls}" d="M-16,0L16,0L160,-1250L-160,-1250Z" fill="#ffffff" opacity="0" transform="translate(${px} 380)"/>`;
+  const pbeam = (cls, px, py, len, w) => `<path class="${cls}" d="M0,-8L0,8L${len},${w}L${len},${-w}Z" fill="#f7a9bb" opacity="0" transform="translate(${px} ${py})"/>`;
+  return `
+  <rect width="1920" height="1080" fill="var(--sky)"/>
+  <g class="mcl" data-k="1"><path d="${cloudPath(183, [[330, 32, 18], [402, 62, 64], [472, 50, 40], [540, 44, 30], [600, 30, 12]])}" fill="var(--cloud)"/></g>
+  <g class="mcl" data-k="-0.8"><path d="${cloudPath(300, [[0, 72, 92], [100, 62, 62], [182, 56, 40], [252, 40, 18]])}" fill="var(--cloud)"/></g>
+  <g class="mcl" data-k="-1"><path d="${cloudPath(247, [[1488, 30, 14], [1560, 62, 46], [1662, 82, 92], [1782, 92, 134], [1882, 72, 110], [1935, 40, 80]])}" fill="var(--cloud)"/></g>
+  <g class="mcl" data-k="0.7"><path d="${cloudPath(413, [[350, 24, 12], [412, 52, 46], [472, 40, 24], [506, 20, 8]])}" fill="var(--cloud)"/></g>
+  <g class="mcl" data-k="1.2"><path d="${cloudPath(440, [[1290, 30, 14], [1362, 56, 40], [1442, 62, 60], [1512, 46, 30], [1556, 20, 10]])}" fill="var(--cloud)"/></g>
+  <g class="stars">${stars}</g>
+  <circle class="moon" cx="960" cy="560" r="92" fill="#f7cb51" opacity="0"/>
+  ${beam('beamL', 800)}${beam('beamR', 1120)}
+  ${pop(4.5, 0, 0, `<path d="M0,620V415C110,392 250,384 370,410C480,435 600,505 730,620Z" fill="var(--hB)"/>
+     <path d="M0,620V393C80,384 180,386 250,400C330,418 350,470 300,522C250,572 150,602 0,620Z" fill="var(--hA)"/>
+     <path d="M0,620V468C60,462 130,475 178,500V620Z" fill="var(--hC)"/>`, 'rise')}
+  ${pop(4.56, 0, 0, `<path d="M1200,620C1330,540 1480,450 1640,398C1740,366 1840,360 1920,368V620Z" fill="var(--hC)"/>
+     <path d="M1205,612C1300,545 1420,478 1530,452C1580,442 1620,446 1640,452C1530,490 1400,548 1290,620Z" fill="var(--hD)"/>`, 'rise')}
+  <path d="M0,594C400,586 800,590 960,592C1300,590 1600,586 1920,580V1080H0Z" fill="var(--ground)"/>
+  <g fill="var(--path)">
+    <path d="M548,594H1372C1396,630 1392,680 1352,712C1290,762 1150,812 1068,846C1058,920 1068,1000 1080,1080H866C880,1000 882,920 862,858C760,826 640,780 590,735C540,690 532,640 548,594Z"/>
+    <path d="M0,708C150,703 330,688 460,640L560,604L585,692C450,724 300,752 0,772Z"/>
+    <path d="M300,652L560,618L572,662L340,694Z"/>
+    <path d="M1330,690C1450,688 1600,690 1920,676V742C1700,748 1500,752 1320,764Z"/>
+    <path d="M1380,652H1840L1850,700L1372,706Z"/>
+    <path d="M1230,782C1320,752 1420,800 1530,812L1532,858C1410,850 1310,834 1206,848Z"/>
+    <path d="M0,872C140,902 232,1000 304,1080H232C170,1010 100,954 0,934Z"/>
+  </g>
+  <path d="M210,795C330,780 470,800 560,790C680,780 790,820 800,880C810,940 720,990 600,995C500,1000 420,985 360,960C300,940 220,920 160,900C120,885 125,840 150,820C170,805 190,798 210,795Z" fill="${C.blue}" stroke="var(--path)" stroke-width="52" stroke-linejoin="round"/>
+  <path d="M210,795C330,780 470,800 560,790C680,780 790,820 800,880C810,940 720,990 600,995C500,1000 420,985 360,960C300,940 220,920 160,900C120,885 125,840 150,820C170,805 190,798 210,795Z" fill="#0177b8"/>
+  <g fill="none" stroke="#bfe0f2" stroke-width="2.5" stroke-linecap="round">
+    <path d="M240,842q12,-7 24,0t24,0t24,0t24,0"/><path d="M298,876q10,-6 20,0t20,0t20,0"/><path d="M440,906q10,-6 20,0t20,0t20,0"/><path d="M530,942q11,-6 22,0t22,0t22,0"/>
+  </g>
+  ${pop(4.9, 0, 0, tree(115, 545, 36, 56, '#0d3a45', '#0d3a45', 80) + tree(74, 580, 20, 46, '#1d7a6c', '#1d7a6c', 50) + tree(535, 555, 24, 46, '#1d7a6c', '#0f5c52', 55) + tree(1365, 552, 21, 46, '#1d7a6c', '#1d7a6c', 60))}
+  ${pop(4.95, 1850, 560, `<path d="${cloudPath(568, [[1800, 38, 40], [1860, 50, 62], [1925, 40, 50]])}" fill="#0f6a5f"/>`)}
+  ${pop(4.28, 300, 655, `
+    <path d="M85,655C120,610 150,575 175,555C205,520 225,470 232,442C250,490 300,525 330,532C352,505 375,470 388,447C405,490 440,530 470,560C490,590 505,620 520,655Z" fill="${C.tent}"/>
+    <path d="M232,442C228,500 215,560 205,655H182C200,580 222,500 232,442Z" fill="${C.tent2}"/>
+    <path d="M388,447C392,520 410,600 425,655H446C425,590 400,520 388,447Z" fill="${C.tent2}"/>
+    <path d="M85,655C120,610 150,575 175,555L190,560C165,590 140,620 118,655Z" fill="${C.tent2}"/>
+    <path d="M235,655C238,606 270,586 307,586C344,586 377,606 380,655Z" fill="var(--door)"/>
+    <path d="M262,655L292,610L320,655Z" fill="${C.deep}"/>
+    <path d="M420,655L440,598L460,655Z" fill="${C.deep}"/>
+    <rect x="230.5" y="400" width="3" height="44" fill="#7e7a6e"/><rect x="386.5" y="410" width="3" height="40" fill="#7e7a6e"/>
+    <path d="M234,401L264,407L234,415Z" fill="${C.blue}"/><path d="M390,411L426,416L390,428Z" fill="${C.orange}"/>`)}
+  ${pop(4.33, 1610, 660, `
+    <path d="M1400,660C1430,615 1455,585 1475,565C1500,530 1522,475 1530,445C1548,490 1600,525 1622,532C1645,505 1672,470 1685,440C1700,485 1740,530 1770,560C1790,590 1805,625 1820,660Z" fill="${C.tent}"/>
+    <path d="M1530,445C1526,505 1512,585 1500,660H1480C1498,585 1520,505 1530,445Z" fill="${C.tent2}"/>
+    <path d="M1685,440C1690,515 1702,590 1716,660H1696C1690,590 1684,515 1685,440Z" fill="${C.tent2}"/>
+    <path d="M1420,660C1425,612 1450,590 1470,590C1495,590 1515,612 1520,660Z" fill="${C.deep}"/>
+    <path d="M1540,660C1545,610 1570,588 1595,588C1625,588 1648,610 1652,660Z" fill="var(--door)"/>
+    <path d="M1700,660C1705,615 1725,595 1750,595C1775,595 1795,615 1800,660Z" fill="${C.tent3}"/>
+    <rect x="1528.5" y="402" width="3" height="45" fill="#7e7a6e"/><rect x="1683.5" y="398" width="3" height="44" fill="#7e7a6e"/>
+    <path d="M1532,403L1566,409L1532,418Z" fill="${C.pink}"/><path d="M1687,399L1722,405L1687,414Z" fill="${C.orange}"/>`)}
+  ${pop(4.18, 960, 592, `${truss(750, 368, 28, 186, true)}${truss(1140, 368, 28, 186, true)}${truss(778, 368, 362, 26, false)}
+    <rect x="748" y="552" width="424" height="40" fill="#11384a"/><path d="${deckZ}" fill="none" stroke="#2c6f88" stroke-width="3"/>`)}
+  ${pop(4.45, 960, 592, speaker(695, 'L') + speaker(1172, 'R'))}
+  ${pop(4.6, 960, 548, `<rect x="818" y="395" width="284" height="153" fill="#10394a"/>
+    <rect class="scrO" x="818" y="548" width="284" height="0" fill="${C.orange}"/>
+    <rect class="scrB" x="818" y="548" width="284" height="0" fill="${C.blue}"/>
+    <rect class="scrN" x="818" y="395" width="284" height="153" fill="#e796a1" opacity="0"/>`)}
+  ${pop(4.55, 0, 0, `<path d="M774,548C778,430 860,346 960,342C1060,346 1140,420 1150,536" fill="none" stroke="var(--arch)" stroke-width="34" stroke-linecap="butt"/>
+    <path d="M790,548C795,450 865,368 960,362C1035,366 1100,410 1124,470" fill="none" stroke="var(--arch2)" stroke-width="9"/>`, 'dash')}
+  <rect class="lampL" x="782" y="508" width="16" height="12" rx="3" fill="#dfe6ea"/><rect class="lampR" x="1122" y="508" width="16" height="12" rx="3" fill="#dfe6ea"/>
+  ${pop(4.9, 0, 0, person(310, 652, 0.96, 4.9) + person(338, 648, 0.96, 4.95) + person(440, 652, 0.96, 5.0) + person(484, 652, 0.96, 5.05))}
+  ${pop(4.95, 0, 0, person(1440, 650, 0.96, 4.95) + person(1466, 650, 0.96, 5.0) + person(1612, 655, 0.96, 5.05) + person(1636, 655, 0.96, 5.1) + person(1590, 640, 0.9, 5.12))}
+  ${crowd()}
+  ${person(488, 742, 1, 4.85)}${person(1360, 690, 0.95, 5.0)}${person(826, 912, 1, 5.05)}${person(1462, 908, 1, 5.2)}${person(1526, 905, 1, 5.22)}
+  ${pop(4.62, 220, 752, `${rect(105, 658, 158, 94, C.orange, 'rx="6"')}${rect(122, 673, 126, 40, '#f6efe0', 'rx="6"')}
+    <ellipse cx="150" cy="693" rx="18" ry="9" fill="#3b8fd0"/><ellipse cx="186" cy="693" rx="16" ry="8" fill="#f2a35e"/><ellipse cx="222" cy="693" rx="18" ry="9" fill="#e8a0b0"/>
+    <path d="M263,680H312C322,680 330,692 335,705V752H263Z" fill="${C.orange}"/><path d="M272,690H310C318,690 323,700 326,712H272Z" fill="${C.deep}"/>
+    ${rect(105, 740, 230, 12, '#c85a06')}${wheel(160, 754, 17)}${wheel(292, 754, 17)}`)}
+  ${pop(4.7, 1000, 790, `<path d="${cloudPath(782, [[460, 30, 24], [500, 38, 36], [540, 30, 22]])}" fill="#0d3a45"/><path d="${cloudPath(783, [[478, 26, 16], [520, 26, 20]])}" fill="#1d7a6c"/>
+    <path d="${cloudPath(832, [[680, 22, 20], [712, 30, 28], [742, 22, 14]])}" fill="#0f5c52"/><path d="${cloudPath(806, [[150, 18, 12], [176, 24, 18]])}" fill="#0f5c52"/>
+    <path d="${cloudPath(936, [[130, 22, 18], [160, 30, 28], [190, 22, 14]])}" fill="#0d3a45"/><path d="${cloudPath(872, [[52, 28, 28], [90, 32, 40], [120, 22, 18]])}" fill="#1d7a6c"/>`)}
+  ${pop(4.95, 700, 900, `<path d="M640,884H762C754,904 736,916 700,916C664,916 648,904 640,884Z" fill="${C.orange}"/><path d="M660,884H740C734,893 720,898 700,898C680,898 666,893 660,884Z" fill="#f6efe0"/>
+    <path d="M641,885C636,870 640,860 648,852" fill="none" stroke="${C.orange}" stroke-width="5" stroke-linecap="round"/>`)}
+  ${pop(5.1, 50, 840, tree(52, 742, 38, 86, C.deep, '#1d7a6c', 100))}
+  ${pop(5.15, 1840, 690, tree(1838, 598, 32, 62, C.deep, '#1d7a6c', 95))}
+  ${pop(5.2, 1845, 955, tree(1845, 866, 38, 86, C.deep, '#1d7a6c', 90))}
+  ${pop(4.4, 1700, 895, `<path d="M1505,895L1565,775L1690,700H1920V895Z" fill="#ebe5d4"/><path d="M1690,700L1792,895H1920V700Z" fill="#d6cfbc"/>
+    <path d="M1690,700L1792,895" stroke="#a39d8b" stroke-width="3"/>
+    ${rect(1525, 800, 148, 82, C.orange)}${rect(1542, 818, 114, 64, '#c85a06')}
+    ${Array.from({ length: 8 }, (_, i) => `${rect(1512 + i * 21.25, 778, 21.25, 24, i % 2 ? '#f6efe0' : C.orange)}<path d="M${1512 + i * 21.25},801a10.625,9 0 0 0 21.25,0Z" fill="${i % 2 ? '#f6efe0' : C.orange}"/>`).join('')}
+    <g stroke="#f6efe0" stroke-width="3"><path d="M1548,846H1586M1554,846L1550,884M1580,846L1584,884M1600,850H1640M1606,850L1602,886M1634,850L1638,886"/></g>`)}
+  ${pop(4.72, 1160, 935, `<rect x="1070" y="872" width="96" height="14" rx="4" fill="#f2a35e"/><circle cx="1096" cy="866" r="7" fill="#d99668"/><circle cx="1140" cy="864" r="7" fill="#f2bc98"/>
+    ${rect(1065, 886, 116, 44, C.blue, 'rx="3"')}<path d="M1180,930V868C1180,862 1185,858 1192,858H1228C1238,858 1246,872 1252,890L1262,895V930Z" fill="${C.blue}"/>
+    <path d="M1190,868H1226C1232,868 1238,880 1240,892H1190Z" fill="#9cc8ea"/>${wheel(1100, 934, 15)}${wheel(1226, 934, 15)}`)}
+  ${pop(4.78, 1120, 880, umbrella(1120, 812, 48, 26, 880))}
+  ${pop(4.84, 1200, 872, umbrella(1200, 806, 40, 22, 872))}
+  ${pop(5.12, 1420, 812, `${rect(1340, 732, 92, 80, '#f2ebd9', 'rx="5"')}${rect(1350, 742, 70, 43, C.deep, 'rx="3"')}
+    <path d="M1432,812V748H1478C1490,748 1498,760 1505,775V812Z" fill="${C.orange}"/><path d="M1442,756H1475C1482,756 1488,765 1492,776H1442Z" fill="${C.deep}"/>
+    ${rect(1358, 722, 52, 10, C.orange, 'rx="3"')}${rect(1440, 724, 58, 10, C.blue, 'rx="3"')}${wheel(1376, 814, 14)}${wheel(1470, 814, 14)}`)}
+  ${pop(5.2, 1410, 998, `<path d="M1320,998V955C1320,945 1328,940 1338,940H1365L1385,918H1450C1460,918 1468,925 1475,940L1490,945C1498,948 1502,955 1502,965V998Z" fill="${C.orange}"/>
+    <path d="M1372,942L1388,925H1415V942Z" fill="${C.deep}"/><path d="M1422,925H1448C1455,925 1460,932 1465,942H1422Z" fill="${C.deep}"/>
+    ${rect(1330, 952, 40, 6, '#f6efe0')}${rect(1330, 962, 40, 6, C.pink)}${wheel(1360, 998, 16)}${wheel(1468, 998, 16)}`)}
+  ${pop(5.26, 1398, 918, umbrella(1398, 860, 48, 26, 918))}
+  ${pop(5.3, 1640, 1000, `<path d="M1520,1000V940C1520,925 1530,912 1545,905L1580,898H1755C1762,898 1766,903 1766,910V1000Z" fill="#f2ebd9"/>
+    <path d="M1535,940L1548,915L1590,912V940Z" fill="#9cc8ea"/>${rect(1610, 912, 145, 33, 'var(--win)', 'rx="4"')}
+    ${rect(1520, 966, 246, 5, C.orange)}${wheel(1570, 1000, 17)}${wheel(1712, 1000, 17)}`)}
+  ${pop(4.75, 140, 1080, `<path d="${cloudPath(1090, [[30, 90, 130], [150, 80, 92], [262, 50, 46]])}" fill="${C.deep}"/><path d="${cloudPath(1092, [[-10, 70, 80], [104, 70, 60], [200, 46, 36]])}" fill="#0f6a5f"/>`)}
+  ${pop(4.8, 1800, 1080, `<path d="${cloudPath(1090, [[1640, 60, 60], [1725, 80, 84], [1830, 72, 100], [1920, 60, 76]])}" fill="${C.deep}"/><path d="${cloudPath(1092, [[1700, 50, 40], [1880, 60, 60]])}" fill="#0f6a5f"/>`)}
+  ${pbeam('pbL', 721, 420, -560, 150)}${pbeam('pbR', 1198, 420, 560, 150)}
+  <path class="dbL" d="M-10,0L10,0L90,330L-90,330Z" fill="#f7a9bb" opacity="0" transform="translate(790 518)"/>
+  <path class="dbR" d="M-10,0L10,0L90,330L-90,330Z" fill="#f7a9bb" opacity="0" transform="translate(1130 518)"/>`;
+}
+
+/* ================= TICKET ================= */
+function ticketPath(dx, dy) {
+  const L = 300 + dx, Rr = 1615 + dx, T = 310 + dy, B = 840 + dy, rc = 16, px = 617 + dx;
+  const small = [345, 380, 415, 450, 485, 665, 700, 735, 770, 805];
+  const bR = small.map(y => [y + dy, 9]).concat([[575 + dy, 60]]).sort((a, b) => a[0] - b[0]);
+  const bL = small.map(y => [y + dy, 9]).concat([[575 + dy, 46]]).sort((a, b) => a[0] - b[0]);
+  let d = `M${L + rc},${T}H${px - 30}A30,30 0 0 0 ${px + 30},${T}H${Rr - rc}Q${Rr},${T} ${Rr},${T + rc}`;
+  for (const [cy, r] of bR) d += `V${cy - r}A${r},${r} 0 0 0 ${Rr},${cy + r}`;
+  d += `V${B - rc}Q${Rr},${B} ${Rr - rc},${B}H${px + 30}A30,30 0 0 0 ${px - 30},${B}H${L + rc}Q${L},${B} ${L},${B - rc}`;
+  for (const [cy, r] of bL.slice().reverse()) d += `V${cy + r}A${r},${r} 0 0 0 ${L},${cy - r}`;
+  return d + `V${T + rc}Q${L},${T} ${L + rc},${T}Z`;
+}
+function ticketMarkup() {
+  const tp = ticketPath(0, 0);
+  const dash = Array.from({ length: 13 }, (_, i) => rect(614, 352 + i * 36, 6, 18, [C.orange, C.blue, C.pink][i % 3], 'rx="3"')).join('');
+  return `<defs><clipPath id="tkClip"><path d="${tp}"/></clipPath><clipPath id="tkArt"><rect x="668" y="352" width="532" height="316"/></clipPath></defs>
+  <path d="M330,840L1600,840L1615,330L1775,500L1775,1010L500,1010Z" fill="#e4dfcb"/>
+  <path d="${tp}" fill="#f4f0e1"/>
+  <g clip-path="url(#tkClip)">${rect(290, 300, 250, 560, C.pink)}</g>
+  <path d="${tp}" fill="none" stroke="#a7a293" stroke-width="3.5" stroke-linejoin="round"/>
+  ${dash}
+  <g clip-path="url(#tkArt)">
+    <path d="${cloudPath(415, [[690, 22, 14], [722, 34, 30], [770, 30, 18], [800, 14, 6]])}" fill="${C.pink}"/>
+    <path d="${cloudPath(385, [[1110, 16, 10], [1135, 22, 14], [1158, 12, 6]])}" fill="${C.pink}"/>
+    <path d="${cloudPath(467, [[1112, 18, 12], [1150, 30, 30], [1190, 20, 16]])}" fill="${C.pink}"/>
+    <path d="${cloudPath(560, [[680, 20, 14], [712, 30, 30], [750, 22, 14]])}" fill="${C.pink}"/>
+    <g transform="translate(955 668) scale(0.54) translate(-959 -652)"><circle cx="959" cy="491" r="361" fill="${C.orange}"/>${skyline()}</g>
+  </g>
+  ${rect(1233, 370, 302, 30, C.orange)}${rect(1233, 418, 300, 30, C.orange)}${rect(1233, 474, 302, 29, C.pink)}${rect(1233, 532, 282, 31, C.pink)}
+  <circle cx="1262" cy="630" r="28" fill="${C.orange}"/>${rect(1320, 623, 110, 14, C.ink, 'rx="4"')}
+  ${rect(668, 720, 524, 28, C.gray)}${rect(668, 762, 382, 28, C.pink)}
+  <rect x="1232" y="707" width="313" height="86" rx="43" fill="${C.orange}"/>
+  <text x="1388.5" y="762" text-anchor="middle" font-size="35" font-weight="700" fill="#fbf3e6" letter-spacing="0.5">TICKETS</text>
+  <g transform="translate(482 792) rotate(-90)">
+    <text x="0" y="0" font-size="132" font-weight="800" letter-spacing="-3" textLength="432" lengthAdjust="spacingAndGlyphs"><tspan fill="${C.ink}">W</tspan><tspan fill="${C.orange}">A</tspan><tspan fill="${C.ink}">V</tspan><tspan fill="${C.teal}">E</tspan><tspan fill="${C.orange}">S</tspan></text>
+    <text x="0" y="98" font-size="132" font-weight="800" letter-spacing="-3" textLength="322" lengthAdjust="spacingAndGlyphs"><tspan fill="${C.orange}">F</tspan><tspan fill="${C.teal}">E</tspan><tspan fill="${C.ink}">S</tspan><tspan fill="${C.teal}">T</tspan></text>
+  </g>`;
+}
+
+/* ================= DOM construction ================= */
+function buildSheet(host, markup) {
+  const nodes = [];
+  [['l', 0], ['c', 640], ['r', 1280]].forEach(([k, off]) => {
+    const p = document.createElement('div'); p.className = 'pnl ' + k;
+    p.innerHTML = `<div class="face"><svg viewBox="0 0 1920 1080" width="1920" height="1080" style="left:${-off}px">${markup}</svg></div><div class="face back"></div>`;
+    host.appendChild(p); nodes.push(p);
+  });
+  return nodes;
+}
+const posterHost = $('posterSheet'), mapHost = $('mapSheet');
+const posterP = buildSheet(posterHost, posterMarkup());
+const mapP = buildSheet(mapHost, mapMarkup());
+$('ticketSvg').innerHTML = ticketMarkup();
+
+// groups the 3 copies (one per panel) of each animated element
+function roles(host, sel) {
+  const all = [...host.querySelectorAll(sel)], n = all.length / 3;
+  return Array.from({ length: n }, (_, k) => [all[k], all[k + n], all[k + 2 * n]]);
+}
+function setA(nodes, name, v) { for (const n of nodes) { if (n['_' + name] !== v) { n.setAttribute(name, v); n['_' + name] = v; } } }
+const PSUN = roles(posterHost, '.psun')[0], PCL = roles(posterHost, '.pcl');
+const MCL = roles(mapHost, '.mcl'), STARS = roles(mapHost, '.star'), MOON = roles(mapHost, '.moon')[0];
+const BL = roles(mapHost, '.beamL')[0], BR = roles(mapHost, '.beamR')[0];
+const PBL = roles(mapHost, '.pbL')[0], PBR = roles(mapHost, '.pbR')[0], DBL = roles(mapHost, '.dbL')[0], DBR = roles(mapHost, '.dbR')[0];
+const SCRO = roles(mapHost, '.scrO')[0], SCRB = roles(mapHost, '.scrB')[0], SCRN = roles(mapHost, '.scrN')[0];
+const POPS = roles(mapHost, '.pop').map(g => ({ g, t: +g[0].dataset.t, ox: +g[0].dataset.ox, oy: +g[0].dataset.oy, m: g[0].dataset.m }));
+const PEOPLE = roles(mapHost, '.pp').map(g => ({ g, x: +g[0].dataset.x, y: +g[0].dataset.y, s: +g[0].dataset.s, ph: +g[0].dataset.ph, t: +g[0].dataset.t }));
+// the arch's dashed outline
+POPS.filter(p => p.m === 'dash').forEach(p => p.g.forEach(g => g.querySelectorAll('path').forEach(e => { e.setAttribute('pathLength', '1'); e.setAttribute('stroke-dasharray', '1 1'); })));
+
+/* ----- map layer: "TICKETS" bubble, play button, waves ----- */
+$('ov').innerHTML = `
+  <g id="rings" fill="none" stroke="#fbf8ee" stroke-width="3"></g>
+  <g id="play"><circle id="playC" cx="960" cy="468" r="46" fill="#3d8fd0"/><path id="playT" d="M948,449L976,468L948,487Z" fill="#fbf8ee"/></g>
+  <g id="card">
+    <path d="M767,150H1150Q1172,150 1172,172V360Q1172,382 1150,382H982L960,408L938,382H767Q745,382 745,360V172Q745,150 767,150Z" fill="${C.paper}"/>
+    <text x="774" y="211" font-size="31" font-weight="700" fill="${C.ink}" letter-spacing="-0.3">TICKETS</text>
+    ${rect(775, 242, 368, 21, C.gray)}${rect(775, 275, 171, 19, C.gray)}
+    <circle cx="1115" cy="330" r="29" fill="${C.blue}"/><path d="M1106,317L1127,330L1106,343Z" fill="${C.paper}"/>
+  </g>`;
+const RING_N = 10;
+for (let i = 0; i < RING_N; i++) $('rings').insertAdjacentHTML('beforeend', `<circle cx="${i % 2 ? 1198.5 : 721.5}" cy="455" r="0" opacity="0"/>`);
+const ringEls = [...$('rings').children];
+
+/* ----- fixed UI: nav bar, day/night slider, chat bubble ----- */
+$('ui').innerHTML = `
+  <g id="slider">
+    <rect x="563" y="963" width="794" height="82" rx="24" fill="${C.paper}"/>
+    <g transform="translate(615 1004)"><circle r="9" fill="${C.orange}"/>${Array.from({ length: 8 }, (_, i) => `<rect x="-1.6" y="-17" width="3.2" height="5" rx="1.6" fill="${C.orange}" transform="rotate(${i * 45})"/>`).join('')}</g>
+    <path d="M1309,990A15,15 0 1 0 1309,1018A11.5,11.5 0 1 1 1309,990Z" fill="${C.ink}"/>
+    <rect x="690" y="1001" width="548" height="6" rx="3" fill="#ddd8c8"/>
+    <rect id="sFill" x="690" y="1001" width="0" height="6" rx="3" fill="${C.blue}"/>
+    <circle id="sKnob" cx="690" cy="1004" r="19" fill="${C.blue}" stroke="${C.paper}" stroke-width="3"/>
+  </g>
+  <rect id="mapHover" x="250" y="17" width="137" height="94" rx="26" fill="#b3c4ce" opacity="0"/>
+  <g id="logo" font-weight="800">
+    <text x="40" y="80" font-size="57" textLength="175" lengthAdjust="spacingAndGlyphs" letter-spacing="-1"><tspan style="fill:var(--lg1)">W</tspan><tspan style="fill:var(--lg2)">A</tspan><tspan style="fill:var(--lg3)">V</tspan><tspan style="fill:var(--lg4)">E</tspan><tspan style="fill:var(--lg5)">S</tspan></text>
+    <text x="68" y="125" font-size="57" textLength="124" lengthAdjust="spacingAndGlyphs" letter-spacing="-1"><tspan style="fill:var(--lg6)">F</tspan><tspan style="fill:var(--lg7)">E</tspan><tspan style="fill:var(--lg8)">S</tspan><tspan style="fill:var(--lg9)">T</tspan></text>
+    <circle cx="219" cy="42" r="3.6" fill="none" style="stroke:var(--lg5)" stroke-width="1.4"/>
+  </g>
+  <g style="fill:var(--nav)" font-weight="600" font-size="27">
+    <text x="311.5" y="74" text-anchor="middle">MAP</text>
+    <text x="976.5" y="74" text-anchor="middle" textLength="101" lengthAdjust="spacingAndGlyphs">TICKETS</text>
+    <rect x="1080" y="60" width="63" height="8" rx="4"/><rect x="1197" y="60" width="66" height="8" rx="4"/>
+    <rect x="1317" y="60" width="134" height="8" rx="4"/><rect x="1504" y="60" width="71" height="8" rx="4"/>
+  </g>
+  <defs><clipPath id="avClip"><circle cx="1655" cy="64" r="26"/></clipPath></defs>
+  <g clip-path="url(#avClip)">
+    <rect x="1625" y="34" width="60" height="60" fill="#8ec3e6"/>
+    <path d="M1632,96C1634,80 1644,74 1655,74C1666,74 1676,80 1678,96Z" fill="${C.orange}"/>
+    <rect x="1651" y="64" width="8" height="12" fill="${C.skin}"/>
+    <ellipse cx="1655" cy="58" rx="10.5" ry="12" fill="${C.skin}"/>
+    <path d="M1644,56C1643,44 1650,40 1656,40C1664,40 1668,46 1666,55C1662,49 1656,48 1650,50C1647,51 1646,54 1644,56Z" fill="#7a4a2a"/>
+  </g>
+  <rect id="btnHalo" x="1698" y="23" width="191" height="83" rx="41.5" fill="#d6d1c0" opacity="0"/>
+  <g id="btn"><rect id="btnR" x="1707" y="32" width="173" height="65" rx="32.5" fill="${C.blue}"/>
+    <text x="1793.5" y="74" text-anchor="middle" font-size="27" font-weight="600" fill="#fbf3e6" textLength="104" lengthAdjust="spacingAndGlyphs">TICKETS</text></g>
+  <g id="chat">
+    <circle cx="1870" cy="1038" r="9" fill="#768086"/>
+    <circle id="chatC" cx="1828" cy="992" r="38" fill="${C.blue}"/>
+    <path d="M1828,1008C1816,999 1810,992 1810,985C1810,978 1815,974 1820,974C1824,974 1827,976 1828,979C1829,976 1832,974 1836,974C1841,974 1846,978 1846,985C1846,992 1840,999 1828,1008Z" fill="${C.paper}"/>
+  </g>`;
+
+/* ----- cursor: arrow + hand ----- */
+$('cur').innerHTML = `<g id="cursor">
+  <path id="arrow" d="M0,0V52L12.5,40.5L21,60.5L30,56.5L21.5,36.5H38Z" fill="#000" stroke="#fff" stroke-width="3.2" stroke-linejoin="round"/>
+  <g id="hand" display="none" transform="translate(-20 -2) scale(2.05)">
+    <path d="M8,2C8,0.4 12,0.4 12,2V17V14C12,12.4 16,12.4 16,14V18V15.6C16,14 20,14 20,15.6V20V17.6C20,16 24,16 24,17.6V30C24,37 20,42 15,42H12C8,42 6,40 4,36L0,27C-1,25 1,23 3,24.5L8,29Z" fill="#fff" stroke="#000" stroke-width="1.7" stroke-linejoin="round"/>
+    <path d="M12,22V30M16,22V30M20,22V30" stroke="#000" stroke-width="1.2" stroke-linecap="round"/>
+  </g></g>`;
+
+const stageEl = $('stage');
+const setVar = (k, v) => { if (stageEl['_' + k] !== v) { stageEl.style.setProperty('--' + k, v); stageEl['_' + k] = v; } };
+const setT = (el, v) => { if (el._tf !== v) { el.style.transform = v; el._tf = v; } };
+const setD = (el, on) => { const v = on ? '' : 'none'; if (el._d !== v) { el.style.display = v; el._d = v; } };
+const setAt = (el, k, v) => { if (el['_' + k] !== v) { el.setAttribute(k, v); el['_' + k] = v; } };
+
+/* ================= TIMING ================= */
+const DUR = 15;
+// 1. folding / unfolding of the sheets (poster, map) as a 3-panel accordion
+function sheetPose(host, P, s, tx, ty, rx, rz, ry, fL, fR) {
+  const flat = s === 1 && !tx && !ty && !rx && !rz && !ry && !fL && !fR;
+  if (host._flat !== flat) { host.classList.toggle('flat', flat); host._flat = flat; }
+  setT(host, flat ? 'none' : `translate3d(${f2(tx)}px,${f2(ty)}px,0) rotateX(${f2(rx)}deg) rotateY(${f2(ry)}deg) rotateZ(${f2(rz)}deg) scale(${s.toFixed(4)})`);
+  setT(P[0], fL ? `translateZ(${-2 * Math.min(1, fL * 8)}px) rotateY(${f2(-180 * fL)}deg)` : 'none');
+  setT(P[2], fR ? `translateZ(${2 * Math.min(1, fR * 8)}px) rotateY(${f2(-180 * fR)}deg)` : 'none');
+}
+const S_OUT = mono([[3.88, 1], [3.96, 0.93], [4.04, 0.79], [4.1, 0.63], [4.17, 0.48]]);
+const S_MAPIN = mono([[4.17, 0.48], [4.25, 0.57], [4.33, 0.72], [4.42, 0.84], [4.5, 0.92], [4.58, 1]]);
+const S_MAPOUT = mono([[11.9, 1], [11.97, 0.95], [12.04, 0.84], [12.1, 0.62], [12.17, 0.5]]);
+const S_POSTIN = mono([[13.36, 0.5], [13.45, 0.62], [13.53, 0.72], [13.6, 0.8], [13.68, 0.88], [13.75, 0.93], [13.85, 0.97], [13.95, 0.993], [14.0, 1]]);
+const S_TICK = mono([[12.15, 0.55], [12.27, 0.82], [12.35, 0.92], [12.5, 0.98], [12.62, 1]]);
+function renderSheets(t) {
+  const posterOn = t < 4.17 || t >= 13.36, mapOn = t >= 4.17 && t < 12.22, tickOn = t >= 12.15 && t < 13.58;
+  setD(posterHost, posterOn); setD(mapHost, mapOn); setD($('ticket'), tickOn);
+  if (posterOn) {
+    if (t < 3.88 || t >= 14.0) sheetPose(posterHost, posterP, 1, 0, 0, 0, 0, 0, 0, 0);
+    else if (t < 4.17) {
+      const a = clamp((t - 3.88) / 0.29), w = Math.sin(Math.PI * a);
+      sheetPose(posterHost, posterP, S_OUT(t), 0, -10 * w, 9 * w, -1.5 * w, 0, prog(t, 4.0, 4.165, 'power2.in'), prog(t, 3.97, 4.15, 'power2.in'));
+    } else {
+      const a = prog(t, 13.36, 14.0, 'power2.out');
+      sheetPose(posterHost, posterP, S_POSTIN(t), lerp(60, 0, a), lerp(-20, 0, a), lerp(10, 0, a), lerp(2, 0, a), 0,
+        1 - prog(t, 13.4, 13.7, 'power2.inOut'), 1 - prog(t, 13.36, 13.52, 'power2.out'));
+    }
+  }
+  if (mapOn) {
+    if (t < 4.58) {
+      const a = prog(t, 4.17, 4.58, 'power2.out');
+      sheetPose(mapHost, mapP, S_MAPIN(t), 0, lerp(-14, 0, a), lerp(10, 0, a), lerp(1.2, 0, a), 0, 1 - prog(t, 4.2, 4.42, 'power2.out'), 1 - prog(t, 4.17, 4.33, 'power2.out'));
+    } else if (t < 11.9) sheetPose(mapHost, mapP, 1, 0, 0, 0, 0, 0, 0, 0);
+    else {
+      const a = clamp((t - 11.9) / 0.3), w = Math.sin(Math.PI * Math.min(1, a * 1.2));
+      sheetPose(mapHost, mapP, S_MAPOUT(t), lerp(0, -60, a), -12 * w, 9 * w, 1.5 * w, 90 * prog(t, 12.1, 12.2, 'power2.in'),
+        prog(t, 12.0, 12.14, 'power2.in'), prog(t, 11.97, 12.12, 'power2.in'));
+    }
+  }
+  if (tickOn) {
+    const tk = $('ticket');
+    if (t < 13.2) {
+      tk.style.transformOrigin = '957px 575px';
+      const a = prog(t, 12.15, 12.6, 'power3.out');
+      setT(tk, `translate3d(${f2(lerp(-160, 0, a))}px,${f2(lerp(-30, 0, a))}px,0) rotateY(${f2(lerp(-90, 0, prog(t, 12.15, 12.36, 'power2.out')))}deg) rotateZ(${f2(lerp(-7, 0, prog(t, 12.18, 12.64, 'power2.out')))}deg) scale(${S_TICK(t).toFixed(4)})`);
+    } else {
+      tk.style.transformOrigin = '300px 575px';
+      const a = prog(t, 13.2, 13.56, 'power1.in');
+      setT(tk, `translate3d(${f2(-330 * a)}px,${f2(-18 * a)}px,${f2(40 * a)}px) rotateY(${f2(88 * a)}deg) rotateZ(${f2(-2.5 * Math.sin(Math.PI * clamp((t - 13.2) / 0.36)))}deg)`);
+    }
+  }
+}
+
+// 2. poster content: the sun rises back behind the stage at the end of the loop, drifting clouds
+const SUN_DY = mono([[13.45, 560], [13.6, 400], [13.75, 200], [13.875, 95], [14.0, 42], [14.125, 18], [14.25, 6], [14.4, 0]]);
+function renderPoster(t) {
+  const dy = t > 13 ? SUN_DY(t) : 0;
+  setA(PSUN, 'transform', dy ? `translate(0 ${f2(dy)})` : '');
+  const drift = 14 * Math.sin(Math.PI * t / DUR) ** 2;  // returns exactly to 0 at 15 s, without a jolt
+  PCL.forEach(g => setA(g, 'transform', `translate(${f2(drift * +g[0].dataset.k)} 0)`));
+}
+
+// 3. map content
+const KNOB = mono([[8.08, 690], [8.3, 1006], [8.425, 1114], [8.55, 1171], [8.675, 1198], [8.8, 1221], [8.93, 1228], [9.0, 1228]]);
+const MOON_Y = mono([[9.2, 580], [9.5, 380], [9.75, 292], [10.0, 256], [10.25, 220], [10.5, 202], [11.0, 188], [11.5, 181], [12.2, 177]]);
+const BEAM_A = mono([[8.4, -55], [8.675, -45], [8.8, -36], [9.05, -20], [9.25, -2], [9.5, 15], [9.75, 26], [10.0, 36], [10.25, 44], [10.5, 46], [10.75, 40],
+  [11.0, 30], [11.25, 10], [11.5, -5], [11.75, -16], [12.0, -26], [12.25, -32]]);
+const night = t => prog(t, 8.33, 8.74, 'power1.inOut');
+function renderMap(t) {
+  // elements appearing during the unfold
+  for (const p of POPS) {
+    let v = '';
+    if (p.m === 'dash') { const s = prog(t, p.t, p.t + 0.35, 'power2.out'); p.g.forEach(g => g.querySelectorAll('path').forEach(e => setAt(e, 'stroke-dashoffset', (1 - s).toFixed(3)))); continue; }
+    if (p.m === 'rise') { const s = prog(t, p.t, p.t + 0.3, 'power3.out'); if (s < 1) v = `translate(0 ${f2((1 - s) * 140)})`; }
+    else { const s = ease('back.out(1.7)')(clamp((t - p.t) / 0.3)); if (s < 1) v = `translate(${p.ox} ${p.oy}) scale(${s.toFixed(4)}) translate(${-p.ox} ${-p.oy})`; }
+    setA(p.g, 'transform', v);
+  }
+  // the crowd: pop, swaying, jumping when the music starts
+  const strong = prog(t, 6.22, 6.45, 'power1.out') * (1 - prog(t, 7.45, 7.85, 'power1.in'));
+  const soft = prog(t, 8.55, 9.0) * (1 - prog(t, 11.8, 11.95));
+  const sway = prog(t, 5.2, 5.6);
+  for (const p of PEOPLE) {
+    const s = ease('back.out(2)')(clamp((t - p.t) / 0.26)) * p.s;
+    const jump = (13 * strong + 5 * soft) * Math.abs(Math.sin(Math.PI * (2.3 * t + p.ph)));
+    const sx = 1.6 * sway * Math.sin(2 * Math.PI * (0.8 * t + p.ph));
+    setA(p.g, 'transform', s <= 0 ? 'translate(-99 -99) scale(0)' : `translate(${f2(p.x + sx)} ${f2(p.y - jump)}) scale(${s.toFixed(3)})`);
+  }
+  // drifting clouds
+  MCL.forEach(g => setA(g, 'transform', `translate(${f2((t - 4) * 5 * +g[0].dataset.k)} 0)`));
+  // stage screen: hover (orange), playing then blue, pink at night
+  setA(SCRO, 'height', f2(153 * prog(t, 5.02, 5.24))); setA(SCRO, 'y', f2(548 - 153 * prog(t, 5.02, 5.24)));
+  setA(SCRB, 'height', f2(153 * prog(t, 7.6, 7.76))); setA(SCRB, 'y', f2(548 - 153 * prog(t, 7.6, 7.76)));
+  const n = night(t);
+  setA(SCRN, 'opacity', n.toFixed(3));
+  // night: moon, stars, light beams
+  setA(MOON, 'cy', f2(MOON_Y(t))); setA(MOON, 'opacity', t > 9.1 ? '1' : '0');
+  STARS.forEach((g, i) => {
+    const t0 = 9.0 + ((i * 7) % 24) * 0.04;
+    const s = ease('back.out(3)')(clamp((t - t0) / 0.25)) * (1 + 0.18 * Math.sin(2 * Math.PI * (1.3 * t + i * 0.37)));
+    setA(g, 'transform', `translate(${g[0].dataset.x} ${g[0].dataset.y}) scale(${s.toFixed(3)})`);
+  });
+  const bo = prog(t, 8.33, 8.56);
+  const a = BEAM_A(t);
+  setA(BL, 'opacity', (0.2 * bo).toFixed(3)); setA(BR, 'opacity', (0.2 * bo).toFixed(3));
+  setA(BL, 'transform', `translate(800 380) rotate(${f2(a)})`); setA(BR, 'transform', `translate(1120 380) rotate(${f2(-a)})`);
+  const pa = 7 * Math.sin(2 * Math.PI * (t - 8.6) / 2.4), po = (0.22 * prog(t, 8.6, 8.9)).toFixed(3);
+  setA(PBL, 'opacity', po); setA(PBR, 'opacity', po);
+  setA(PBL, 'transform', `translate(721 420) rotate(${f2(-14 + pa)})`); setA(PBR, 'transform', `translate(1198 420) rotate(${f2(14 - pa)})`);
+  const da = 16 * Math.sin(2 * Math.PI * (t - 8.7) / 2.0), dop = (0.26 * prog(t, 8.7, 9.0)).toFixed(3);
+  setA(DBL, 'opacity', dop); setA(DBR, 'opacity', dop);
+  setA(DBL, 'transform', `translate(790 518) rotate(${f2(18 + da)})`); setA(DBR, 'transform', `translate(1130 518) rotate(${f2(-18 - da)})`);
+}
+
+// 4. day / night colors (CSS variables shared by the 3 copies)
+function renderColors(t) {
+  const n = night(t);
+  for (const k in DAY) {
+    if (k === 'nav' || k.startsWith('lg')) continue;
+    setVar(k, mixC(DAY[k], NIGHT[k], n));
+  }
+  const nn = t < 11.93 ? n : 1 - prog(t, 11.93, 12.06);
+  setVar('nav', mixC(DAY.nav, NIGHT.nav, nn));
+  for (let i = 1; i <= 9; i++) setVar('lg' + i, mixC(DAY['lg' + i], NIGHT['lg' + i], nn));
+}
+
+// 5. map layer: bubble, play button, sound waves
+function renderOverlay(t) {
+  const on = t >= 5.8 && t < 8.02;
+  setD($('ov'), on || (t >= 6.1 && t < 7.8));
+  // bubble: shoots out of the screen, then goes back in
+  const cIn = ease('back.out(1.5)')(clamp((t - 5.83) / 0.2)), cOut = prog(t, 7.84, 8.0, 'power2.in');
+  const cs = Math.max(0.001, cIn * (1 - 0.7 * cOut));
+  setAt($('card'), 'transform', `translate(960 470) scale(${cs.toFixed(4)}) translate(-960 -470)`);
+  setAt($('card'), 'opacity', (clamp((t - 5.83) / 0.08) * (1 - cOut)).toFixed(3));
+  // play button on the screen: appears, click (6.1 s), switches to "playing" (7.42 s)
+  const pIn = ease('back.out(2)')(clamp((t - 5.9) / 0.18)), press = Math.sin(Math.PI * clamp((t - 6.06) / 0.14));
+  const ps = Math.max(0.001, pIn * (1 - 0.12 * press) * (1 - cOut));
+  setAt($('play'), 'transform', `translate(960 468) scale(${ps.toFixed(4)}) translate(-960 -468)`);
+  const playing = t >= 7.42;
+  setAt($('playC'), 'fill', playing ? C.paper : '#3d8fd0'); setAt($('playT'), 'fill', playing ? C.blue : C.paper);
+  // waves: circles expanding from the speakers
+  ringEls.forEach((c, i) => {
+    const t0 = 6.2 + Math.floor(i / 2) * 0.22, a = clamp((t - t0) / 0.92);
+    const vis = t >= t0 && a < 1;
+    setAt(c, 'r', vis ? f2(36 + 230 * ease('power1.out')(a)) : '0');
+    setAt(c, 'opacity', vis ? (0.95 * (1 - a)).toFixed(3) : '0');
+  });
+}
+
+// 6. UI: MAP hover, TICKETS button, day/night slider, chat
+const BTN = [[0, C.blue], [4.1, C.blue], [4.2, C.orange], [11.92, C.orange], [12.02, '#e0915c'], [12.14, '#5b9bd0'], [12.32, '#5b9bd0'], [12.5, C.blue]];
+function btnColor(t) {
+  for (let i = 0; i < BTN.length - 1; i++) if (t < BTN[i + 1][0]) return mixC(BTN[i][1], BTN[i + 1][1], clamp((t - BTN[i][0]) / (BTN[i + 1][0] - BTN[i][0])));
+  return BTN[BTN.length - 1][1];
+}
+function renderUI(t) {
+  setAt($('mapHover'), 'opacity', (prog(t, 3.71, 3.79) * (1 - prog(t, 4.42, 4.58))).toFixed(3));
+  setAt($('btnR'), 'fill', btnColor(t));
+  setAt($('btnHalo'), 'opacity', (prog(t, 11.92, 12.0) * (1 - prog(t, 12.32, 12.5))).toFixed(3));
+  const bp = 1 - 0.05 * Math.sin(Math.PI * clamp((t - 11.92) / 0.16));
+  setAt($('btn'), 'transform', bp < 1 ? `translate(1793.5 64.5) scale(${bp.toFixed(4)}) translate(-1793.5 -64.5)` : '');
+  // day -> night slider
+  const sy = (1 - prog(t, 5.52, 5.74, 'power3.out')) * 140 + prog(t, 11.68, 11.9, 'power2.in') * 140;
+  setD($('slider'), t > 5.5 && t < 11.92);
+  setAt($('slider'), 'transform', `translate(0 ${f2(sy)})`);
+  const kx = KNOB(t);
+  setAt($('sKnob'), 'cx', f2(kx)); setAt($('sFill'), 'width', f2(kx - 690));
+  // chat bubble: blue (poster), orange (map), hidden under the ticket
+  const chatCol = t < 4.12 ? C.blue : t < 4.24 ? mixC(C.blue, C.orange, (t - 4.12) / 0.12) : t < 12.2 ? C.orange : C.blue;
+  setAt($('chatC'), 'fill', chatCol);
+  const co = 1 - prog(t, 11.95, 12.08) + prog(t, 13.25, 13.45);
+  setAt($('chat'), 'opacity', clamp(t < 12.6 ? co : prog(t, 13.25, 13.45)).toFixed(3));
+}
+
+// 7. cursor (arrow tip / index fingertip)
+const CX = mono([[0, 1058], [1.7, 1058], [1.875, 1018], [2.0, 940], [2.125, 774], [2.25, 623], [2.375, 510], [2.5, 436], [2.625, 387], [2.75, 357], [2.875, 338], [3.0, 328], [3.125, 327],
+  [3.6, 327], [3.72, 318], [4.45, 318], [4.55, 325], [4.75, 331], [5.0, 450], [5.25, 780], [5.5, 940], [5.75, 966], [5.9, 968], [7.4, 968], [7.55, 930], [7.78, 840], [8.06, 700]]);
+const CY = mono([[0, 633], [1.7, 633], [1.875, 591], [2.0, 526], [2.125, 416], [2.25, 317], [2.375, 238], [2.5, 176], [2.625, 137], [2.75, 111], [2.875, 94], [3.0, 85], [3.125, 82],
+  [3.6, 82], [3.72, 68], [4.45, 68], [4.55, 76], [4.75, 88], [5.0, 160], [5.25, 350], [5.5, 450], [5.75, 476], [5.9, 478], [7.4, 478], [7.55, 770], [7.78, 990], [8.06, 1004]]);
+const CX2 = mono([[11.12, 1238], [11.25, 1460], [11.5, 1690], [11.75, 1780], [11.85, 1792], [12.75, 1800], [12.9, 1786], [12.98, 1709], [13.07, 1613], [13.15, 1536], [13.23, 1498], [13.32, 1497],
+  [14.3, 1495], [14.55, 1380], [14.75, 1135], [14.9, 1058], [15, 1058]]);
+const CY2 = mono([[11.12, 1004], [11.25, 680], [11.5, 300], [11.75, 114], [11.85, 95], [12.75, 82], [12.9, 115], [12.98, 250], [13.07, 365], [13.15, 442], [13.23, 480], [13.32, 495],
+  [14.3, 470], [14.55, 520], [14.75, 608], [14.9, 633], [15, 633]]);
+function renderCursor(t) {
+  let x, y;
+  if (t < 8.06) { x = CX(t); y = CY(t); }
+  else if (t < 11.12) { x = KNOB(t) + 10; y = 1004; }
+  else { x = CX2(t); y = CY2(t); }
+  const hand = (t >= 3.72 && t < 4.5) || (t >= 5.86 && t < 11.38);
+  setAt($('arrow'), 'display', hand ? 'none' : 'inline'); setAt($('hand'), 'display', hand ? 'inline' : 'none');
+  const click = Math.sin(Math.PI * clamp((t - 3.8) / 0.14)) + Math.sin(Math.PI * clamp((t - 6.06) / 0.14)) + Math.sin(Math.PI * clamp((t - 11.9) / 0.14)) + Math.sin(Math.PI * clamp((t - 8.02) / 0.12));
+  setAt($('cursor'), 'transform', `translate(${f2(x)} ${f2(y)}) scale(${(1 - 0.1 * click).toFixed(3)})`);
+}
+
+/* ================= GLOBAL RENDER ================= */
+function render(t) {
+  t = clamp(t, 0, DUR);
+  if (t >= DUR - 1e-6) t = 0;            // 15 s = 0 s: seamless loop
+  renderColors(t);
+  renderSheets(t);
+  if (t < 4.17 || t >= 13.38) renderPoster(t);
+  if (t >= 4.1 && t < 12.25) renderMap(t);
+  renderOverlay(t);
+  renderUI(t);
+  renderCursor(t);
+}
+
+/* ---------- scaling the 1920x1080 scene to the window ---------- */
+function fit() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  $('wrap').style.transform = `translate(${(innerWidth - 1920 * s) / 2}px,${(innerHeight - 1080 * s) / 2}px) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+/* ---------- GSAP clock ---------- */
+const clock = { t: 0 };
+const tl = gsap.timeline({ repeat: -1, paused: true });
+tl.fromTo(clock, { t: 0 }, { t: DUR, duration: DUR, ease: 'none', onUpdate: () => render(clock.t) });
+window.anim = {
+  tl, duration: DUR,
+  seek(t) { t = clamp(t, 0, DUR); tl.pause(); tl.time(t, true); render(t); },
+  play(from = 0) { tl.restart(); tl.time(from); tl.play(); },
+  pause() { tl.pause(); }
+};
+const qs = new URLSearchParams(location.search);
+render(0);
+Promise.all([document.fonts.load('700 60px "Outfit"', 'WAVESFTMPICK'), document.fonts.load('800 60px "Outfit"', 'WAVESFT'), document.fonts.load('600 27px "Outfit"', 'MAPTICKES'), document.fonts.ready]).then(() => {
+  if (qs.has('t')) anim.seek(parseFloat(qs.get('t')));
+  else if (!qs.has('external')) tl.play(0);
+  document.documentElement.dataset.ready = '1';
+});
+})();
+</script>
+</body>
+</html>

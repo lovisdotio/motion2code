@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flat Site</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+<!--
+  site.html: the replay (index.html) turned into a real page. Same SVG drawings, colors and fonts, but no fake
+  cursor: what scrolled in the video is real scrolling (ScrollTrigger), what was clicked is a real <button>.
+  Keyboard, 375 px mobile, prefers-reduced-motion, zero console errors.
+-->
+<style>
+  :root { --cream:#F6EECD; --ink:#1B1B3A; --tangerine:#FF7A1A; --blue:#2350FF; --pink:#FF8FC8; --bar:rgba(27,27,58,.18) }
+  * { box-sizing:border-box }
+  html, body { margin:0; background:var(--cream); color:var(--ink); font:600 16px/1.4 'Outfit',system-ui,sans-serif }
+  a, button { font:inherit; color:inherit }
+  button { cursor:pointer; border:0; background:none; padding:0 }
+  :focus-visible { outline:3px solid var(--blue); outline-offset:3px; border-radius:6px }
+  .wrap { width:min(1200px, 100% - 32px); margin-inline:auto }
+  /* header + menu */
+  header { position:fixed; inset:0 0 auto; z-index:10; background:var(--cream) }
+  header .wrap { display:flex; align-items:center; justify-content:space-between; height:72px }
+  .logo { font-weight:800; font-size:22px; text-decoration:none; letter-spacing:.02em }
+  .menu-btn { width:48px; height:48px; border-radius:50%; background:var(--ink); display:grid; place-items:center }
+  .menu-btn span { display:block; width:20px; height:3px; background:var(--cream); border-radius:2px; transition:transform .25s }
+  .menu-btn span + span { margin-top:-14px }
+  .menu-btn[aria-expanded="true"] span:first-child { transform:translateY(4px) rotate(45deg) }
+  .menu-btn[aria-expanded="true"] span:last-child { transform:translateY(-4px) rotate(-45deg) }
+  nav.panel { position:fixed; inset:72px 0 auto auto; width:min(360px,100%); background:var(--blue); color:var(--cream);
+    padding:24px; transform:translateX(100%); visibility:hidden; border-radius:0 0 0 24px }
+  nav.panel a { display:block; padding:12px 0; font-size:28px; font-weight:800; text-decoration:none }
+  /* text lines stay flat bars, as in the source video */
+  .bars i { display:block; height:10px; border-radius:5px; background:var(--bar); margin:10px 0 }
+  section { padding:96px 0 }
+  .hero { min-height:100vh; display:grid; place-items:center; padding-top:72px; overflow:hidden }
+  .hero svg { width:min(900px, 100%); height:auto; display:block }
+  h1 { font-size:clamp(40px, 8vw, 104px); line-height:.95; margin:0; font-weight:800 }
+  /* pinned, scrubbed scene */
+  .pin { height:100vh; display:grid; place-items:center; overflow:hidden; background:var(--ink) }
+  .pin svg { width:min(1100px, 100% - 32px); height:auto }
+  /* cards + controls */
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:20px }
+  .card { background:#fff; border-radius:20px; padding:20px; perspective:900px }
+  .card .inner { position:relative; display:block; width:100%; height:220px; transform-style:preserve-3d }
+  .card .face { position:absolute; inset:0; border-radius:14px; backface-visibility:hidden; display:grid; place-items:center }
+  .card .front { background:var(--pink) }
+  .card .back { background:var(--tangerine); transform:rotateY(180deg) }
+  .row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:16px }
+  .btn { background:var(--ink); color:var(--cream); border-radius:999px; padding:12px 22px }
+  .btn:active { transform:scale(.96) }
+  .count { min-width:28px; height:28px; border-radius:14px; background:var(--tangerine); color:#fff; display:inline-grid; place-items:center }
+  .slider { position:relative; flex:1 1 220px; height:44px; touch-action:none }
+  .slider .rail { position:absolute; left:0; right:0; top:19px; height:6px; border-radius:3px; background:var(--bar) }
+  .slider .knob { position:absolute; top:6px; left:0; width:32px; height:32px; border-radius:50%; background:var(--blue) }
+  [role="tablist"] { display:flex; gap:8px }
+  [role="tab"] { padding:10px 18px; border-radius:999px; background:var(--bar) }
+  [role="tab"][aria-selected="true"] { background:var(--ink); color:var(--cream) }
+  footer { padding:48px 0; text-align:center }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition:none !important } }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="logo" href="#top" aria-label="Home">WAVES</a>
+  <button class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span><span></span></button>
+</div></header>
+<nav class="panel" id="menu" aria-label="Main">
+  <a href="#scene">MAP</a><a href="#cards">TICKETS</a>
+</nav>
+
+<main id="top">
+  <section class="hero"><div class="wrap">
+    <svg viewBox="0 0 900 420" role="img" aria-label="A sun behind stages">
+      <circle id="sun" cx="450" cy="300" r="180" fill="#FF7A1A"/>
+      <g fill="#1B1B3A"><rect x="120" y="250" width="180" height="170" rx="12"/><rect x="340" y="200" width="220" height="220" rx="12"/><rect x="600" y="260" width="180" height="160" rx="12"/></g>
+    </svg>
+    <h1>WAVES FEST</h1>
+    <div class="bars" style="max-width:420px"><i style="width:90%"></i><i style="width:70%"></i><i style="width:80%"></i></div>
+  </div></section>
+
+  <!-- what moved over time in the video moves with the scroll here -->
+  <section class="pin" id="scene" aria-label="Day to night">
+    <svg viewBox="0 0 1100 600" aria-hidden="true">
+      <rect id="sky" width="1100" height="600" fill="#FF8FC8"/>
+      <circle id="sun2" cx="550" cy="420" r="120" fill="#FF7A1A"/>
+      <g id="stars" fill="#F6EECD"></g>
+      <rect y="440" width="1100" height="160" fill="#1B1B3A"/>
+      <g id="beams" fill="#F6EECD" opacity="0"><path d="M300 440 L250 0 L330 0 Z"/><path d="M800 440 L770 0 L850 0 Z"/></g>
+    </svg>
+  </section>
+
+  <section id="cards"><div class="wrap">
+    <div class="grid">
+      <div class="card"><button class="inner" aria-label="Flip the ticket" aria-pressed="false">
+        <span class="face front">DAY 1</span><span class="face back">DAY 2</span></button></div>
+      <div class="card">
+        <div role="tablist" aria-label="Stages">
+          <button role="tab" aria-selected="true" aria-controls="p1" id="t1">MAIN</button>
+          <button role="tab" aria-selected="false" aria-controls="p2" id="t2" tabindex="-1">LAKE</button>
+        </div>
+        <div role="tabpanel" id="p1" aria-labelledby="t1" class="bars"><i style="width:80%"></i><i style="width:60%"></i></div>
+        <div role="tabpanel" id="p2" aria-labelledby="t2" class="bars" hidden><i style="width:50%"></i><i style="width:90%"></i></div>
+        <div class="row">
+          <button class="btn" id="playBtn" aria-pressed="false" aria-label="Play">Play</button>
+          <div class="slider" id="vol" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="rail"></div><div class="knob"></div></div>
+        </div>
+      </div>
+      <div class="card"><div class="bars"><i style="width:70%"></i><i style="width:40%"></i></div>
+        <div class="row"><button class="btn" id="add" aria-label="Add a ticket to the cart">TICKETS</button>
+          <span class="count" id="cart" aria-live="polite">0</span></div></div>
+    </div>
+  </div></section>
+</main>
+<footer class="bars wrap"><i style="width:30%;margin-inline:auto"></i></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = s => document.querySelector(s);
+
+// ambient loop (only when motion is welcome)
+if (!RM) gsap.to('#sun', { attr: { r: 192 }, duration: 1.2, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+
+// pinned scene scrubbed by the scroll: the video's 9-12 s "day to night" beat
+const stars = $('#stars');
+for (let i = 0; i < 40; i++) {                       // seeded layout, same on every load
+  const x = (i * 271) % 1100, y = (i * 137) % 380, c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 3 + (i % 3)); c.setAttribute('opacity', 0);
+  stars.appendChild(c);
+}
+const night = gsap.timeline({ defaults: { ease: 'none' } })
+  .to('#sky', { attr: { fill: '#2350FF' } }, 0)
+  .to('#sun2', { attr: { cy: 640 } }, 0)
+  .to('#stars circle', { opacity: 1, stagger: 0.02 }, 0.3)
+  .to('#beams', { opacity: 1 }, 0.6);
+ScrollTrigger.create({ trigger: '#scene', start: 'top top', end: '+=150%', pin: true, scrub: RM ? true : 0.6, animation: night });
+
+// cards enter as they reach the viewport
+gsap.utils.toArray('.card').forEach((c, i) => gsap.from(c, {
+  y: RM ? 0 : 60, opacity: 0, duration: 0.6, delay: i * 0.08, ease: 'back.out(1.6)',
+  scrollTrigger: { trigger: c, start: 'top 85%', toggleActions: 'play none none reverse' }
+}));
+
+// menu
+const menuBtn = $('.menu-btn'), menu = $('#menu');
+const menuTl = gsap.timeline({ paused: true }).set(menu, { visibility: 'visible' }).to(menu, { x: 0, duration: RM ? 0 : 0.35, ease: 'power3.out' });
+gsap.set(menu, { xPercent: 0, x: '100%' });
+menuBtn.addEventListener('click', () => {
+  const open = menuBtn.getAttribute('aria-expanded') !== 'true';
+  menuBtn.setAttribute('aria-expanded', open); menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  open ? menuTl.play() : menuTl.reverse();
+});
+menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => menuBtn.getAttribute('aria-expanded') === 'true' && menuBtn.click()));
+addEventListener('keydown', e => { if (e.key === 'Escape' && menuBtn.getAttribute('aria-expanded') === 'true') menuBtn.click(); });
+
+// flip card
+document.querySelectorAll('.card .inner').forEach(b => b.addEventListener('click', () => {
+  const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
+  gsap.to(b, { rotationY: on ? 180 : 0, duration: RM ? 0 : 0.6, ease: 'back.out(1.4)' });
+}));
+
+// tabs with arrow keys
+const tabs = [...document.querySelectorAll('[role="tab"]')];
+function select(tab) {
+  tabs.forEach(t => { const on = t === tab; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !on; });
+  tab.focus();
+}
+tabs.forEach((t, i) => { t.addEventListener('click', () => select(t));
+  t.addEventListener('keydown', e => { if (e.key === 'ArrowRight') select(tabs[(i + 1) % tabs.length]); if (e.key === 'ArrowLeft') select(tabs[(i - 1 + tabs.length) % tabs.length]); }); });
+
+// play / pause toggles for real
+const playBtn = $('#playBtn');
+playBtn.addEventListener('click', () => {
+  const on = playBtn.getAttribute('aria-pressed') !== 'true';
+  playBtn.setAttribute('aria-pressed', on); playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play'); playBtn.textContent = on ? 'Pause' : 'Play';
+});
+
+// draggable slider: mouse, touch, keyboard
+const vol = $('#vol'), knob = vol.querySelector('.knob');
+function setVol(v) {
+  v = Math.round(Math.max(0, Math.min(100, v))); vol.setAttribute('aria-valuenow', v);
+  gsap.set(knob, { x: (vol.clientWidth - knob.offsetWidth) * v / 100 });
+}
+vol.addEventListener('pointerdown', e => {
+  vol.setPointerCapture(e.pointerId);
+  const move = ev => { const r = vol.getBoundingClientRect(); setVol((ev.clientX - r.left - 16) / (r.width - 32) * 100); };
+  move(e); vol.onpointermove = move; vol.onpointerup = () => (vol.onpointermove = null);
+});
+vol.addEventListener('keydown', e => {
+  const v = +vol.getAttribute('aria-valuenow');
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { setVol(v + 5); e.preventDefault(); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { setVol(v - 5); e.preventDefault(); }
+});
+addEventListener('resize', () => setVol(+vol.getAttribute('aria-valuenow')));
+
+// add to cart: the counter goes up with a pop
+let n = 0;
+$('#add').addEventListener('click', () => { $('#cart').textContent = ++n;
+  if (!RM) gsap.fromTo('#cart', { scale: 1.6 }, { scale: 1, duration: 0.4, ease: 'back.out(3)' }); });
+
+document.fonts.ready.then(() => { ScrollTrigger.refresh(); document.documentElement.dataset.ready = '1'; });
+</script>
+</body>
+</html>

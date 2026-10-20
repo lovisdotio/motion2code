@@ -1,0 +1,34 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  static:
+    name: contract, allowlist, hygiene
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Static checks of every gallery page and template
+        run: python3 tests/check_repo.py
+
+  runtime:
+    name: headless render, loop seam, determinism
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ffmpeg and Playwright Chromium
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          pip install playwright==1.49.1
+          python -m playwright install --with-deps chromium
+      - name: Runtime checks of every replay
+        run: python3 tests/check_repo.py --runtime

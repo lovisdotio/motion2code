@@ -1,0 +1,1645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MILA DRAWS</title>
+<meta name="description" content="Mila draws flat stickers, cats, clouds and cheerful characters.">
+<meta name="theme-color" content="#EEE8EF">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=block&text=MILADRWSH!" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEE8EF; --lilac:#B983BE; --lilac-d:#9B6CA6; --green:#178B44; --green-d:#127A3B; --red:#D1242F;
+    --cream:#EAE1C2; --cream2:#F3ECDD; --pill:#F7EEEA; --white:#FDFBFC; --ink:#073F31; --grey:#A79DAD; --line:#DDD0DF;
+    --u:1;
+  }
+  *{box-sizing:border-box}
+  html{background:var(--bg);-webkit-text-size-adjust:100%}
+  html.lb-open{overflow:hidden}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
+  button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  a{color:inherit;-webkit-tap-highlight-color:transparent}
+  svg{display:block}
+  .sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  :focus{outline:none}
+  :focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+  .defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+  text{font-family:'Nunito',sans-serif;font-weight:900;text-rendering:geometricPrecision}
+  .bar{display:block;border-radius:999px;background:var(--lilac)}
+
+  /* ================= NAVIGATION ================= */
+  .nav{position:fixed;top:0;left:0;right:0;z-index:50;height:calc(115px*var(--u));display:flex;align-items:center;
+    padding:0 calc(49px*var(--u)) 0 calc(46px*var(--u));pointer-events:none;background:rgba(238,232,239,0);transition:background-color .25s}
+  body.scrolled .nav{background:var(--bg)}
+  .nav > *{pointer-events:auto}
+  .logo{display:block;width:calc(106px*var(--u));height:calc(38px*var(--u));border-radius:8px;text-decoration:none}
+  .logo svg{width:100%;height:100%}
+  .logoA{transition:fill .25s,stroke .25s}
+  body.in-work .nav .logoA{fill:var(--green);stroke:var(--green)}
+  .links{margin-left:auto}
+  .links ul{display:flex;align-items:center;gap:calc(50px*var(--u));list-style:none;margin:0;padding:0}
+  .links li{position:relative}
+  .nl{display:flex;align-items:center;height:calc(64px*var(--u));border-radius:8px}
+  .nl .bar{width:calc(var(--bw)*1px*var(--u));height:calc(12px*var(--u));transition:background-color .2s,transform .2s}
+  .nl:hover .bar,.nl[aria-expanded="true"] .bar{background:var(--green);transform:translateY(-2px)}
+  .chev{width:calc(18px*var(--u));height:calc(12px*var(--u));margin-left:calc(6px*var(--u));transition:transform .25s}
+  .nl[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .avatar{display:block;width:calc(56px*var(--u));height:calc(56px*var(--u));margin-left:calc(51px*var(--u));border-radius:50%;transition:transform .2s}
+  .avatar:hover{transform:scale(1.08) rotate(-6deg)}
+  .avatar svg{width:100%;height:100%}
+  .avGrid{opacity:0;transition:opacity .25s}.avHome{transition:opacity .25s}
+  body.in-work .avGrid{opacity:1} body.in-work .avHome{opacity:0}
+  .cta{display:grid;place-items:center;width:calc(163px*var(--u));height:calc(65px*var(--u));margin-left:calc(25px*var(--u));border-radius:999px;background:var(--red);transition:background-color .25s,transform .15s}
+  .cta .bar{width:calc(96px*var(--u));height:calc(11px*var(--u));background:var(--pill)}
+  .cta:hover{background:#B91E28} body.in-work .cta{background:var(--green)} body.in-work .cta:hover{background:var(--green-d)}
+  .cta:active,.pill:active,.see:active,.top-btn:active,.w-chat:active,.w-shake:active,.mi:active{transform:scale(.93)}
+  .burger{display:none}
+  .more-menu{position:absolute;top:calc(100% + 8px*var(--u));right:calc(-24px*var(--u));min-width:calc(280px*var(--u));background:var(--white);border-radius:calc(26px*var(--u));padding:calc(12px*var(--u));display:grid;gap:calc(4px*var(--u))}
+  .more-menu[hidden]{display:none}
+  .mi{display:flex;align-items:center;gap:calc(16px*var(--u));height:calc(60px*var(--u));padding:0 calc(14px*var(--u));border-radius:calc(18px*var(--u));width:100%;transition:background-color .15s,transform .15s}
+  .mi:hover,.mi:focus-visible{background:var(--bg)}
+  .mi .ic{flex:none;display:grid;place-items:center;width:calc(40px*var(--u));height:calc(40px*var(--u));border-radius:50%}
+  .mi .ic svg{width:60%;height:60%}
+  .mi .bar{height:calc(11px*var(--u));width:calc(var(--bw)*1px*var(--u))}
+
+  /* ================= HERO (stickers) ================= */
+  .hero{position:relative;height:100vh;height:100svh;min-height:460px;overflow:hidden}
+  .shaker{position:absolute;inset:0}
+  .stage{position:absolute;left:0;top:0;transform-origin:0 0;user-select:none;-webkit-user-select:none}
+  .item{position:absolute;display:block}
+  .l{position:absolute;inset:0;display:block;pointer-events:none}
+  .item svg{width:100%;height:100%;overflow:visible}
+  .sticker{pointer-events:none;touch-action:none;-webkit-user-drag:none;border-radius:40px}
+  .sticker svg{pointer-events:none}
+  .sticker use{pointer-events:visiblePainted;cursor:grab}
+  .sticker:focus-visible{outline:none}
+  .sticker:focus-visible .wob{outline:6px dashed var(--ink);outline-offset:4px;border-radius:40px}
+  body.dragging,body.dragging *{cursor:grabbing!important}
+  .glyph{pointer-events:visiblePainted}
+  .trail{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;z-index:30}
+  .title{margin:0;width:100%;height:100%}
+  .copy{position:absolute;inset:0}
+  .copy .bars{position:absolute;inset:0;width:100%;height:100%}
+  .see{position:absolute;left:0;top:72.53%;width:43.64%;height:27.47%;border-radius:999px;background:var(--green);pointer-events:auto;transition:background-color .2s}
+  .see:hover{background:var(--green-d)}
+  .see .bar{position:absolute;left:20.1%;top:42.19%;width:59.8%;height:15.63%;background:var(--cream2)}
+  .see:focus-visible,.search:focus-visible{outline:calc(4px*var(--cs,1)) solid var(--ink);outline-offset:calc(4px*var(--cs,1))}
+  .search{position:absolute;left:47.81%;top:73.82%;width:12.28%;height:24.03%;border-radius:50%;pointer-events:auto;z-index:2}
+  .search:hover circle:first-child{stroke:#8E8296}
+  .search svg{width:100%;height:100%}
+  .search-field{position:absolute;left:47.81%;top:73.82%;width:12.28%;height:24.03%;border-radius:999px;border:calc(2.5px*var(--cs,1)) solid var(--grey);background:rgba(253,251,252,0);visibility:hidden;overflow:hidden;pointer-events:auto}
+  .search-field input{position:absolute;top:0;bottom:0;left:calc(58px*var(--cs,1));right:calc(18px*var(--cs,1));width:auto;border:0;background:transparent;color:var(--ink);
+    font:800 calc(22px*var(--cs,1))/1 system-ui,-apple-system,sans-serif;outline:none;padding:0;-webkit-appearance:none;appearance:none}
+  .search-field input::-webkit-search-cancel-button{display:none}
+  .search-field input{user-select:text;-webkit-user-select:text}
+  section[tabindex]:focus,.about-actions:focus{outline:none}
+
+  /* ================= WORK (illustration grid) ================= */
+  .work{position:relative;height:100vh;height:100svh;min-height:460px;overflow:hidden}
+  .work-inner{position:absolute;inset:0}
+  .work-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+  .card{position:absolute;left:calc(var(--x)*1px);top:calc(var(--y)*1px);width:calc(var(--w)*1px);height:calc(var(--h)*1px)}
+  .card__inner{position:absolute;inset:0}
+  .card__btn{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:28px}
+  .card__btn svg{width:100%;height:100%}
+  .card__btn:focus-visible{outline:6px solid var(--ink);outline-offset:6px}
+  .card.is-flying .card__btn{visibility:hidden}
+
+  /* ================= ABOUT ================= */
+  .about{position:relative}
+  .about-grid{position:relative;max-width:1700px;margin:0 auto;padding:clamp(90px,9vw,170px) clamp(16px,5.7vw,110px) clamp(60px,6vw,110px);
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,5vw,96px);align-items:center}
+  .about-card{width:100%;max-width:620px;justify-self:end;aspect-ratio:1/1;border-radius:28px;position:relative}
+  .about-card svg{width:100%;height:100%}
+  .about-copy{max-width:660px}
+  .about-bars{width:100%;height:auto}
+  .chips{display:flex;flex-wrap:wrap;gap:14px;list-style:none;margin:clamp(24px,3vw,44px) 0 0;padding:0}
+  .chip{display:flex;align-items:center;gap:12px;height:52px;padding:0 22px 0 14px;border-radius:999px;background:var(--white)}
+  .chip i{display:block;width:26px;height:26px;border-radius:50%}
+  .chip .bar{height:10px;width:var(--bw)}
+  .about-actions{display:flex;flex-wrap:wrap;gap:16px;margin-top:clamp(28px,3.4vw,52px)}
+  .pill{display:grid;place-items:center;width:199px;height:64px;border-radius:999px;transition:background-color .2s}
+  .pill .bar{width:60%;height:10px;background:var(--cream2)}
+  .pill--red{background:var(--red)} .pill--red:hover{background:#B91E28}
+  .pill--green{background:var(--green)} .pill--green:hover{background:var(--green-d)}
+  .deco{position:absolute;pointer-events:auto}
+  .deco svg{width:100%;height:100%;overflow:visible}
+  #decoStar{right:3%;top:16%;width:clamp(70px,8vw,150px);aspect-ratio:530/513}
+  #decoCherry{left:2%;bottom:6%;width:clamp(60px,6.5vw,120px);aspect-ratio:482/544}
+  #decoCloud{right:12%;bottom:6%;width:clamp(90px,10vw,190px);aspect-ratio:470/253}
+  .foot{width:calc(100% - 2 * clamp(16px,5.7vw,110px));max-width:1480px;margin:0 auto;padding:28px 0 140px;display:flex;align-items:center;gap:clamp(18px,3vw,50px);border-top:3px solid var(--line)}
+  .foot .logo{width:106px;height:38px;--u:1}
+  .foot-bars{display:flex;gap:28px;margin-left:auto}
+  .foot-bars .bar{height:10px;width:var(--bw)}
+  .top-btn{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--green);transition:background-color .2s,transform .15s}
+  .top-btn:hover{background:var(--green-d)}
+  .top-btn svg{width:22px;height:22px}
+
+  /* ================= FLOATING WIDGET + CONTACT ================= */
+  .widget{position:fixed;right:calc(49px*var(--u));bottom:calc(41px*var(--u));width:calc(68px*var(--u));height:calc(68px*var(--u));z-index:60}
+  .w-chat{position:absolute;inset:0;border-radius:50%;transition:transform .15s}
+  .w-chat:hover{transform:scale(1.06)}
+  .w-shake{position:absolute;left:calc(-17px*var(--u));top:calc(-18px*var(--u));width:calc(34px*var(--u));height:calc(34px*var(--u));border-radius:50%;transition:transform .15s}
+  .w-shake:hover{transform:rotate(-14deg) scale(1.1)}
+  .widget svg{width:100%;height:100%}
+  .contact{position:fixed;right:calc(49px*var(--u));bottom:calc(126px*var(--u));width:min(390px,calc(100vw - 32px));background:var(--white);border-radius:28px;padding:22px;z-index:61}
+  .contact[hidden]{display:none}
+  .contact__head{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-right:46px}
+  .contact__head svg{width:52px;height:52px;flex:none}
+  .contact__head .rows{display:grid;gap:9px;flex:1}
+  .contact__head .bar{height:10px}
+  .contact textarea{display:block;width:100%;min-height:120px;resize:vertical;border:2.5px solid var(--grey);border-radius:20px;background:var(--bg);padding:14px 16px;
+    font:700 16px/1.4 system-ui,-apple-system,sans-serif;color:var(--ink)}
+  .contact textarea:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  .contact__form .pill{margin-top:14px;width:160px;height:54px}
+  .contact__close{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:var(--bg);display:grid;place-items:center;transition:transform .15s}
+  .contact__close:hover{transform:rotate(90deg)}
+  .contact__close svg{width:16px;height:16px}
+  .contact__done{display:grid;place-items:center;padding:6px 0 8px}
+  .contact__done[hidden]{display:none}
+  .contact__done svg{width:220px;height:auto}
+
+  /* ================= LIGHTBOX ================= */
+  .lb{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:rgba(238,232,239,.96);overflow:hidden;color:var(--ink)}
+  .lb::backdrop{background:transparent}
+  .lb__wrap{position:absolute;inset:0;display:grid;place-items:center}
+  .lb__stage{position:relative;display:grid;place-items:center}
+  .lb__art{width:600px;border-radius:28px}
+  .lb__art svg{width:100%;height:auto}
+  .lb__btn{position:absolute;display:grid;place-items:center;width:64px;height:64px;border-radius:50%;transition:transform .15s,background-color .2s}
+  .lb__btn svg{width:24px;height:24px}
+  .lb__btn:hover{transform:scale(1.08)} .lb__btn:active{transform:scale(.92)}
+  .lb__close{top:28px;right:28px;background:var(--red)}
+  .lb__prev{left:32px;top:50%;margin-top:-32px;background:var(--lilac)}
+  .lb__next{right:32px;top:50%;margin-top:-32px;background:var(--green)}
+  .lb__dots{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);display:flex;gap:6px}
+  .dot{display:grid;place-items:center;width:32px;height:32px;border-radius:50%}
+  .dot span{display:block;width:12px;height:12px;border-radius:50%;background:var(--lilac);transition:transform .2s,background-color .2s}
+  .dot[aria-current="true"] span{background:var(--green);transform:scale(1.4)}
+
+  /* ================= COMPACT (phones, portrait tablets) ================= */
+  @media not all and (min-width: 900px) and (min-aspect-ratio: 6/5){
+    .nav{height:64px;padding:0 14px}
+    .logo{width:84px;height:30px}
+    .avatar{width:40px;height:40px;margin-left:auto}
+    .cta{width:92px;height:40px;margin-left:10px}
+    .cta .bar{width:52px;height:8px}
+    .burger{display:grid;place-content:center;gap:6px;width:44px;height:44px;margin-left:8px;border-radius:12px}
+    .burger span{display:block;width:22px;height:4px;border-radius:2px;background:var(--lilac);transition:transform .25s,opacity .2s}
+    .burger[aria-expanded="true"] span:nth-child(1){transform:translateY(10px) rotate(45deg)}
+    .burger[aria-expanded="true"] span:nth-child(2){opacity:0}
+    .burger[aria-expanded="true"] span:nth-child(3){transform:translateY(-10px) rotate(-45deg)}
+    .links{position:fixed;top:64px;left:0;right:0;margin:0;background:var(--bg);padding:8px 22px 26px;display:none;max-height:calc(100svh - 64px);overflow:auto}
+    .links.open{display:block}
+    .links ul{flex-direction:column;align-items:stretch;gap:0}
+    .nl{height:56px;width:100%}
+    .nl .bar{height:14px;width:calc(var(--bw)*1.7px)}
+    .chev{width:22px;height:14px;margin-left:10px}
+    .more-menu{position:static;min-width:0;background:transparent;padding:0 0 6px 10px;gap:0}
+    .mi{height:52px;gap:14px;padding:0 10px;border-radius:16px}
+    .mi .ic{width:34px;height:34px}
+    .mi .bar{height:10px;width:calc(var(--bw)*1.3px)}
+    .work{height:auto;min-height:0;padding:84px 16px 40px}
+    .work-inner{position:relative;inset:auto}
+    .work-stage{position:static;width:auto;height:auto;transform:none!important;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:14px}
+    .card{position:relative;left:auto;top:auto;width:auto;height:auto;aspect-ratio:var(--w)/var(--h)}
+    .card__btn{border-radius:24px}
+    .card__btn:focus-visible{outline-width:3px;outline-offset:3px}
+    .about-grid{grid-template-columns:1fr;padding:64px 16px 48px;gap:34px}
+    .about-card{justify-self:center;max-width:460px}
+    #decoStar{right:10px;top:34px;width:74px}
+    #decoCherry{left:6px;top:calc(64px + min(100vw - 32px, 460px) - 70px);bottom:auto;width:62px}
+    #decoCloud{right:6px;top:calc(64px + min(100vw - 32px, 460px) - 40px);bottom:auto;width:100px}
+    .pill{width:160px;height:56px}
+    .foot{padding:22px 0 110px}
+    .foot-bars{display:none}
+    .foot .top-btn{margin-left:auto}
+    .widget{right:16px;bottom:16px;width:56px;height:56px}
+    .w-shake{left:-14px;top:-14px;width:32px;height:32px}
+    .contact{right:16px;left:16px;width:auto;bottom:86px}
+    .lb__btn{width:52px;height:52px}
+    .lb__close{top:14px;right:14px}
+    .lb__prev{left:16px;top:auto;bottom:18px;margin:0}
+    .lb__next{right:16px;top:auto;bottom:18px;margin:0}
+    .lb__dots{bottom:28px}
+    .dot{width:26px;height:26px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{transition:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= ART (shared by every sticker, card and mini sticker) ================= -->
+<svg class="defs" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <!-- ===== CAT (home page coordinates) ===== -->
+  <g id="catArt">
+    <path class="sil" fill="#EAE1C2" d="M1322,945 C1305,925 1298,900 1302,875 C1305,845 1318,815 1342,797 L1418,736 Q1438,722 1442,742 L1458,785 L1470,795 L1548,762 Q1566,755 1564,775 L1558,848 C1600,862 1660,872 1695,892 C1688,850 1685,800 1700,760 C1712,728 1735,700 1765,697 C1790,695 1805,712 1803,735 C1801,755 1790,770 1788,790 C1786,815 1805,860 1828,900 C1850,940 1862,985 1868,1030 L1875,1110 L1370,1110 C1368,1060 1360,1000 1345,970 C1338,960 1330,952 1322,945 Z"/>
+    <ellipse class="silx" cx="1292" cy="868" rx="34" ry="42"/>
+    <g fill="#178B44">
+      <path d="M1447,800 L1470,795 L1548,762 Q1566,755 1564,775 L1558,848 C1546,880 1532,906 1520,926 C1505,946 1475,946 1455,926 C1438,906 1432,870 1436,840 C1438,822 1442,808 1447,800 Z"/>
+      <path d="M1540,872 C1605,868 1690,893 1728,922 C1700,951 1650,969 1608,966 C1572,962 1550,940 1540,872 Z"/>
+      <path d="M1384,792 L1421,748 L1429,788 Z"/>
+      <path d="M1748,700 C1770,694 1800,705 1803,735 C1801,752 1792,766 1789,776 C1772,771 1758,753 1752,736 C1748,723 1746,710 1748,700 Z"/>
+      <path d="M1745,822 C1775,825 1800,855 1828,900 C1850,940 1862,985 1868,1030 L1872,1080 L1803,1080 C1806,1000 1790,962 1760,931 C1735,905 1722,870 1728,845 C1731,832 1737,824 1745,822 Z"/>
+      <path d="M1362,1015 C1395,1012 1425,1045 1440,1110 L1370,1110 C1368,1075 1365,1040 1362,1015 Z"/>
+      <path d="M1505,1110 C1515,1060 1545,1022 1585,1018 C1625,1015 1645,1050 1648,1110 Z"/>
+    </g>
+    <path fill="#EAE1C2" d="M1549,784 L1509,813 L1546,838 Z"/>
+    <g id="catEyeL">
+      <g class="open"><path fill="#FFFFFF" d="M1358,846 C1371,837 1388,841 1398,852 C1385,859 1369,858 1358,846 Z"/><ellipse cx="1365" cy="843" rx="10.5" ry="11.5" fill="#073F31"/></g>
+      <path class="shut" fill="none" stroke="#073F31" stroke-width="6" stroke-linecap="round" d="M1352,846 Q1370,833 1390,845"/>
+    </g>
+    <g id="catEyeR">
+      <g class="open"><path fill="#FFFFFF" d="M1446,867 C1461,856 1480,860 1491,872 C1476,881 1458,880 1446,867 Z"/><ellipse cx="1457" cy="867" rx="11.5" ry="11.5" fill="#073F31"/></g>
+      <path class="shut" fill="none" stroke="#073F31" stroke-width="6" stroke-linecap="round" d="M1444,870 Q1463,857 1484,868"/>
+    </g>
+    <path fill="#073F31" stroke="#073F31" stroke-width="4" stroke-linejoin="round" d="M1393,868 L1430,877 L1405,894 Z"/>
+    <g fill="none" stroke="#073F31" stroke-width="5" stroke-linecap="round">
+      <path d="M1274,839 Q1310,850 1341,870"/><path d="M1271,868 Q1305,870 1336,881"/><path d="M1269,896 Q1300,890 1332,892"/>
+      <path d="M1505,896 Q1545,895 1586,901"/><path d="M1504,911 Q1540,915 1575,927"/><path d="M1502,924 Q1535,938 1564,955"/>
+    </g>
+  </g>
+
+  <!-- ===== CHERRY ===== -->
+  <g id="cherryArt">
+    <path class="sil silstroke" fill="none" stroke="#178B44" stroke-width="17" stroke-linecap="round" d="M198,172 C232,235 252,330 238,388 C228,425 216,442 206,458"/>
+    <path class="sil silstroke" fill="none" stroke="#178B44" stroke-width="15" stroke-linecap="round" d="M250,248 C290,305 326,375 338,442"/>
+    <polygon class="silx" points="200,182 250,246 340,446 206,462"/>
+    <path class="sil" fill="#178B44" d="M215,198 C255,158 335,145 395,165 C445,182 470,230 483,277 C440,296 380,300 330,291 C290,283 262,264 250,246 C238,230 225,214 215,198 Z"/>
+    <path fill="none" stroke="#F3ECDD" stroke-width="4.5" stroke-linecap="round" d="M283,199 Q350,204 430,250"/>
+    <ellipse class="sil" fill="#178B44" cx="200" cy="176" rx="21" ry="17" transform="rotate(35 200 176)"/>
+    <path id="cherL" class="sil" fill="#D1242F"/>
+    <path id="cherR" class="sil" fill="#D1242F"/>
+    <g fill="none" stroke="#FBF6F3" stroke-width="14" stroke-linecap="round"><path d="M241,516 Q234,550 214,574"/><path d="M421,457 Q441,477 448,506"/></g>
+  </g>
+
+  <!-- ===== STAR ===== -->
+  <g id="starArt">
+    <polygon class="sil" fill="#178B44" stroke="#178B44" stroke-width="10" stroke-linejoin="round" points="1616,203 1682,372 1856,369 1718,476 1777,644 1632,548 1495,656 1537,486 1386,389 1566,377"/>
+    <circle cx="1605" cy="439" r="65" fill="#B983BE"/>
+    <g id="starEyes">
+      <path fill="#FFFFFF" d="M1552,415 C1565,404 1585,407 1595,420 C1580,429 1561,427 1552,415 Z"/><circle cx="1564" cy="417" r="10.5" fill="#073F31"/>
+      <path fill="#FFFFFF" d="M1630,425 C1645,413 1663,418 1671,430 C1656,438 1639,436 1630,425 Z"/><circle cx="1642" cy="425" r="10.5" fill="#073F31"/>
+    </g>
+    <path fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M1573,455 Q1588,468 1601,452 Q1614,468 1629,456 M1601,452 Q1605,445 1600,438"/>
+  </g>
+
+  <!-- ===== LILAC CLOUD ===== -->
+  <g id="pcloudArt">
+    <g fill="#B983BE">
+      <circle class="sil" cx="640" cy="237" r="66"/><circle class="sil" cx="800" cy="183" r="118"/>
+      <circle class="sil" cx="965" cy="213" r="88"/><circle class="sil" cx="1050" cy="250" r="53"/>
+      <rect class="sil" x="574" y="200" width="529" height="103" rx="50"/>
+    </g>
+    <g id="pcloudEyes" fill="#178B44">
+      <ellipse cx="739" cy="166" rx="22" ry="18" transform="rotate(-10 739 166)"/>
+      <ellipse cx="820" cy="178" rx="22" ry="19" transform="rotate(-6 820 178)"/>
+    </g>
+    <path fill="#178B44" d="M872,206 C890,186 920,179 943,186 C926,204 896,212 872,206 Z"/>
+    <path fill="#EAE1C2" d="M722,198 L823,207 C818,233 795,247 768,244 C743,240 727,222 722,198 Z"/>
+  </g>
+
+  <!-- ===== SMALL CREAM CLOUD ===== -->
+  <g id="ccloudArt">
+    <g fill="#EAE1C2">
+      <circle class="sil" cx="1262" cy="200" r="88"/><circle class="sil" cx="1395" cy="215" r="70"/>
+      <circle class="sil" cx="1470" cy="257" r="48"/><circle class="sil" cx="1155" cy="258" r="47"/>
+      <rect class="sil" x="1155" y="230" width="315" height="75"/>
+    </g>
+    <g id="ccloudEyes">
+      <ellipse cx="1233" cy="196" rx="9" ry="12" fill="#FFFFFF" transform="rotate(15 1233 196)"/><ellipse cx="1227" cy="193" rx="7.5" ry="11.5" fill="#178B44" transform="rotate(15 1227 193)"/>
+      <ellipse cx="1299" cy="208" rx="8.5" ry="11.5" fill="#FFFFFF" transform="rotate(15 1299 208)"/><ellipse cx="1294" cy="206" rx="7" ry="11" fill="#178B44" transform="rotate(15 1294 206)"/>
+    </g>
+    <path fill="#B983BE" d="M1217,216 L1292,226 C1285,245 1268,253 1252,251 C1233,248 1220,234 1217,216 Z"/>
+  </g>
+
+  <!-- ===== BIG CREAM CLOUD ===== -->
+  <g id="bcloudArt">
+    <g fill="#EAE1C2">
+      <circle class="sil" cx="262" cy="860" r="158"/><circle class="sil" cx="40" cy="920" r="85"/>
+      <circle class="sil" cx="478" cy="897" r="110"/><circle class="sil" cx="612" cy="944" r="74"/>
+      <rect class="sil" x="-60" y="900" width="672" height="118"/>
+    </g>
+    <g id="bcloudEyes">
+      <ellipse cx="334" cy="859" rx="23" ry="16" fill="#FFFFFF" transform="rotate(-15 334 859)"/><ellipse cx="349" cy="855" rx="13" ry="19" fill="#073F31" transform="rotate(12 349 855)"/>
+      <ellipse cx="440" cy="839" rx="21" ry="17" fill="#FFFFFF" transform="rotate(-15 440 839)"/><ellipse cx="456" cy="834" rx="13.5" ry="19.5" fill="#073F31" transform="rotate(12 456 834)"/>
+    </g>
+    <path fill="#B983BE" d="M354,892 L471,874 C470,908 446,935 413,935 C384,935 361,918 354,892 Z"/>
+  </g>
+
+  <!-- card clip -->
+  <clipPath id="clip1"><rect x="110" y="197" width="573" height="395" rx="28"/></clipPath>
+  <clipPath id="clip2"><rect x="713" y="197" width="487" height="486" rx="28"/></clipPath>
+  <clipPath id="clip3"><rect x="1231" y="197" width="573" height="395" rx="28"/></clipPath>
+  <clipPath id="clip4"><rect x="110" y="620" width="573" height="398" rx="28"/></clipPath>
+  <clipPath id="clip5"><rect x="713" y="711" width="487" height="307" rx="28"/></clipPath>
+  <clipPath id="clip6"><rect x="1231" y="620" width="573" height="398" rx="28"/></clipPath>
+  <clipPath id="clipAvA"><circle cx="1655" cy="58" r="28"/></clipPath>
+  <clipPath id="clipMini"><circle cx="0" cy="0" r="50"/></clipPath>
+</defs>
+  <clipPath id="clipAbout"><circle cx="300" cy="330" r="200"/></clipPath>
+</defs>
+</svg>
+
+<div id="live" class="sr" aria-live="polite"></div>
+
+<!-- ================= NAVIGATION ================= -->
+<header class="nav" id="nav">
+  <a class="logo" href="#home" aria-label="MILA DRAWS, back to the top"><svg class="logoSvg" viewBox="46 39 106 38" aria-hidden="true" focusable="false"></svg></a>
+  <nav class="links" id="menu" aria-label="Main">
+    <ul>
+      <li><a class="nl" href="#work" aria-label="Work"><span class="bar" style="--bw:65"></span></a></li>
+      <li><a class="nl" href="#about" aria-label="About"><span class="bar" style="--bw:48"></span></a></li>
+      <li><a class="nl" href="#home" aria-label="Stickers"><span class="bar" style="--bw:110"></span></a></li>
+      <li><a class="nl" href="#contact-block" aria-label="Contact"><span class="bar" style="--bw:86"></span></a></li>
+      <li class="more">
+        <button class="nl more-btn" type="button" aria-label="More" aria-expanded="false" aria-controls="moreMenu"><span class="bar" style="--bw:80"></span>
+          <svg class="chev" viewBox="1561 51 18 12" aria-hidden="true" focusable="false"><path d="M1564,54 L1570,60 L1576,54" fill="none" stroke="#B983BE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="more-menu" id="moreMenu" hidden>
+          <button class="mi" type="button" data-action="shake" aria-label="Shake: send every sticker back to its spot">
+            <span class="ic" style="background:#D1242F"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9 Q7 5 10 9 T16 9 T22 9 M2 15 Q5 11 8 15 T14 15 T20 15" fill="none" stroke="#F7EEEA" stroke-width="2.6" stroke-linecap="round"/></svg></span>
+            <span class="bar" style="--bw:120"></span></button>
+          <button class="mi" type="button" data-action="scatter" aria-label="Scatter the stickers across the page">
+            <span class="ic" style="background:#178B44"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 Q13 11 22 12 Q13 13 12 22 Q11 13 2 12 Q11 11 12 2 Z" fill="#F3ECDD"/></svg></span>
+            <span class="bar" style="--bw:96"></span></button>
+          <button class="mi" type="button" data-action="contact" aria-label="Write to Mila" aria-controls="contact" aria-expanded="false">
+            <span class="ic" style="background:#B983BE"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="#FDFBFC" stroke-width="2.4"/><path d="M4 7 L12 13 L20 7" fill="none" stroke="#FDFBFC" stroke-width="2.4" stroke-linejoin="round"/></svg></span>
+            <span class="bar" style="--bw:110"></span></button>
+        </div>
+      </li>
+    </ul>
+  </nav>
+  <a class="avatar" href="#about" aria-label="About Mila">
+    <svg viewBox="1627 30 56 56" aria-hidden="true" focusable="false">
+      <g clip-path="url(#clipAvA)">
+        <g class="avHome">
+          <circle cx="1655" cy="58" r="28" fill="#B983BE"/>
+          <path fill="#EAE1C2" d="M1640,90 C1640,72 1650,66 1662,66 C1676,66 1684,74 1684,90 Z"/>
+          <circle cx="1661" cy="55" r="13" fill="#EAE1C2"/>
+          <path fill="#178B44" d="M1647,52 C1648,38 1668,36 1675,46 C1668,46 1660,47 1656,52 C1654,58 1652,64 1648,66 C1644,62 1645,56 1647,52 Z"/>
+          <path fill="#D1242F" d="M1640,90 C1641,80 1648,74 1656,73 L1668,73 C1676,74 1683,80 1684,90 Z"/>
+        </g>
+        <g class="avGrid">
+          <circle cx="1655" cy="58" r="28" fill="#178B44"/>
+          <path fill="#0B3A2E" d="M1641,64 C1636,42 1650,34 1660,36 C1673,38 1678,50 1675,66 Z"/>
+          <circle cx="1658" cy="56" r="11.5" fill="#EAE1C2"/>
+          <path fill="#0B3A2E" d="M1646,52 C1648,42 1662,40 1670,47 C1664,48 1656,50 1650,56 Z"/>
+          <path fill="#D1242F" d="M1638,90 C1640,77 1648,71 1658,71 C1668,71 1676,77 1678,90 Z"/>
+        </g>
+      </g>
+    </svg>
+  </a>
+  <button class="cta" type="button" data-action="contact" aria-label="Write to Mila" aria-controls="contact" aria-expanded="false"><span class="bar"></span></button>
+  <button class="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
+</header>
+
+<main>
+  <!-- ================= HERO : the sticker page ================= -->
+  <section id="home" class="hero" aria-label="Sticker page" tabindex="-1">
+    <div class="shaker" id="shaker">
+      <div class="stage" id="stage">
+        <svg class="trail" id="trail" aria-hidden="true" focusable="false"><g id="trailG"></g></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WORK : six illustration cards ================= -->
+  <section id="work" class="work" aria-label="Illustrations" tabindex="-1">
+    <div class="work-inner" id="workInner">
+      <div class="work-stage" id="workStage"></div>
+    </div>
+  </section>
+
+  <!-- ================= ABOUT + CONTACT ================= -->
+  <section id="about" class="about" aria-labelledby="aboutTitle" tabindex="-1">
+    <div class="about-inner" id="aboutInner">
+      <div class="about-grid">
+        <div class="about-card" id="aboutCard" aria-hidden="true">
+          <svg viewBox="0 0 600 600" focusable="false">
+            <rect width="600" height="600" rx="28" fill="#178B44"/>
+            <g fill="#EAE1C2"><circle cx="92" cy="520" r="52"/><circle cx="160" cy="548" r="40"/><rect x="40" y="540" width="170" height="60" rx="20"/></g>
+            <circle cx="300" cy="330" r="200" fill="#B983BE"/>
+            <g clip-path="url(#clipAbout)">
+              <g transform="translate(300 330) scale(4)">
+                <path fill="#D1242F" d="M-34,52 C-30,26 -14,16 0,16 C16,16 30,26 34,52 Z"/>
+                <circle cx="2" cy="-6" r="21" fill="#EAE1C2"/>
+                <path fill="#178B44" d="M-24,-6 C-26,-30 -4,-38 12,-32 C24,-27 28,-14 26,-4 C16,-16 2,-20 -10,-14 C-14,-8 -18,0 -22,6 Z"/>
+                <circle cx="18" cy="-34" r="7" fill="#D1242F"/>
+                <g class="aEyes"><circle cx="-4" cy="-4" r="2.8" fill="#073F31"/><circle cx="12" cy="-6" r="2.8" fill="#073F31"/></g>
+                <path d="M0,5 Q5,9 10,5" fill="none" stroke="#073F31" stroke-width="2.5" stroke-linecap="round"/>
+              </g>
+            </g>
+            <path class="aSpark" fill="#F3ECDD"/>
+            <path class="aSpark2" fill="#F3ECDD"/>
+            <g class="aHi">
+              <path fill="#FFFFFF" d="M410,186 L384,228 L444,196 Z"/>
+              <ellipse cx="470" cy="140" rx="92" ry="62" fill="#FFFFFF"/>
+              <text class="hiText2" x="0" y="0" font-size="1000" fill="#D1242F">HI!</text>
+            </g>
+          </svg>
+        </div>
+        <div class="about-copy">
+          <h2 id="aboutTitle" class="sr">About Mila</h2>
+          <p class="sr">Mila draws flat stickers, cats, clouds and cheerful characters for brands, books and walls.</p>
+          <svg class="about-bars" viewBox="0 0 640 262" aria-hidden="true" focusable="false">
+            <g fill="#B983BE"><rect x="0" y="0" width="610" height="16" rx="8"/><rect x="0" y="38" width="560" height="16" rx="8"/><rect x="0" y="76" width="636" height="16" rx="8"/><rect x="0" y="114" width="290" height="16" rx="8"/></g>
+            <g fill="#CDB0D1"><rect x="0" y="170" width="520" height="13" rx="6.5"/><rect x="0" y="202" width="580" height="13" rx="6.5"/><rect x="0" y="234" width="210" height="13" rx="6.5"/></g>
+          </svg>
+          <ul class="chips" aria-hidden="true">
+            <li class="chip"><i style="background:#178B44"></i><span class="bar" style="--bw:84px"></span></li>
+            <li class="chip"><i style="background:#D1242F"></i><span class="bar" style="--bw:62px"></span></li>
+            <li class="chip"><i style="background:#B983BE"></i><span class="bar" style="--bw:104px"></span></li>
+            <li class="chip"><i style="background:#EAE1C2"></i><span class="bar" style="--bw:70px"></span></li>
+          </ul>
+          <div class="about-actions" id="contact-block" tabindex="-1">
+            <button class="pill pill--red" type="button" data-action="contact" aria-label="Write to Mila" aria-controls="contact" aria-expanded="false"><span class="bar"></span></button>
+            <a class="pill pill--green" href="#home" aria-label="Back to the stickers"><span class="bar"></span></a>
+          </div>
+        </div>
+        <div class="deco" id="decoStar" aria-hidden="true"></div>
+        <div class="deco" id="decoCherry" aria-hidden="true"></div>
+        <div class="deco" id="decoCloud" aria-hidden="true"></div>
+      </div>
+      <footer class="foot">
+        <a class="logo" href="#home" aria-label="MILA DRAWS, back to the top"><svg class="logoSvg" viewBox="46 39 106 38" aria-hidden="true" focusable="false"></svg></a>
+        <div class="foot-bars" aria-hidden="true"><span class="bar" style="--bw:65px"></span><span class="bar" style="--bw:48px"></span><span class="bar" style="--bw:110px"></span></div>
+        <button class="top-btn" type="button" aria-label="Back to the top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20 V5 M5 11 L12 4 L19 11" fill="none" stroke="#F3ECDD" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </footer>
+    </div>
+  </section>
+</main>
+
+<!-- ================= FLOATING WIDGET ================= -->
+<div class="widget">
+  <button class="w-chat" type="button" data-action="contact" aria-label="Write to Mila" aria-controls="contact" aria-expanded="false">
+    <svg viewBox="1803 971 68 68" aria-hidden="true" focusable="false"><circle cx="1837" cy="1005" r="34" fill="#FFFFFF"/><rect x="1826" y="995" width="22" height="19" rx="3" fill="none" stroke="#B983BE" stroke-width="2.5"/></svg>
+  </button>
+  <button class="w-shake" type="button" data-action="shake" aria-label="Shake: send every sticker back to its spot">
+    <svg viewBox="1786 953 34 34" aria-hidden="true" focusable="false"><circle cx="1803" cy="970" r="17" fill="#DC5560"/><path d="M1798,977 L1798,968 Q1798,962 1804,962 Q1809,962 1809,968" fill="none" stroke="#F7EEEA" stroke-width="3" stroke-linecap="round"/></svg>
+  </button>
+</div>
+
+<div class="contact" id="contact" role="dialog" aria-labelledby="contactTitle" hidden>
+  <h2 id="contactTitle" class="sr">Write to Mila</h2>
+  <div class="contact__head" aria-hidden="true">
+    <svg viewBox="1627 30 56 56" focusable="false"><use href="#avatarArt"/></svg>
+    <div class="rows"><span class="bar" style="width:72%"></span><span class="bar" style="width:46%;background:#CDB0D1"></span></div>
+  </div>
+  <form class="contact__form" id="contactForm" novalidate>
+    <label class="sr" for="msg">Your message</label>
+    <textarea id="msg" name="msg" rows="4"></textarea>
+    <button class="pill pill--green" type="submit" aria-label="Send the message"><span class="bar"></span></button>
+  </form>
+  <div class="contact__done" id="contactDone" hidden>
+    <svg viewBox="0 0 240 150" aria-hidden="true" focusable="false">
+      <path fill="#B983BE" d="M70,112 L48,146 L104,120 Z"/>
+      <ellipse cx="120" cy="70" rx="112" ry="66" fill="#B983BE"/>
+      <text class="hiText3" x="0" y="0" font-size="1000" fill="#FDFBFC">HI!</text>
+    </svg>
+  </div>
+  <button class="contact__close" type="button" aria-label="Close"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" stroke="#073F31" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+</div>
+
+<dialog class="lb" id="lb" aria-label="Illustration">
+  <div class="lb__wrap" id="lbWrap">
+    <div class="lb__stage"><div class="lb__art" id="lbArt"></div></div>
+    <button class="lb__btn lb__prev" type="button" aria-label="Previous illustration"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 L7 12 L15 20" fill="none" stroke="#FDFBFC" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="lb__btn lb__next" type="button" aria-label="Next illustration"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 L17 12 L9 20" fill="none" stroke="#F3ECDD" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="lb__btn lb__close" type="button" aria-label="Close the illustration"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18" stroke="#F7EEEA" stroke-width="3.2" stroke-linecap="round"/></svg></button>
+    <div class="lb__dots" id="lbDots"></div>
+  </div>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
+<script>
+(() => {
+'use strict';
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+const C = { bg: '#EEE8EF', lilac: '#B983BE', green: '#178B44', red: '#D1242F', cream: '#EAE1C2', white: '#FDFBFC' };
+const NS = 'http://www.w3.org/2000/svg';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const rand = (a, b) => a + Math.random() * (b - a);
+const f2 = v => (Math.abs(v) < 1e-6 ? 0 : v).toFixed(2);
+
+const RM_Q = '(prefers-reduced-motion: reduce)';
+const DESK_Q = '(min-width: 900px) and (min-aspect-ratio: 6/5)';
+const rmMQ = matchMedia(RM_Q), deskMQ = matchMedia(DESK_Q);
+const reduced = () => rmMQ.matches;
+const isDesk = () => deskMQ.matches;
+const coarse = matchMedia('(pointer: coarse)').matches;
+
+const nav = $('#nav'), hero = $('#home'), shaker = $('#shaker'), stage = $('#stage'), trailSvg = $('#trail'), trailG = $('#trailG');
+const work = $('#work'), workInner = $('#workInner'), workStage = $('#workStage'), about = $('#about'), aboutInner = $('#aboutInner');
+let busy = false;
+const live = msg => { const l = $('#live'); l.textContent = ''; setTimeout(() => { l.textContent = msg; }, 40); };
+
+/* ======================================================================
+   SHARED ART (same drawings as the replay)
+   ====================================================================== */
+function cherryD(cx, cy, r, dx) {
+  const p = (x, y) => `${x.toFixed(1)},${y.toFixed(1)}`;
+  return `M${p(cx + dx, cy - 0.8 * r)} C${p(cx + dx + 0.25 * r, cy - 1.02 * r)} ${p(cx + r, cy - 1.0 * r)} ${p(cx + r, cy - 0.05 * r)} ` +
+    `C${p(cx + r, cy + 0.58 * r)} ${p(cx + 0.55 * r, cy + r)} ${p(cx, cy + r)} C${p(cx - 0.55 * r, cy + r)} ${p(cx - r, cy + 0.58 * r)} ${p(cx - r, cy - 0.05 * r)} ` +
+    `C${p(cx - r, cy - 1.0 * r)} ${p(cx + dx - 0.25 * r, cy - 1.02 * r)} ${p(cx + dx, cy - 0.8 * r)} Z`;
+}
+$('#cherL').setAttribute('d', cherryD(167, 528, 106, 34));
+$('#cherR').setAttribute('d', cherryD(374, 514, 107, -36));
+function sparkD(cx, cy, rx, ry, k = 0.085) {
+  const a = rx * k, b = ry * k;
+  return `M${cx},${cy - ry} Q${cx + a},${cy - b} ${cx + rx},${cy} Q${cx + a},${cy + b} ${cx},${cy + ry} Q${cx - a},${cy + b} ${cx - rx},${cy} Q${cx - a},${cy - b} ${cx},${cy - ry} Z`;
+}
+/* white sticker backing: the silhouette thickened (flat, no shadow) */
+function makeBack(id, w) {
+  const src = document.getElementById(id), g = el('g', { id: id + 'Back' }, src.parentNode);
+  for (const s of src.querySelectorAll('.sil, .silx')) {
+    const c = s.cloneNode(false); c.removeAttribute('id'); c.removeAttribute('class');
+    const sw = parseFloat(s.getAttribute('stroke-width') || 0);
+    if (s.getAttribute('fill') === 'none') { c.setAttribute('stroke', C.white); c.setAttribute('stroke-width', sw + w); }
+    else { c.setAttribute('fill', C.white); c.setAttribute('stroke', C.white); c.setAttribute('stroke-width', sw + w); c.setAttribute('stroke-linejoin', 'round'); }
+    g.appendChild(c);
+  }
+  for (const s of src.querySelectorAll('.silx')) s.setAttribute('display', 'none');
+}
+makeBack('catArt', 40); makeBack('cherryArt', 40); makeBack('starArt', 42); makeBack('pcloudArt', 36); makeBack('ccloudArt', 40); makeBack('bcloudArt', 44);
+setOpen($('#catEyeL'), 0, 846); setOpen($('#catEyeR'), 0, 868);
+/* nav avatar reused in the contact panel */
+{ const a = el('g', { id: 'avatarArt' }, $('.defs defs')); a.innerHTML = $('.avatar svg g[clip-path]').outerHTML.replace('class="avGrid"', 'class="avGrid" opacity="0"'); }
+
+/* ---------- small trail stickers (same as the replay) ---------- */
+function mini(parent, kind) {
+  const g = el('g', {}, parent), inner = el('g', {}, g);
+  const useSet = (id, s, cx, cy) => { const w = el('g', { transform: `scale(${s}) translate(${-cx} ${-cy})` }, inner); el('use', { href: '#' + id + 'Back' }, w); el('use', { href: '#' + id }, w); };
+  if (kind === 'star') useSet('starArt', 0.3, 1621, 430);
+  if (kind === 'ccloud') useSet('ccloudArt', 0.4, 1313, 208);
+  if (kind === 'cherry') useSet('cherryArt', 0.24, 271, 395);
+  if (kind === 'pcloud') useSet('pcloudArt', 0.28, 838, 184);
+  if (kind === 'avatar' || kind === 'bird') {
+    el('circle', { r: 59, fill: C.white }, inner);
+    const c = el('g', { 'clip-path': 'url(#clipMini)' }, inner);
+    if (kind === 'avatar') {
+      el('circle', { r: 50, fill: C.lilac }, c);
+      el('path', { fill: C.red, d: 'M-34,52 C-30,26 -14,16 0,16 C16,16 30,26 34,52 Z' }, c);
+      el('circle', { cx: 2, cy: -6, r: 21, fill: C.cream }, c);
+      el('path', { fill: C.green, d: 'M-24,-6 C-26,-30 -4,-38 12,-32 C24,-27 28,-14 26,-4 C16,-16 2,-20 -10,-14 C-14,-8 -18,0 -22,6 Z' }, c);
+      el('circle', { cx: 18, cy: -34, r: 7, fill: C.red }, c);
+      el('circle', { cx: -4, cy: -4, r: 2.8, fill: '#073F31' }, c); el('circle', { cx: 12, cy: -6, r: 2.8, fill: '#073F31' }, c);
+      el('path', { d: 'M0,5 Q5,9 10,5', fill: 'none', stroke: '#073F31', 'stroke-width': 2.5, 'stroke-linecap': 'round' }, c);
+    } else {
+      el('circle', { r: 50, fill: C.green }, c);
+      el('path', { fill: C.lilac, d: 'M-26,50 C-28,20 -18,2 -6,-6 C-8,-22 4,-34 18,-30 C30,-26 32,-10 24,0 C32,14 34,32 30,50 Z' }, c);
+      el('path', { fill: C.cream, d: 'M18,-30 L34,-36 L26,-22 Z' }, c);
+      el('circle', { cx: 12, cy: -16, r: 3, fill: '#073F31' }, c);
+      el('path', { fill: C.cream, d: 'M-14,18 C-4,10 10,12 16,22 C6,30 -8,28 -14,18 Z' }, c);
+    }
+  }
+  return { g, inner };
+}
+
+/* ---------- type: Nunito 900, each letter fitted to the box measured on the video ---------- */
+const cvs = document.createElement('canvas').getContext('2d');
+let fontsReady = false;
+function inkBox(str) {
+  cvs.font = '900 1000px Nunito';
+  const m = cvs.measureText(str);
+  return [-m.actualBoundingBoxLeft, m.actualBoundingBoxRight, -m.actualBoundingBoxAscent, m.actualBoundingBoxDescent];
+}
+function fit(e, str, box, sw) {
+  const [l, r, t, b] = inkBox(str), h = sw / 2;
+  const x0 = box[0] + h, x1 = box[1] - h, y0 = box[2] + h, y1 = box[3] - h;
+  const sx = (x1 - x0) / (r - l), sy = (y1 - y0) / (b - t);
+  e.setAttribute('transform', `matrix(${sx.toFixed(5)} 0 0 ${sy.toFixed(5)} ${(x0 - sx * l).toFixed(2)} ${(y0 - sy * t).toFixed(2)})`);
+  if (sw) e.setAttribute('stroke-width', (sw / Math.sqrt(sx * sy)).toFixed(2));
+}
+function glyph(parent, ch, fill, sw, cls) {
+  const e = el('text', { x: 0, y: 0, 'font-size': 1000, fill }, parent);
+  if (cls) e.setAttribute('class', cls);
+  if (sw) { e.setAttribute('stroke', fill); e.setAttribute('stroke-width', sw); e.setAttribute('stroke-linejoin', 'round'); }
+  e.textContent = ch; return e;
+}
+
+/* ======================================================================
+   HERO : stickers that the visitor drags around
+   ====================================================================== */
+const BOX = {
+  ccloud: [1078, 82, 470, 253], pcloud: [544, 35, 589, 298], cherry: [31, 120, 482, 544], star: [1356, 173, 530, 513],
+  bcloud: [-90, 672, 806, 376], cat: [1228, 667, 677, 473],
+  title: [556, 355, 806, 377], copy: [731, 781, 456, 233],
+  sp0: [449, 63, 102, 100], sp1: [1691, 96, 190, 190], sp2: [1589, 689, 78, 78]
+};
+const SPARKS = { sp0: [500, 113, 47, 46], sp1: [1786, 191, 91, 91], sp2: [1628, 728, 35, 35] };
+const STK = {
+  ccloud: { art: 'ccloudArt', label: 'Cream cloud sticker', eyes: ['ccloudEyes', 200], noBack: true },
+  pcloud: { art: 'pcloudArt', label: 'Lilac cloud sticker', eyes: ['pcloudEyes', 172] },
+  cherry: { art: 'cherryArt', label: 'Cherry sticker' },
+  star: { art: 'starArt', label: 'Star sticker', eyes: ['starEyes', 421] },
+  bcloud: { art: 'bcloudArt', label: 'Big cloud sticker', eyes: ['bcloudEyes', 846] },
+  cat: { art: 'catArt', label: 'Cat sticker' }
+};
+const ORDER = ['ccloud', 'sp0', 'sp1', 'sp2', 'pcloud', 'cherry', 'star', 'bcloud', 'title', 'copy', 'cat'];
+const STICKER_KEYS = ['pcloud', 'cherry', 'star', 'ccloud', 'bcloud', 'cat'];
+/* phone layout: centre and scale of every element, in a 1080-wide page */
+function portrait(H) {
+  return {
+    sp0: [104, 270, 1], sp1: [985, 250, 0.8], pcloud: [400, 362, 0.84], ccloud: [858, 480, 0.74],
+    cherry: [225, 762, 0.68], star: [842, 800, 0.68], title: [540, 1188, 1.06], copy: [540, 1642, 1.42], sp2: [975, 1468, 1],
+    bcloud: [262, H - 132, 0.7], cat: [804, H - 126, 0.7]
+  };
+}
+
+const COPY_HTML = `<div class="copy">
+  <svg class="bars" viewBox="731 781 456 233" aria-hidden="true" focusable="false"><g fill="#B983BE">
+    <rect x="731" y="781" width="456" height="13" rx="2"/><rect x="731" y="816" width="439" height="13" rx="2"/>
+    <rect x="731" y="851" width="394" height="13" rx="2"/><rect x="731" y="887" width="141" height="13" rx="2"/></g></svg>
+  <p class="sr">Illustrator of flat stickers, cats and cheerful characters. Drag the stickers, click the cat.</p>
+  <a class="see" href="#work" aria-label="See the illustrations"><span class="bar"></span></a>
+  <div class="search-field" id="searchField"><label class="sr" for="q">Search the illustrations</label><input id="q" type="search" autocomplete="off" enterkeyhint="search" spellcheck="false"></div>
+  <button class="search" type="button" aria-label="Search the illustrations" aria-expanded="false" aria-controls="searchField">
+    <svg viewBox="949 953 56 56" aria-hidden="true" focusable="false"><circle cx="977" cy="981" r="26.75" fill="none" stroke="#A79DAD" stroke-width="2.5"/>
+    <g fill="none" stroke="#A79DAD" stroke-linecap="round"><circle cx="973" cy="977" r="9.5" stroke-width="3"/><path d="M980,984 L988,992" stroke-width="3.5"/></g></svg></button>
+</div>`;
+
+const ITEMS = {};
+ORDER.forEach((k, i) => {
+  const isSt = !!STK[k], tag = isSt ? 'span' : 'div';
+  const outer = document.createElement(isSt ? 'button' : 'div');
+  let content = '';
+  if (isSt) {
+    outer.type = 'button'; outer.className = 'item sticker';
+    outer.setAttribute('aria-label', k === 'cat' ? 'Cat sticker: unfold it into the illustrations. You can also drag it.' : `${STK[k].label}: drag it, or use the arrow keys, to move it around the page.`);
+    content = `<svg viewBox="${BOX[k].join(' ')}" aria-hidden="true" focusable="false">${STK[k].noBack ? '' : `<use class="back" href="#${STK[k].art}Back"/>`}<use href="#${STK[k].art}"/></svg>`;
+  } else if (k.startsWith('sp')) {
+    outer.className = 'item spark-item'; outer.setAttribute('aria-hidden', 'true');
+    const [x, y, rx, ry] = SPARKS[k];
+    content = `<svg viewBox="${BOX[k].join(' ')}" focusable="false"><path fill="#B983BE" d="${sparkD(x, y, rx, ry)}"/></svg>`;
+  } else if (k === 'title') {
+    outer.className = 'item title-item';
+    content = `<h1 class="title"><span class="sr">MILA DRAWS</span><svg viewBox="${BOX.title.join(' ')}" aria-hidden="true" focusable="false"><g id="titleG"></g></svg></h1>`;
+  } else {
+    outer.className = 'item copy-item'; content = COPY_HTML;
+  }
+  outer.innerHTML = `<${tag} class="l par"><${tag} class="l hov"><${tag} class="l wob">${content}</${tag}></${tag}></${tag}>`;
+  outer.style.zIndex = i + 1;
+  stage.insertBefore(outer, trailSvg);
+  ITEMS[k] = { k, el: outer, par: $('.par', outer), hov: $('.hov', outer), wob: $('.wob', outer), svg: $('svg', outer), z: i + 1,
+    x: 0, y: 0, home: [0, 0], moved: false, lastWob: 0, def: STK[k] || null, sticker: isSt };
+});
+const STICKERS = STICKER_KEYS.map(k => ITEMS[k]);
+const SPARK_ITEMS = ['sp0', 'sp1', 'sp2'].map(k => ITEMS[k]);
+
+/* ---------- title letters + logos ---------- */
+const TITLE = [
+  ['M', [567, 755, 365, 532], C.lilac], ['I', [778, 831, 365, 532], C.green], ['L', [856, 980, 365, 532], C.lilac], ['A', [986, 1141, 365, 532], C.red],
+  ['D', [566, 712, 547, 720], C.red], ['R', [728, 861, 547, 720], C.lilac], ['A', [871, 1026, 547, 720], C.green], ['W', [1022, 1217, 547, 720], C.lilac], ['S', [1223, 1355, 545, 722], C.green]
+];
+const TSW = 15;
+const titleEls = TITLE.map(([ch, box, col]) => {
+  const g = el('g', { class: 'glyph' }, $('#titleG'));
+  return { g, t: glyph(g, ch, col, TSW), ch, box, last: 0 };
+});
+titleEls.forEach(L => gsap.set(L.g, { svgOrigin: `${(L.box[0] + L.box[1]) / 2} ${L.box[3]}` }));
+const LOGO = [['M', [50, 79, 43, 73], C.lilac], ['I', [83, 92, 43, 73], C.green], ['L', [97, 117, 43, 73], C.lilac], ['A', [119, 147, 43, 73], C.red]];
+const logoEls = [];
+$$('.logoSvg').forEach(svg => LOGO.forEach(([ch, box, col], i) => logoEls.push({ t: glyph(svg, ch, col, 2.5, i === 3 ? 'logoA' : ''), ch, box })));
+
+/* ======================================================================
+   WORK : the six illustration cards (cat unfolded, girl who waves…)
+   ====================================================================== */
+const CARDS = [
+  { n: 1, box: [110, 197, 573, 395], label: 'Illustration 1, the cat sticker unfolded', tags: 'cat kitty cloud sticker purple lilac' },
+  { n: 2, box: [713, 197, 487, 486], label: 'Illustration 2, a red-haired girl waving hi', tags: 'girl wave hi hello red hair green' },
+  { n: 3, box: [1231, 197, 573, 395], label: 'Illustration 3, a cat winking on red', tags: 'cat kitty wink red cloud' },
+  { n: 4, box: [110, 620, 573, 398], label: 'Illustration 4, a girl with sparkles', tags: 'girl woman sparkle star eyes hand purple' },
+  { n: 5, box: [713, 711, 487, 307], label: 'Illustration 5, a girl and her mirror', tags: 'mirror girl red hair green' },
+  { n: 6, box: [1231, 620, 573, 398], label: 'Illustration 6, a boy with cherries', tags: 'cherry cherries boy fruit purple' }
+];
+const CARD_ART = {
+1: `<rect class="cardbg" x="110" y="197" width="573" height="395" rx="28" fill="#B983BE"/>
+<g clip-path="url(#clip1)">
+  <g class="catTilt"><use href="#catArt" transform="translate(232 397) scale(0.9) translate(-1363 -843)"/>
+  <path d="M222,503 Q268,521 316,512" fill="none" stroke="#178B44" stroke-width="7" stroke-linecap="round"/></g>
+  <g class="cx cloud1"><g fill="#EAE1C2"><circle cx="305" cy="247" r="31"/><circle cx="345" cy="253" r="20"/><circle cx="264" cy="257" r="16"/><rect x="248" y="252" width="125" height="21" rx="10.5"/></g>
+  <g fill="#178B44"><circle cx="287" cy="241" r="3.6"/><circle cx="307" cy="245" r="3.6"/></g>
+  <path d="M285,250 L307,254 C304,262 297,265 292,263 C288,261 285,256 285,250 Z" fill="#B983BE"/></g>
+</g>
+<g class="cx"><circle cx="163" cy="251" r="27" fill="#9B6CA6"/>
+<path fill="#F3ECDD" d="M163,240 Q164,250 174,251 Q164,252 163,262 Q162,252 152,251 Q162,250 163,240 Z"/>
+<circle cx="629" cy="247" r="30" fill="#FFFFFF"/><circle cx="629" cy="247" r="19" fill="#178B44"/>
+<rect x="619" y="243" width="20" height="8" rx="4" fill="#F3ECDD"/></g>`,
+2: `<rect class="cardbg" x="713" y="197" width="487" height="486" rx="28" fill="#178B44"/>
+<g clip-path="url(#clip2)">
+  <g class="arm"><g class="armWave">
+    <path fill="#EAE1C2" d="M1006,650 C1012,585 1030,525 1048,468 L1120,466 C1130,525 1124,595 1104,650 C1080,672 1030,672 1006,650 Z"/>
+    <ellipse cx="1084" cy="442" rx="40" ry="38" fill="#EAE1C2"/>
+    <g fill="#EAE1C2">
+      <rect x="1050" y="372" width="19" height="64" rx="9.5" transform="rotate(-12 1059 404)"/>
+      <rect x="1073" y="360" width="19" height="66" rx="9.5" transform="rotate(-3 1082 393)"/>
+      <rect x="1096" y="364" width="19" height="62" rx="9.5" transform="rotate(7 1105 395)"/>
+      <rect x="1117" y="380" width="17" height="54" rx="8.5" transform="rotate(16 1125 407)"/>
+      <rect x="1026" y="424" width="17" height="46" rx="8.5" transform="rotate(-52 1034 447)"/>
+    </g>
+  </g></g>
+  <path fill="#EAE1C2" d="M770,700 C772,640 785,585 812,552 C860,570 930,625 1000,700 Z"/>
+  <path fill="#D1242F" d="M905,326 C955,316 1003,340 1012,392 C1018,425 1035,448 1058,468 C1080,490 1070,525 1042,530 C1012,535 990,522 978,505 L962,455 L905,455 C885,478 872,505 860,522 C842,545 805,560 776,562 C760,545 772,505 798,483 C815,468 816,440 821,412 C828,362 862,332 905,326 Z"/>
+  <path fill="#EAE1C2" d="M900,445 L968,445 L984,502 C970,528 945,538 918,535 C892,532 872,520 858,506 C880,490 895,470 900,445 Z"/>
+  <ellipse cx="940" cy="414" rx="46" ry="54" fill="#EAE1C2"/>
+  <path fill="#D1242F" d="M893,425 C893,372 928,346 975,350 C992,352 1004,362 1008,378 C990,370 962,366 942,372 C918,382 903,402 893,425 Z"/>
+  <g fill="#178B44" stroke="#0C4A2B" stroke-width="2.5">
+    <ellipse cx="912" cy="321" rx="25" ry="14" transform="rotate(-25 912 321)"/>
+    <ellipse cx="889" cy="372" rx="10" ry="22" transform="rotate(12 889 372)"/>
+  </g>
+  <path fill="#FFFFFF" d="M913,408 Q928,395 943,406 Q928,416 913,408 Z"/><circle cx="923" cy="406" r="6" fill="#073F31"/>
+  <path fill="#FFFFFF" d="M952,397 Q967,384 982,395 Q967,405 952,397 Z"/><circle cx="961" cy="395" r="6" fill="#073F31"/>
+  <path fill="#178B44" d="M953,397 L967,414 L951,417 Z"/>
+  <path fill="#0F6A35" d="M944,428 Q954,426 962,429 Q959,443 951,442 Q945,439 944,428 Z"/>
+  <path d="M871,622 L866,680" stroke="#0F6A35" stroke-width="4" stroke-linecap="round"/>
+  <g class="lines" fill="#FFFFFF">
+    <path d="M778,338 C771,358 777,376 792,387 C784,372 782,355 778,338 Z"/>
+    <path d="M742,390 C756,388 771,398 778,417 C766,404 754,398 742,390 Z"/>
+  </g>
+  <g class="hi">
+    <path fill="#FFFFFF" d="M1045,322 L1022,360 L1074,332 Z"/>
+    <ellipse cx="1089" cy="277" rx="88" ry="60" fill="#FFFFFF"/>
+    <text class="hiText" x="0" y="0" font-size="1000" fill="#D1242F">HI!</text>
+  </g>
+</g>
+<circle cx="765" cy="243" r="27" fill="#136B3A"/>
+<path fill="#F3ECDD" d="M765,256 C752,247 754,236 760,236 C763,236 765,238 765,241 C765,238 767,236 770,236 C776,236 778,247 765,256 Z"/>`,
+3: `<rect class="cardbg" x="1231" y="197" width="573" height="395" rx="28" fill="#D1242F"/>
+<g clip-path="url(#clip3)">
+  <g class="cloud3" fill="#EAE1C2"><circle cx="1660" cy="240" r="38"/><circle cx="1614" cy="252" r="24"/><circle cx="1718" cy="250" r="28"/><rect x="1590" y="245" width="172" height="32" rx="16"/></g>
+  <path fill="#EAE1C2" d="M1303,600 C1298,560 1310,515 1338,470 L1500,388 L1620,428 L1690,500 C1660,430 1665,330 1700,300 C1720,284 1760,288 1776,310 C1791,330 1786,356 1764,367 C1744,382 1744,422 1758,470 C1772,520 1786,560 1782,600 Z"/>
+  <path fill="#B983BE" d="M1345,505 C1400,520 1480,490 1520,410 C1580,415 1640,440 1668,462 C1652,502 1612,522 1560,522 C1505,522 1472,560 1458,600 L1386,600 C1380,560 1362,530 1345,520 Z"/>
+  <ellipse cx="1512" cy="562" rx="62" ry="58" fill="#178B44"/>
+  <ellipse cx="1712" cy="338" rx="30" ry="48" transform="rotate(35 1712 338)" fill="#178B44"/>
+  <ellipse cx="1748" cy="592" rx="30" ry="42" fill="#178B44"/>
+  <path fill="#EAE1C2" d="M1300,375 C1300,333 1318,310 1335,300 L1384,246 C1394,240 1400,250 1401,262 L1410,300 L1450,300 L1500,265 C1512,259 1519,268 1517,280 L1515,385 C1510,425 1470,451 1420,453 C1360,455 1305,430 1300,375 Z"/>
+  <path fill="#178B44" d="M1410,300 L1450,300 L1500,265 C1512,259 1519,268 1517,280 L1515,385 C1505,410 1482,426 1460,426 C1430,421 1415,400 1413,370 Z"/>
+  <path fill="#178B44" d="M1359,303 L1388,263 L1394,303 Z"/>
+  <path fill="#EAE1C2" d="M1462,284 L1500,273 L1494,328 Z"/>
+  <g class="eyeW">
+    <g class="open"><path fill="#FFFFFF" d="M1342,343 Q1358,333 1376,343 Q1358,351 1342,343 Z"/><circle cx="1356" cy="342" r="7.5" fill="#073F31"/></g>
+    <path class="shut" fill="none" stroke="#073F31" stroke-width="6" stroke-linecap="round" d="M1343,346 Q1360,334 1376,346" opacity="0"/>
+  </g>
+  <path fill="#FFFFFF" d="M1416,356 Q1436,344 1457,356 Q1436,366 1416,356 Z"/><circle cx="1440" cy="356" r="7.5" fill="#073F31"/>
+  <path fill="#073F31" stroke="#073F31" stroke-width="4" stroke-linejoin="round" d="M1377,361 L1407,364 L1391,381 Z"/>
+  <path fill="none" stroke="#073F31" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" d="M1367,390 Q1378,403 1391,391 Q1401,404 1413,391"/>
+  <g fill="none" stroke="#073F31" stroke-width="5" stroke-linecap="round">
+    <path d="M1272,346 Q1302,352 1330,362"/><path d="M1271,371 Q1300,370 1328,372"/><path d="M1274,396 Q1300,388 1328,385"/>
+    <path d="M1471,372 Q1505,370 1537,373"/><path d="M1471,388 Q1500,391 1530,399"/><path d="M1471,400 Q1497,408 1522,421"/>
+  </g>
+  <path class="spark" fill="#F3ECDD"/>
+</g>
+<circle cx="1286" cy="250" r="27" fill="#2F6E45"/>
+<path d="M1277,260 L1295,240" stroke="#F3ECDD" stroke-width="4" stroke-linecap="round"/>`,
+4: `<rect class="cardbg" x="110" y="620" width="573" height="398" rx="28" fill="#B983BE"/>
+<g clip-path="url(#clip4)">
+  <g fill="#EAE1C2"><circle cx="150" cy="680" r="64"/><circle cx="232" cy="640" r="48"/></g>
+  <path fill="#0B3A2E" d="M262,770 C262,705 322,668 388,664 C452,660 498,694 506,746 C512,790 506,832 516,872 C524,906 500,928 466,926 L340,926 C300,940 245,965 190,990 L150,990 C138,940 160,890 192,860 C226,830 258,812 262,770 Z"/>
+  <path fill="#EAE1C2" d="M362,852 L450,852 C452,882 458,902 472,916 L490,934 L490,1010 L286,1010 L286,926 C322,914 346,896 356,872 Z"/>
+  <path fill="#D1242F" d="M110,1030 L110,1010 C170,965 245,935 290,925 C308,975 360,998 400,996 C452,994 478,964 486,936 C545,950 610,975 690,1000 L690,1030 Z"/>
+  <path fill="#D1242F" d="M560,905 L690,960 L690,1030 L540,1030 Z"/>
+  <path fill="#EAE1C2" d="M338,792 C336,748 372,720 418,720 C458,720 480,748 478,792 C476,836 460,866 428,878 C398,888 362,880 348,860 C340,842 338,818 338,792 Z"/>
+  <circle cx="326" cy="812" r="19" fill="#EAE1C2"/>
+  <path fill="#0B3A2E" d="M300,806 C298,742 344,690 404,684 C452,680 486,702 494,736 C472,722 444,716 414,718 C392,750 356,784 300,812 Z"/>
+  <path fill="#0B3A2E" d="M466,724 C490,744 498,790 496,834 C494,866 502,892 514,908 L474,910 C466,884 466,850 470,818 C472,790 470,756 466,724 Z"/>
+  <g fill="none" stroke="#0B3A2E" stroke-width="7" stroke-linecap="round"><path d="M365,779 Q380,771 396,778"/><path d="M428,761 Q442,753 457,760"/></g>
+  <g class="eyes4">
+    <g class="open">
+      <path fill="#FFFFFF" d="M362,801 Q380,790 398,801 Q380,810 362,801 Z"/><ellipse cx="384" cy="800" rx="9" ry="7.5" fill="#073F31"/>
+      <path fill="#FFFFFF" d="M434,781 Q450,771 465,781 Q450,789 434,781 Z"/><ellipse cx="452" cy="780" rx="8.5" ry="7.5" fill="#073F31"/>
+    </g>
+    <g class="shut" fill="none" stroke="#0B3A2E" stroke-width="5" stroke-linecap="round"><path d="M364,800 Q380,810 397,800"/><path d="M436,781 Q450,790 464,780"/></g>
+  </g>
+  <path fill="#178B44" d="M414,782 L441,812 L418,818 Z"/>
+  <path fill="none" stroke="#0B3A2E" stroke-width="5" stroke-linecap="round" d="M411,832 Q422,843 435,834"/>
+  <g class="hand4" fill="#EAE1C2">
+    <ellipse cx="620" cy="905" rx="58" ry="62"/>
+    <rect x="566" y="808" width="30" height="98" rx="15" transform="rotate(-14 581 857)"/>
+    <rect x="600" y="790" width="30" height="110" rx="15" transform="rotate(-2 615 845)"/>
+    <rect x="636" y="795" width="29" height="104" rx="14.5" transform="rotate(12 650 847)"/>
+    <rect x="666" y="822" width="27" height="88" rx="13.5" transform="rotate(26 680 866)"/>
+    <rect x="540" y="880" width="26" height="70" rx="13" transform="rotate(-48 553 915)"/>
+  </g>
+  <g class="spark4" fill="#F3ECDD"><path class="sparkS"/><g class="rays"><ellipse cx="528" cy="681" rx="5" ry="20" transform="rotate(-40 528 681)"/><ellipse cx="628" cy="681" rx="5" ry="20" transform="rotate(40 628 681)"/><ellipse cx="542" cy="767" rx="5" ry="16" transform="rotate(30 542 767)"/></g></g>
+</g>
+<circle cx="164" cy="676" r="27" fill="#A89C8A"/>
+<path d="M154,672 Q164,686 174,672" fill="none" stroke="#F3ECDD" stroke-width="4" stroke-linecap="round"/>`,
+5: `<rect class="cardbg" x="713" y="711" width="487" height="307" rx="28" fill="#178B44"/>
+<g clip-path="url(#clip5)">
+  <g class="cloud5" fill="#EAE1C2"><rect x="1050" y="690" width="180" height="72" rx="36"/><rect x="1098" y="720" width="130" height="76" rx="36"/></g>
+  <path fill="#D1242F" d="M884,792 C850,812 822,846 803,880 C788,906 800,932 790,962 C780,992 762,1012 756,1030 L806,1030 C826,994 852,972 872,960 L905,898 Z"/>
+  <path fill="#B983BE" d="M780,1030 C800,980 850,950 900,945 C940,965 990,970 1030,950 C1080,960 1120,990 1135,1030 Z"/>
+  <path fill="#D1242F" d="M855,790 C870,750 910,735 950,740 C1010,745 1045,790 1048,830 C1050,852 1040,870 1030,882 L990,882 L880,832 Z"/>
+  <path fill="#14803F" d="M880,832 C880,800 912,790 960,800 L1022,820 C1032,860 1026,902 1010,932 C990,962 950,972 920,962 C895,952 882,922 880,892 Z"/>
+  <circle cx="890" cy="852" r="18" fill="#14803F"/>
+  <path fill="#EAE1C2" d="M988,796 C1002,792 1018,800 1028,814 L1026,858 C1012,856 1000,848 994,836 Z"/>
+  <path fill="#EAE1C2" d="M982,818 C986,842 990,862 993,880 L975,880 C978,862 980,840 982,818 Z"/>
+  <path fill="#D1242F" d="M868,846 C878,792 930,760 990,768 C1016,772 1032,790 1042,812 C1020,800 992,795 975,800 C950,816 914,832 868,852 Z"/>
+  <path fill="#FFFFFF" d="M940,852 Q954,842 968,852 Q954,860 940,852 Z"/><circle cx="956" cy="851" r="6" fill="#073F31"/>
+  <path fill="#FFFFFF" d="M992,856 Q1007,846 1022,856 Q1007,864 992,856 Z"/><circle cx="1010" cy="855" r="6" fill="#073F31"/>
+  <path fill="none" stroke="#EAE1C2" stroke-width="5" stroke-linecap="round" d="M967,884 Q979,894 991,887"/>
+  <path fill="#EAE1C2" d="M935,1030 C942,988 968,966 1000,962 L1036,976 L1030,1030 Z"/>
+  <g class="mirror"><ellipse cx="1057" cy="900" rx="34" ry="48" fill="#E3CAD7"/>
+  <ellipse cx="1052" cy="895" rx="24" ry="36" fill="#EEDDE6"/>
+  <path fill="#14803F" d="M1024,990 C1028,958 1058,938 1090,946 C1112,960 1122,992 1122,1030 L1028,1030 Z"/></g>
+  <path class="spark" fill="#F3ECDD"/>
+</g>
+<circle cx="767" cy="765" r="27" fill="#136B3A"/>
+<path d="M758,775 L776,757 M766,757 L776,757 L776,767" fill="none" stroke="#F3ECDD" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+6: `<rect class="cardbg" x="1231" y="620" width="573" height="398" rx="28" fill="#B983BE"/>
+<g clip-path="url(#clip6)">
+  <g class="cherrySway"><use href="#cherryArt" transform="translate(1712 872) rotate(-6) scale(0.64) translate(-374 -514)"/></g>
+  <path fill="#EAE1C2" d="M1335,760 C1335,720 1370,690 1420,692 C1470,695 1497,730 1499,780 C1501,815 1492,830 1472,842 L1477,880 C1440,915 1380,915 1345,885 L1350,842 C1340,822 1335,792 1335,760 Z"/>
+  <circle cx="1340" cy="790" r="22" fill="#EAE1C2"/>
+  <path fill="#178B44" d="M1231,1030 L1231,893 C1280,872 1320,862 1345,858 C1380,905 1440,915 1478,878 L1500,880 C1600,885 1665,935 1712,1030 Z"/>
+  <path fill="#178B44" d="M1296,770 C1288,702 1338,662 1405,660 C1460,658 1494,680 1500,712 C1470,702 1450,700 1438,702 L1432,688 C1412,712 1372,728 1340,734 C1336,760 1338,790 1346,812 L1300,808 Z"/>
+  <path fill="#178B44" d="M1298,736 C1284,778 1288,814 1300,836 C1286,842 1270,844 1255,843 C1272,862 1312,868 1354,858 C1342,832 1336,792 1340,758 Z"/>
+  <g class="brows6" fill="#178B44"><rect x="1398" y="739" width="30" height="10" rx="5" transform="rotate(-18 1413 744)"/><rect x="1453" y="725" width="30" height="10" rx="5" transform="rotate(8 1468 730)"/></g>
+  <path fill="#FFFFFF" d="M1398,762 Q1412,752 1428,762 Q1412,770 1398,762 Z"/><ellipse cx="1416" cy="761" rx="8" ry="7" fill="#073F31"/>
+  <path fill="#FFFFFF" d="M1457,746 Q1471,737 1484,746 Q1471,753 1457,746 Z"/><ellipse cx="1474" cy="745" rx="8" ry="7" fill="#073F31"/>
+  <path fill="#178B44" d="M1440,746 L1462,775 L1444,778 Z"/>
+  <path fill="none" stroke="#073F31" stroke-width="5" stroke-linecap="round" d="M1446,788 Q1458,796 1468,784"/>
+  <path class="spark" fill="#F3ECDD"/>
+</g>
+<circle cx="1285" cy="675" r="27" fill="#95668F"/>
+<path d="M1290,663 L1279,675 L1290,687" fill="none" stroke="#F3ECDD" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`
+};
+const CARD_SPARK = { 3: [1277, 500, 38, 46], 5: [1141, 890, 36, 42], 6: [1537, 700, 25, 30] };
+
+function cardSVG(n) {
+  const b = CARDS[n - 1].box;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<svg viewBox="${b.join(' ')}" aria-hidden="true" focusable="false" xmlns="${NS}">${CARD_ART[n]}</svg>`;
+  const svg = wrap.firstElementChild;
+  if (CARD_SPARK[n]) { const [x, y, rx, ry] = CARD_SPARK[n]; $('.spark', svg).setAttribute('d', sparkD(x, y, rx, ry, 0.12)); }
+  if (n === 4) $('.sparkS', svg).setAttribute('d', sparkD(579, 722, 54, 62, 0.12));
+  if (n === 2 && fontsReady) fit($('.hiText', svg), 'HI!', [1041, 1137, 250, 305], 0);
+  return svg;
+}
+/* eyes : 0 = open, 1 = closed */
+function setOpen(g, closed, cy) {
+  const o = $('.open', g), s = $('.shut', g);
+  if (o) { o.setAttribute('transform', `translate(0 ${cy}) scale(1 ${Math.max(0.08, 1 - closed).toFixed(3)}) translate(0 ${-cy})`); o.setAttribute('opacity', closed > 0.85 ? 0 : 1); }
+  if (s) s.setAttribute('opacity', closed > 0.85 ? 1 : 0);
+}
+function squash(g, f, cy) { if (g) g.setAttribute('transform', `translate(0 ${cy}) scale(1 ${Math.max(0.1, 1 - 0.9 * f).toFixed(3)}) translate(0 ${-cy})`); }
+
+/* each card's character comes alive on hover / focus (the video's 9-12 s) */
+function makeAlive(svg, n) {
+  const q = s => $(s, svg);
+  const tl = gsap.timeline({ paused: true });
+  const loops = [];
+  let startLoops = () => {}, stopLoops = () => {};
+  if (n === 1) {
+    gsap.set(q('.catTilt'), { svgOrigin: '330 560' });
+    tl.to(q('.catTilt'), { rotation: -2.5, duration: 0.3, ease: 'back.out(2)' });
+    startLoops = () => { loops.push(gsap.to(q('.cloud1'), { y: -9, duration: 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1 })); blinkCat(); };
+    stopLoops = () => gsap.to(q('.cloud1'), { y: 0, duration: 0.25 });
+  }
+  if (n === 2) {
+    const arm = q('.arm'), wave = q('.armWave'), hi = q('.hi'), lines = q('.lines');
+    gsap.set([arm, wave], { svgOrigin: '1055 640' }); gsap.set(arm, { rotation: 150 });
+    gsap.set(hi, { svgOrigin: '1022 360', scale: 0, autoAlpha: 0 }); gsap.set(lines, { svgOrigin: '785 390', autoAlpha: 0 });
+    tl.to(arm, { rotation: 0, duration: 0.3, ease: 'back.out(1.3)' })
+      .to(hi, { scale: 1, autoAlpha: 1, duration: 0.32, ease: 'back.out(2.4)' }, 0.12)
+      .to(lines, { autoAlpha: 1, duration: 0.14 }, 0.16);
+    startLoops = () => {
+      loops.push(gsap.timeline({ delay: 0.24 }).to(wave, { rotation: 10, duration: 0.12, ease: 'sine.out' }).to(wave, { rotation: -10, duration: 0.238, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
+      loops.push(gsap.to(lines, { scale: 1.08, duration: 0.238, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 0.24 }));
+    };
+    stopLoops = () => { gsap.to(wave, { rotation: 0, duration: 0.2 }); gsap.to(lines, { scale: 1, duration: 0.2 }); };
+  }
+  if (n === 3) {
+    const eye = q('.eyeW'), p = { v: 0 }, upd = () => setOpen(eye, p.v, 342);
+    gsap.set(q('.cloud3'), { svgOrigin: '1676 258' });
+    tl.to(p, { v: 1, duration: 0.08, onUpdate: upd }, 0.05).to(q('.cloud3'), { x: -14, duration: 0.4, ease: 'back.out(2)' }, 0);
+    startLoops = () => loops.push(gsap.to(q('.cloud3'), { y: -6, duration: 0.55, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
+    stopLoops = () => gsap.to(q('.cloud3'), { y: 0, duration: 0.25 });
+  }
+  if (n === 4) {
+    const eyes = q('.eyes4'), p = { v: 1 }, upd = () => setOpen(eyes, p.v, 791);
+    setOpen(eyes, 1, 791);
+    gsap.set(q('.sparkS'), { svgOrigin: '579 722', scale: 0.55 }); gsap.set(q('.rays'), { autoAlpha: 0 });
+    gsap.set(q('.spark4'), { svgOrigin: '579 722' }); gsap.set(q('.hand4'), { svgOrigin: '620 960' });
+    tl.to(p, { v: 0, duration: 0.1, onUpdate: upd }, 0.12)
+      .to(q('.sparkS'), { scale: 1, duration: 0.3, ease: 'back.out(2)' }, 0)
+      .to(q('.rays'), { autoAlpha: 1, duration: 0.2 }, 0.14);
+    startLoops = () => {
+      loops.push(gsap.to(q('.spark4'), { scale: 1.06, duration: 0.31, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
+      loops.push(gsap.to(q('.hand4'), { rotation: 7, duration: 0.24, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
+    };
+    stopLoops = () => { gsap.to(q('.spark4'), { scale: 1, duration: 0.2 }); gsap.to(q('.hand4'), { rotation: 0, duration: 0.2 }); };
+  }
+  if (n === 5) {
+    gsap.set(q('.spark'), { svgOrigin: '1141 890' }); gsap.set(q('.mirror'), { svgOrigin: '1057 990' });
+    tl.to(q('.spark'), { rotation: 90, duration: 0.5, ease: 'back.out(1.6)' }, 0).to(q('.mirror'), { rotation: -6, duration: 0.35, ease: 'back.out(2)' }, 0);
+    startLoops = () => loops.push(gsap.to(q('.cloud5'), { x: -12, duration: 0.7, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
+    stopLoops = () => gsap.to(q('.cloud5'), { x: 0, duration: 0.25 });
+  }
+  if (n === 6) {
+    gsap.set(q('.cherrySway'), { svgOrigin: '1622 660' }); gsap.set(q('.brows6'), { svgOrigin: '1440 740' });
+    tl.to(q('.brows6'), { y: -7, duration: 0.2, ease: 'back.out(3)' }, 0);
+    startLoops = () => loops.push(gsap.timeline().to(q('.cherrySway'), { rotation: 5, duration: 0.2, ease: 'sine.out' }).to(q('.cherrySway'), { rotation: -5, duration: 0.4, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
+    stopLoops = () => gsap.to(q('.cherrySway'), { rotation: 0, duration: 0.25 });
+  }
+  let on = false;
+  return {
+    enter() { if (on) return; on = true; if (reduced()) { tl.progress(1); return; } tl.timeScale(1).play(); startLoops(); },
+    leave() { if (!on) return; on = false; loops.splice(0).forEach(t => t.kill()); if (reduced()) { tl.progress(0); return; } stopLoops(); tl.timeScale(1.6).reverse(); },
+    kill() { loops.splice(0).forEach(t => t.kill()); tl.kill(); }
+  };
+}
+
+const cards = CARDS.map(c => {
+  const art = document.createElement('article');
+  art.className = 'card';
+  const [x, y, w, h] = c.box;
+  art.style.cssText = `--x:${x};--y:${y};--w:${w};--h:${h}`;
+  art.innerHTML = `<div class="card__inner"><button class="card__btn" type="button" aria-label="${c.label}. Open it larger."></button></div>`;
+  const btn = $('.card__btn', art), svg = cardSVG(c.n);
+  btn.appendChild(svg);
+  workStage.appendChild(art);
+  const card = Object.assign({}, c, { el: art, inner: $('.card__inner', art), btn, svg, alive: makeAlive(svg, c.n), hover: false });
+  return card;
+});
+
+/* ======================================================================
+   LAYOUT (desktop: the exact 1920x1080 composition, scaled; phone: portrait)
+   ====================================================================== */
+let MODE = null, W = 1920, H = 1080, K = 1;
+function applyLayout() {
+  const desk = isDesk();
+  const vw = document.documentElement.clientWidth, vh = hero.clientHeight;
+  const mode = desk ? 'desk' : 'compact';
+  if (MODE && mode !== MODE) { STICKERS.forEach(it => { it.x = it.y = 0; it.moved = false; gsap.set(it.el, { x: 0, y: 0 }); it.el.style.zIndex = it.z; }); clearTrail(false); }
+  MODE = mode;
+  W = desk ? 1920 : 1080;
+  H = desk ? 1080 : Math.round(Math.min(2700, Math.max(2000, 1080 * vh / vw)));
+  K = Math.min(vw / (desk ? 1760 : W), vh / H);   /* desktop: the outer 80 units may crop on narrow screens, like a real full-bleed page */
+  stage.style.width = W + 'px'; stage.style.height = H + 'px';
+  stage.style.transform = `translate(${f2((vw - W * K) / 2)}px, ${f2(vh - H * K)}px) scale(${K.toFixed(5)})`;
+  trailSvg.setAttribute('width', W); trailSvg.setAttribute('height', H); trailSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const P = desk ? null : portrait(H);
+  for (const k of ORDER) {
+    const it = ITEMS[k], [bx, by, bw, bh] = BOX[k];
+    let l = bx, t = by, w = bw, h = bh, s = 1;
+    if (P) { const [cx, cy, ss] = P[k]; s = ss; w = bw * s; h = bh * s; l = cx - w / 2; t = cy - h / 2; }
+    Object.assign(it.el.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' });
+    it.s = s; it.home = [l + w / 2, t + h / 2];
+  }
+  ITEMS.copy.el.style.setProperty('--cs', ITEMS.copy.s);
+  const u = desk ? Math.max(0.6, Math.min(vw / 1920, window.innerHeight / 1080)) : 1;
+  document.documentElement.style.setProperty('--u', u.toFixed(4));
+  if (desk) {
+    const wh = work.clientHeight, k2 = Math.min(vw / 1760, wh / 1080);
+    workStage.style.transform = `translate(${f2((vw - 1920 * k2) / 2)}px, ${f2(wh - 1080 * k2)}px) scale(${k2.toFixed(5)})`;
+  } else workStage.style.transform = '';
+  if (lb.open) sizeLb();
+}
+const toDesign = (cx, cy) => { const r = stage.getBoundingClientRect(); return [(cx - r.left) / K, (cy - r.top) / K]; };
+const navH = () => nav.offsetHeight;
+
+/* ======================================================================
+   TRAIL OF MINI STICKERS
+   ====================================================================== */
+const KINDS = ['star', 'ccloud', 'cherry', 'avatar', 'bird', 'pcloud'];
+let minis = [], miniIdx = 0;
+const MAX_MINIS = 48;
+function spawnMini(x, y, kind) {
+  const m = mini(trailG, kind || KINDS[miniIdx++ % KINDS.length]);
+  const sc = MODE === 'compact' ? 0.85 : 1;
+  const st = { x: x + rand(-22, 22), y: y + rand(-22, 22), r: rand(-25, 25), s: 0.3 * sc };
+  const put = () => m.g.setAttribute('transform', `translate(${f2(st.x)} ${f2(st.y)}) rotate(${f2(st.r)}) scale(${Math.max(0.001, st.s).toFixed(3)})`);
+  m.st = st; m.put = put;
+  const r1 = rand(-14, 14);
+  if (reduced()) { st.s = sc; st.r = r1; put(); }
+  else { put(); gsap.to(st, { s: sc, duration: 0.42, ease: 'back.out(2.2)', onUpdate: put }); gsap.to(st, { r: r1, duration: 0.42, ease: 'power3.out', onUpdate: put }); }
+  minis.push(m);
+  if (minis.length > MAX_MINIS) { const o = minis.shift(); gsap.killTweensOf(o.st); gsap.to(o.st, { s: 0, duration: 0.25, onUpdate: o.put, onComplete: () => o.g.remove() }); }
+}
+function clearTrail(animated) {
+  const list = minis; minis = [];
+  list.forEach((m, i) => {
+    gsap.killTweensOf(m.st);
+    if (!animated || reduced()) { m.g.remove(); return; }
+    gsap.to(m.st, { s: 0, r: m.st.r + (i % 2 ? 120 : -120), duration: 0.34, delay: Math.min(0.5, i * 0.012), ease: 'back.in(1.7)', onUpdate: m.put, onComplete: () => m.g.remove() });
+  });
+}
+
+/* ======================================================================
+   STICKER LIFE : blink, wobble, hover lift
+   ====================================================================== */
+function eyeTween(fn, dur = 0.2) { const p = { v: 0 }; gsap.to(p, { keyframes: { v: [0, 1, 0] }, duration: dur, ease: 'none', onUpdate: () => fn(p.v) }); }
+function blinkCat() { eyeTween(v => { setOpen($('#catEyeL'), v, 846); setOpen($('#catEyeR'), v, 868); }); }
+function blink(it) {
+  if (!it || !it.def) return;
+  if (it.k === 'cat') return blinkCat();
+  const [id, cy] = it.def.eyes || [];
+  if (id) eyeTween(v => squash(document.getElementById(id), v, cy), 0.22);
+}
+function wobble(it, dir = 1, amp = 5) {
+  const now = performance.now(); if (now - it.lastWob < 750) return; it.lastWob = now;
+  blink(it);
+  if (reduced()) return;
+  gsap.to(it.wob, { keyframes: { rotation: [0, amp * dir, -amp * 0.65 * dir, amp * 0.35 * dir, -amp * 0.12 * dir, 0], easeEach: 'sine.inOut' }, duration: 0.85, overwrite: 'auto' });
+}
+function bounceLetter(L) {
+  const now = performance.now(); if (now - L.last < 550 || reduced()) return; L.last = now;
+  gsap.fromTo(L.g, { scaleX: 1.07, scaleY: 0.88 }, { scaleX: 1, scaleY: 1, duration: 0.75, ease: 'elastic.out(1.1,0.35)', overwrite: true });
+}
+titleEls.forEach(L => L.g.addEventListener('pointerenter', () => { if (!drag) bounceLetter(L); }));
+
+let catPurr = null;
+function hoverOn(it) {
+  if (busy || drag || reduced()) return;
+  gsap.to(it.hov, it.k === 'cat' ? { y: -6, scale: 1.02, duration: 0.25, ease: 'power2.out' } : { y: -7, scale: 1.035, rotation: -3, duration: 0.25, ease: 'power2.out' });
+  if (it.k === 'cat') { const p = { v: 0 }; catPurr = gsap.to(p, { v: 1, duration: 0.1, onUpdate: () => { setOpen($('#catEyeL'), p.v, 846); setOpen($('#catEyeR'), p.v, 868); } }); }
+}
+function hoverOff(it) {
+  if (drag && drag.it === it) return;
+  gsap.to(it.hov, { y: 0, scale: 1, rotation: 0, duration: 0.3, ease: 'power2.out' });
+  if (it.k === 'cat') { if (catPurr) catPurr.kill(); setOpen($('#catEyeL'), 0, 846); setOpen($('#catEyeR'), 0, 868); }
+}
+
+/* ======================================================================
+   DRAG (mouse + finger) and keyboard nudge
+   ====================================================================== */
+let drag = null, suppressClick = false, zc = 0;
+const TRAIL_STEP = 95;
+function raise(it) { it.el.style.zIndex = 31 + Math.min(24, zc++); }
+function neighbours(it, dir) {
+  const dr = it.svg.getBoundingClientRect();
+  const dcx = dr.left + dr.width / 2, dcy = dr.top + dr.height / 2, drad = Math.min(dr.width, dr.height) / 2;
+  for (const o of [...STICKERS, ...SPARK_ITEMS]) {
+    if (o === it) continue;
+    const r = o.svg.getBoundingClientRect(), rad = Math.min(r.width, r.height) / 2;
+    if (Math.hypot(r.left + r.width / 2 - dcx, r.top + r.height / 2 - dcy) < rad + drad * 0.55) wobble(o, dir, o.sticker ? 5 : 14);
+  }
+  const ix = dr.width * 0.22, iy = dr.height * 0.22;
+  for (const L of titleEls) {
+    const r = L.g.getBoundingClientRect();
+    if (r.right > dr.left + ix && r.left < dr.right - ix && r.bottom > dr.top + iy && r.top < dr.bottom - iy) bounceLetter(L);
+  }
+}
+function onDown(e) {
+  const it = this;
+  if (busy || drag) return;
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  if (e.pointerType === 'mouse') e.preventDefault();
+  drag = { it, id: e.pointerId, x0: e.clientX, y0: e.clientY, sx: it.x, sy: it.y, moved: false, px: e.clientX, t: performance.now(), dist: 0, vx: 0 };
+  try { it.el.setPointerCapture(e.pointerId); } catch (_) { /* pointer already gone */ }
+}
+function onMove(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const it = drag.it, dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+  if (!drag.moved) {
+    if (Math.hypot(dx, dy) < 6) return;
+    drag.moved = true; document.body.classList.add('dragging'); it.el.style.zIndex = 60;
+    gsap.to(it.hov, { scale: 1.07, y: -10, rotation: 0, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
+  }
+  const [hx, hy] = it.home;
+  const nx = clamp(drag.sx + dx / K, -hx, W - hx), ny = clamp(drag.sy + dy / K, -hy, H - hy);
+  drag.dist += Math.hypot(nx - it.x, ny - it.y);
+  it.x = nx; it.y = ny; gsap.set(it.el, { x: nx, y: ny });
+  const now = performance.now(), dt = Math.max(8, now - drag.t);
+  drag.vx = lerp(drag.vx, (e.clientX - drag.px) / dt, 0.35); drag.px = e.clientX; drag.t = now;
+  if (!reduced()) gsap.to(it.wob, { rotation: clamp(drag.vx * 9, -14, 14), duration: 0.25, overwrite: 'auto' });
+  if (drag.dist > TRAIL_STEP * (MODE === 'compact' ? 0.9 : 1)) { drag.dist = 0; const [px, py] = toDesign(e.clientX, e.clientY); spawnMini(px, py); }
+  neighbours(it, Math.sign(drag.vx) || 1);
+}
+function onUp(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const { it, moved } = drag; drag = null;
+  document.body.classList.remove('dragging');
+  if (moved) {
+    suppressClick = true; setTimeout(() => { suppressClick = false; }, 80);
+    it.moved = true; raise(it);
+    gsap.to(it.hov, { scale: 1, y: 0, duration: 0.45, ease: 'back.out(2.2)', overwrite: 'auto' });
+    gsap.to(it.wob, { rotation: 0, duration: 0.8, ease: 'elastic.out(1.2,0.35)', overwrite: 'auto' });
+    blink(it);
+  }
+}
+window.addEventListener('pointermove', onMove);
+window.addEventListener('pointerup', onUp);
+window.addEventListener('pointercancel', onUp);
+
+function boop(it) {
+  blink(it);
+  if (reduced()) return;
+  gsap.fromTo(it.wob, { scaleX: 1.08, scaleY: 0.9 }, { scaleX: 1, scaleY: 1, duration: 0.7, ease: 'elastic.out(1.2,0.35)', overwrite: 'auto' });
+}
+function nudge(it, dx, dy) {
+  if (busy) return;
+  const [hx, hy] = it.home;
+  spawnMini(hx + it.x, hy + it.y);
+  it.x = clamp(it.x + dx, -hx, W - hx); it.y = clamp(it.y + dy, -hy, H - hy);
+  it.moved = true; raise(it);
+  gsap.to(it.el, { x: it.x, y: it.y, duration: reduced() ? 0 : 0.18, ease: 'power2.out', overwrite: 'auto', onComplete: () => neighbours(it, Math.sign(dx) || 1) });
+}
+STICKERS.forEach(it => {
+  it.el.addEventListener('pointerdown', onDown.bind(it));
+  it.el.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') hoverOn(it); });
+  it.el.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hoverOff(it); });
+  it.el.addEventListener('click', e => {
+    if (suppressClick) { suppressClick = false; return; }
+    if (it.k === 'cat') unfold(e.detail === 0); else boop(it);
+  });
+  it.el.addEventListener('keydown', e => {
+    const step = e.shiftKey ? 90 : 30;
+    const m = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+    if (m) { e.preventDefault(); nudge(it, m[0], m[1]); }
+  });
+});
+
+/* ======================================================================
+   UNFOLD : click the cat, it becomes the first card and the grid pops in
+   ====================================================================== */
+let pinST = null, popST = null;
+function workTarget() {
+  if (popST) return popST.end;
+  return work.getBoundingClientRect().top + window.scrollY - (isDesk() ? 0 : navH() - 70);
+}
+function scrollToY(y, dur = 0.9) {
+  if (reduced() || dur === 0) { gsap.killTweensOf(window); window.scrollTo(0, y); return; }
+  gsap.to(window, { scrollTo: { y, autoKill: false }, duration: dur, ease: 'power2.inOut', overwrite: true });
+}
+function focusCard(i) { cards[i].btn.focus({ preventScroll: true }); }
+function unfold(fromKeyboard) {
+  if (busy || drag) return;
+  closePanels();
+  const target = workTarget();
+  if (reduced()) { scrollToY(target, 0); if (fromKeyboard) focusCard(0); live('Six illustrations'); return; }
+  busy = true;
+  const cat = ITEMS.cat, c1 = cards[0];
+  const r = cat.svg.getBoundingClientRect(), sc = r.width / BOX.cat[2];
+  const px = r.left + (1363 - BOX.cat[0]) * sc, py = r.top + (843 - BOX.cat[1]) * sc;
+  const c0 = sc / 0.9, L0 = px - 122 * c0, T0 = py - 200 * c0;
+  const fly = document.createElement('div');
+  fly.style.cssText = 'position:fixed;left:0;top:0;width:573px;height:395px;transform-origin:0 0;z-index:70;pointer-events:none;visibility:hidden';
+  const fsvg = cardSVG(1); fsvg.style.cssText = 'width:100%;height:100%;overflow:visible'; fly.appendChild(fsvg);
+  document.body.appendChild(fly);
+  const bg = $('.cardbg', fsvg), extras = $$('.cx', fsvg);
+  gsap.set(fly, { x: L0, y: T0, scale: c0 });
+  gsap.set(bg, { svgOrigin: '427 448', scale: 0.3 }); gsap.set(extras, { autoAlpha: 0 });
+  c1.el.classList.add('is-flying');
+  const back = $('.back', cat.svg), p = { v: 0 };
+  const tl = gsap.timeline({ onComplete: () => {
+    c1.el.classList.remove('is-flying'); fly.remove();
+    cat.el.style.visibility = ''; gsap.set(back, { opacity: 1 }); gsap.set(cat.hov, { y: 0, scale: 1 });
+    busy = false; live('Six illustrations');
+    if (fromKeyboard) focusCard(0);
+    gsap.fromTo(c1.inner, { scale: 1.03 }, { scale: 1, duration: 0.4, ease: 'back.out(3)' });
+  } });
+  tl.to(back, { opacity: 0, duration: 0.1 }, 0)
+    .to(cat.hov, { y: -6, scale: 1.02, rotation: 0, duration: 0.1 }, 0)
+    .add(() => { cat.el.style.visibility = 'hidden'; fly.style.visibility = 'visible'; }, 0.1)
+    .to(bg, { scale: 1, duration: 0.16, ease: 'power2.out' }, 0.1)
+    .to(extras, { autoAlpha: 1, duration: 0.16 }, 0.18)
+    .add(() => scrollToY(target, 1.0), 0.14)
+    .to(p, { v: 1, duration: 1.15, ease: 'power3.inOut', onUpdate: () => {
+      const tr = c1.btn.getBoundingClientRect(), ct = tr.width / 573;
+      gsap.set(fly, { x: lerp(L0, tr.left, p.v), y: lerp(T0, tr.top, p.v), scale: lerp(c0, ct, p.v) });
+    } }, 0.26);
+}
+$('.see').addEventListener('click', e => { e.preventDefault(); unfold(e.detail === 0); });
+
+/* ======================================================================
+   SHAKE : every sticker flies back to its spot (the video's 12-15 s)
+   ====================================================================== */
+const RET = {
+  pcloud: [0.00, 0.62, 160, 360, 0.55, 0], cherry: [0.04, 0.66, 40, 190, 0.8, 18], star: [0.12, 0.66, -60, 380, 0.7, -40],
+  ccloud: [0.14, 0.60, 0, 170, 0.8, 0], bcloud: [0.20, 0.70, -140, 240, 0.85, -8], cat: [0.26, 0.72, 160, 300, 0.85, 10]
+};
+function shakeTl(targets) {
+  return gsap.timeline().to(targets, { keyframes: { x: [0, 15, -15, 13, -12, 9, -6, 3, 0], rotation: [0, 0.7, -0.7, 0.6, -0.5, 0.35, -0.2, 0.1, 0] }, duration: 0.55, ease: 'none' });
+}
+function resetStickerState() {
+  STICKERS.forEach(it => { it.x = it.y = 0; it.moved = false; it.el.style.zIndex = it.z; });
+  zc = 0;
+}
+function flyIn() {
+  const tl = gsap.timeline();
+  const B = 0.1;
+  STICKERS.forEach(it => {
+    const [t0, d, dx, dy, s, r] = RET[it.k], t = t0 + B;
+    tl.fromTo(it.el, { x: dx, y: dy, rotation: r }, { x: 0, y: 0, rotation: 0, duration: d, ease: 'back.out(1.25)' }, t)
+      .fromTo(it.el, { scale: s }, { scale: 1, duration: d, ease: 'back.out(1.9)' }, t)
+      .fromTo(it.el, { autoAlpha: 0 }, { autoAlpha: 1, duration: d * 0.22, ease: 'none' }, t);
+  });
+  tl.fromTo(ITEMS.title.el, { scale: 0.86, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.36, ease: 'back.out(1.6)' }, B - 0.06)
+    .fromTo(SPARK_ITEMS.map(s => s.el), { scale: 0.001 }, { scale: 1, duration: 0.32, ease: 'back.out(2.2)', stagger: 0.05 }, 0)
+    .fromTo($('.copy .bars'), { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.3, ease: 'power2.out' }, B + 0.3)
+    .fromTo(['.see', '.search'], { scale: 0.85, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.3, ease: 'back.out(2)', clearProps: 'transform,opacity,visibility' }, B + 0.38);
+  return tl;
+}
+function returnHome() {
+  const tl = gsap.timeline();
+  clearTrail(true);
+  STICKERS.forEach((it, i) => {
+    if (it.moved) tl.to(it.el, { x: 0, y: 0, rotation: 0, duration: 0.7, ease: 'back.out(1.25)' }, 0.05 + i * 0.05);
+    else tl.to(it.el, { keyframes: { y: [0, -26, 0] }, duration: 0.5, ease: 'power1.inOut' }, 0.05 + i * 0.04);
+    tl.add(() => wobble(it, i % 2 ? 1 : -1, 4), 0.35 + i * 0.05);
+  });
+  tl.add(() => titleEls.forEach((L, i) => gsap.delayedCall(i * 0.04, () => bounceLetter(L))), 0.2);
+  tl.add(resetStickerState);
+  return tl;
+}
+function shakeReset() {
+  if (busy || drag) return;
+  closePanels(); clearSearch();
+  const below = window.scrollY > hero.offsetHeight * 0.5;
+  if (reduced()) {
+    if (below) window.scrollTo(0, 0);
+    clearTrail(false); STICKERS.forEach(it => gsap.set(it.el, { x: 0, y: 0, rotation: 0 })); resetStickerState();
+    live('Every sticker is back in its spot'); return;
+  }
+  busy = true;
+  const finish = () => { busy = false; live('Every sticker is back in its spot'); };
+  if (below) {
+    const targets = [workInner, aboutInner];
+    gsap.timeline().add(shakeTl(targets))
+      .to(targets, { y: () => window.innerHeight * 1.25, rotation: i => (i ? -2 : 1.5), duration: 0.5, ease: 'power2.in' }, '-=0.05')
+      .add(() => {
+        gsap.killTweensOf(window); window.scrollTo(0, 0); ScrollTrigger.update();
+        gsap.set(targets, { clearProps: 'transform' });
+        clearTrail(false); resetStickerState();
+        gsap.set(STICKERS.map(s => s.el), { autoAlpha: 0 });
+        flyIn().eventCallback('onComplete', finish);
+      });
+  } else {
+    gsap.timeline({ onComplete: finish }).add(shakeTl(shaker)).add(returnHome(), '-=0.2');
+  }
+}
+/* real shake gesture: quick left-right swings of the mouse */
+{
+  let dir = 0, seg = 0, last = null, revs = [], lastShake = 0;
+  window.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' || drag || lb.open) { last = null; return; }
+    if (last === null) { last = e.clientX; return; }
+    const dx = e.clientX - last; last = e.clientX;
+    if (!dx) return;
+    const d = Math.sign(dx), now = performance.now();
+    if (d === dir) seg += Math.abs(dx);
+    else { if (seg > 45) revs.push(now); dir = d; seg = Math.abs(dx); }
+    revs = revs.filter(t => now - t < 900);
+    if (revs.length >= 5 && now - lastShake > 1600) { revs = []; lastShake = now; shakeReset(); }
+  }, { passive: true });
+  /* and a real shake of the phone, where the browser allows it without a prompt */
+  if (coarse && 'DeviceMotionEvent' in window && typeof DeviceMotionEvent.requestPermission !== 'function') {
+    let hits = [], prev = null;
+    window.addEventListener('devicemotion', e => {
+      const a = e.accelerationIncludingGravity; if (!a || a.x == null) return;
+      if (prev) { const jerk = Math.abs(a.x - prev.x) + Math.abs(a.y - prev.y) + Math.abs(a.z - prev.z); const now = performance.now();
+        if (jerk > 28) { hits.push(now); hits = hits.filter(t => now - t < 900); if (hits.length >= 3) { hits = []; shakeReset(); } } }
+      prev = { x: a.x, y: a.y, z: a.z };
+    });
+  }
+}
+/* scatter: every sticker jumps somewhere new, leaving a trail */
+function scatter() {
+  if (busy || drag) return;
+  closePanels();
+  const go = () => {
+    busy = true;
+    const tl = gsap.timeline({ onComplete: () => { busy = false; live('Stickers scattered. Shake or press the red button to tidy up.'); } });
+    STICKERS.forEach((it, i) => {
+      const [hx, hy] = it.home;
+      const tx = rand(0.14, 0.86) * W - hx, ty = rand(0.2, 0.86) * H - hy;
+      const st = { x: it.x, y: it.y }; let acc = 0, lx = st.x, ly = st.y;
+      it.moved = true; raise(it);
+      tl.to(st, { x: tx, y: ty, duration: reduced() ? 0 : 0.9, ease: 'power2.inOut', onUpdate: () => {
+        acc += Math.hypot(st.x - lx, st.y - ly); lx = st.x; ly = st.y; it.x = st.x; it.y = st.y; gsap.set(it.el, { x: st.x, y: st.y });
+        if (acc > 130) { acc = 0; spawnMini(hx + st.x, hy + st.y); }
+      }, onComplete: () => wobble(it, i % 2 ? 1 : -1) }, reduced() ? 0 : i * 0.08);
+    });
+  };
+  if (window.scrollY > 10) { scrollToY(0, 0.6); gsap.delayedCall(reduced() ? 0 : 0.65, go); } else go();
+}
+
+/* ======================================================================
+   CARDS : hover = alive, click = larger view
+   ====================================================================== */
+cards.forEach((c, i) => {
+  const on = () => { c.alive.enter(); if (!reduced()) gsap.to(c.inner, { scale: 1.018, y: -4, duration: 0.25, ease: 'power2.out', overwrite: 'auto' }); };
+  const off = () => { c.alive.leave(); gsap.to(c.inner, { scale: 1, y: 0, duration: 0.3, ease: 'power2.out', overwrite: 'auto' }); };
+  c.on = on; c.off = off;
+  c.btn.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') on(); });
+  c.btn.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') off(); });
+  c.btn.addEventListener('focus', () => { if (c.btn.matches(':focus-visible')) on(); });
+  c.btn.addEventListener('blur', off);
+  c.btn.addEventListener('click', () => openLb(i, c.btn));
+});
+/* keyboard users landing on a card before the grid has popped in */
+work.addEventListener('focusin', () => { if (popST && window.scrollY < popST.start + 10) scrollToY(workTarget(), 0.6); });
+
+/* ======================================================================
+   LIGHTBOX (cards that grow)
+   ====================================================================== */
+const lb = $('#lb'), lbArt = $('#lbArt'), lbDots = $('#lbDots');
+let lbIndex = 0, lbAlive = null, lbOpener = null;
+CARDS.forEach((c, i) => {
+  const d = document.createElement('button'); d.type = 'button'; d.className = 'dot'; d.setAttribute('aria-label', `Show illustration ${i + 1}`);
+  d.innerHTML = '<span></span>'; d.addEventListener('click', () => showLb(i, i > lbIndex ? 1 : -1)); lbDots.appendChild(d);
+});
+function sizeLb() {
+  const c = CARDS[lbIndex], aspect = c.box[2] / c.box[3], compact = !isDesk();
+  const w = Math.min(window.innerWidth - (compact ? 32 : 260), (window.innerHeight - (compact ? 190 : 170)) * aspect, 1280);
+  lbArt.style.width = Math.max(200, w) + 'px';
+}
+function fillLb(i) {
+  if (lbAlive) lbAlive.kill();
+  lbIndex = (i + CARDS.length) % CARDS.length;
+  const svg = cardSVG(lbIndex + 1);
+  lbArt.replaceChildren(svg);
+  sizeLb();
+  lbAlive = makeAlive(svg, lbIndex + 1);
+  lb.setAttribute('aria-label', CARDS[lbIndex].label);
+  $$('.dot', lbDots).forEach((d, k) => d.setAttribute('aria-current', k === lbIndex ? 'true' : 'false'));
+  gsap.delayedCall(reduced() ? 0 : 0.25, () => lbAlive && lbAlive.enter());
+}
+function openLb(i, opener) {
+  if (lb.open) return;
+  closePanels();
+  lbOpener = opener;
+  cards.forEach(c => c.off());
+  lb.showModal();
+  document.documentElement.classList.add('lb-open');
+  fillLb(i);
+  $('.lb__close', lb).focus({ preventScroll: true });
+  live(CARDS[lbIndex].label);
+  if (reduced()) return;
+  const from = opener.getBoundingClientRect(), to = lbArt.getBoundingClientRect();
+  gsap.fromTo(lb, { backgroundColor: 'rgba(238,232,239,0)' }, { backgroundColor: 'rgba(238,232,239,0.96)', duration: 0.3 });
+  gsap.from(lbArt, { x: from.left - to.left, y: from.top - to.top, scale: from.width / to.width, transformOrigin: '0 0', duration: 0.5, ease: 'power3.out' });
+  gsap.from($$('.lb__btn, .lb__dots', lb), { opacity: 0, duration: 0.3, delay: 0.2, stagger: 0.05 });
+}
+function showLb(i, dir) {
+  if (reduced()) { fillLb(i); return; }
+  gsap.to(lbArt, { x: -70 * dir, opacity: 0, duration: 0.16, ease: 'power2.in', onComplete: () => {
+    fillLb(i);
+    gsap.fromTo(lbArt, { x: 70 * dir, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: 'power3.out' });
+  } });
+}
+function closeLb() {
+  if (!lb.open) return;
+  const done = () => {
+    if (lbAlive) { lbAlive.kill(); lbAlive = null; }
+    lb.close(); document.documentElement.classList.remove('lb-open');
+    gsap.set([lbArt, lb, ...$$('.lb__btn, .lb__dots', lb)], { clearProps: 'all' });
+    const target = cards[lbIndex].btn;
+    (lbOpener && lbOpener.isConnected ? (cards.some(c => c.btn === lbOpener) ? target : lbOpener) : target).focus({ preventScroll: true });
+  };
+  if (reduced()) return done();
+  const target = cards[lbIndex].btn.getBoundingClientRect(), now = lbArt.getBoundingClientRect();
+  const visible = target.bottom > 0 && target.top < window.innerHeight && target.width > 10;
+  gsap.to($$('.lb__btn, .lb__dots', lb), { opacity: 0, duration: 0.15 });
+  gsap.to(lb, { backgroundColor: 'rgba(238,232,239,0)', duration: 0.3 });
+  gsap.to(lbArt, visible
+    ? { x: target.left - now.left, y: target.top - now.top, scale: target.width / now.width, transformOrigin: '0 0', duration: 0.38, ease: 'power3.inOut', onComplete: done }
+    : { opacity: 0, scale: 0.9, duration: 0.25, onComplete: done });
+}
+$('.lb__close', lb).addEventListener('click', closeLb);
+$('.lb__prev', lb).addEventListener('click', () => showLb(lbIndex - 1, -1));
+$('.lb__next', lb).addEventListener('click', () => showLb(lbIndex + 1, 1));
+lb.addEventListener('cancel', e => { e.preventDefault(); closeLb(); });
+lb.addEventListener('close', () => { document.documentElement.classList.remove('lb-open'); if (lbAlive) { lbAlive.kill(); lbAlive = null; } });
+lb.addEventListener('click', e => { if (e.target === lb || e.target === $('#lbWrap') || e.target.classList.contains('lb__stage')) closeLb(); });
+lb.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') { e.preventDefault(); showLb(lbIndex + 1, 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); showLb(lbIndex - 1, -1); }
+});
+lbArt.addEventListener('pointerenter', () => { if (lbAlive) lbAlive.enter(); });
+
+/* ======================================================================
+   SEARCH (the magnifier next to the green button)
+   ====================================================================== */
+const searchBtn = $('.search'), field = $('#searchField'), input = $('#q');
+let searchOpen = false;
+function openSearch() {
+  if (searchOpen) return; searchOpen = true;
+  searchBtn.setAttribute('aria-expanded', 'true');
+  field.style.visibility = 'visible';
+  gsap.to(field, { width: '52.19%', backgroundColor: 'rgba(253,251,252,1)', duration: reduced() ? 0 : 0.35, ease: 'power3.out' });
+  input.focus({ preventScroll: true });
+}
+function closeSearch() {
+  if (!searchOpen) return; searchOpen = false;
+  searchBtn.setAttribute('aria-expanded', 'false');
+  gsap.to(field, { width: '12.28%', backgroundColor: 'rgba(253,251,252,0)', duration: reduced() ? 0 : 0.25, ease: 'power2.in', onComplete: () => { if (!searchOpen) field.style.visibility = 'hidden'; } });
+}
+function clearSearch() { input.value = ''; gsap.to(cards.map(c => c.btn), { opacity: 1, duration: 0.25 }); }
+function runSearch() {
+  const words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) { clearSearch(); return; }
+  const hits = cards.filter(c => words.some(w => c.tags.split(' ').some(t => t.startsWith(w))));
+  if (!hits.length) {
+    if (!reduced()) gsap.fromTo(field, { x: -10 }, { x: 0, duration: 0.6, ease: 'elastic.out(1,0.3)' });
+    live('No illustration found'); return;
+  }
+  cards.forEach(c => gsap.to(c.btn, { opacity: hits.includes(c) ? 1 : 0.2, duration: 0.3 }));
+  live(`${hits.length} illustration${hits.length > 1 ? 's' : ''} found`);
+  scrollToY(workTarget(), 1);
+}
+searchBtn.addEventListener('click', () => (searchOpen ? (closeSearch(), searchBtn.focus({ preventScroll: true })) : openSearch()));
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); runSearch(); }
+  if (e.key === 'Escape') { e.preventDefault(); clearSearch(); closeSearch(); searchBtn.focus({ preventScroll: true }); }
+});
+input.addEventListener('input', () => { if (!input.value.trim()) clearSearch(); });
+
+/* ======================================================================
+   NAV : More menu, phone menu, contact panel, anchors
+   ====================================================================== */
+const moreBtn = $('.more-btn'), moreMenu = $('#moreMenu'), burger = $('.burger'), menu = $('#menu');
+const contact = $('#contact'), form = $('#contactForm'), msg = $('#msg'), done = $('#contactDone');
+let contactOpener = null;
+function setMore(open) {
+  moreBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); moreMenu.hidden = !open;
+  if (open && !reduced()) gsap.fromTo(moreMenu, { y: -8, opacity: 0, scale: 0.96, transformOrigin: '80% 0' }, { y: 0, opacity: 1, scale: 1, duration: 0.25, ease: 'back.out(2)' });
+}
+function setMenu(open) {
+  burger.setAttribute('aria-expanded', open ? 'true' : 'false'); menu.classList.toggle('open', open);
+  if (open && !reduced()) gsap.fromTo(menu, { y: -12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.25, ease: 'power2.out' });
+}
+function setContact(open, opener) {
+  if (open === !contact.hidden) return;
+  const hadFocus = contact.contains(document.activeElement);
+  contact.hidden = !open;
+  $$('[data-action="contact"]').forEach(b => b.setAttribute('aria-expanded', open ? 'true' : 'false'));
+  if (open) {
+    contactOpener = opener || null;
+    form.hidden = false; done.hidden = true;
+    if (!reduced()) gsap.fromTo(contact, { y: 24, opacity: 0, scale: 0.94, transformOrigin: '90% 100%' }, { y: 0, opacity: 1, scale: 1, duration: 0.32, ease: 'back.out(1.8)' });
+    msg.focus({ preventScroll: true });
+  } else if (hadFocus && contactOpener && contactOpener.isConnected) { contactOpener.focus({ preventScroll: true }); }
+}
+function closePanels() { setMore(false); if (menu.classList.contains('open')) setMenu(false); if (!contact.hidden) setContact(false); }
+moreBtn.addEventListener('click', () => { const open = moreBtn.getAttribute('aria-expanded') !== 'true'; setMore(open); if (open) $('.mi', moreMenu).focus({ preventScroll: true }); });
+moreMenu.addEventListener('keydown', e => {
+  const items = $$('.mi', moreMenu), i = items.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus({ preventScroll: true }); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus({ preventScroll: true }); }
+  if (e.key === 'Escape') { e.preventDefault(); setMore(false); moreBtn.focus({ preventScroll: true }); }
+});
+burger.addEventListener('click', () => setMenu(burger.getAttribute('aria-expanded') !== 'true'));
+document.addEventListener('click', e => {
+  const act = e.target.closest('[data-action]');
+  if (act) {
+    const a = act.dataset.action;
+    if (a === 'shake') { closePanels(); shakeReset(); }
+    if (a === 'scatter') { closePanels(); scatter(); }
+    if (a === 'contact') { const open = contact.hidden; setMore(false); if (menu.classList.contains('open')) setMenu(false); setContact(open, act); }
+    return;
+  }
+  if (!e.target.closest('.more')) setMore(false);
+  if (!contact.hidden && !e.target.closest('#contact')) setContact(false);
+  const link = e.target.closest('a[href^="#"]');
+  if (link && !link.classList.contains('see')) {
+    e.preventDefault();
+    const id = link.getAttribute('href').slice(1);
+    closePanels();
+    let y = 0, focusEl = hero;
+    if (id === 'work') { y = workTarget(); focusEl = work; }
+    else if (id === 'about' || id === 'contact-block') { const t = document.getElementById(id); y = t.getBoundingClientRect().top + window.scrollY - navH() - (id === 'about' ? 0 : 160); focusEl = t; }
+    scrollToY(Math.max(0, y), 1);
+    gsap.delayedCall(reduced() ? 0 : 1, () => focusEl.focus({ preventScroll: true }));
+  }
+});
+$('.top-btn').addEventListener('click', () => { scrollToY(0, 1); gsap.delayedCall(reduced() ? 0 : 1, () => hero.focus({ preventScroll: true })); });
+$('.contact__close').addEventListener('click', () => setContact(false));
+contact.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); setContact(false); } });
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  if (!msg.value.trim()) {
+    if (!reduced()) gsap.fromTo(msg, { x: -10 }, { x: 0, duration: 0.6, ease: 'elastic.out(1,0.3)' });
+    msg.focus({ preventScroll: true }); live('Write a message first'); return;
+  }
+  form.hidden = true; done.hidden = false; msg.value = '';
+  if (!reduced()) gsap.fromTo($('svg', done), { scale: 0.2, opacity: 0, transformOrigin: '30% 90%' }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2.4)' });
+  live('Message sent. Mila says hi!');
+  $('.contact__close').focus({ preventScroll: true });
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || lb.open) return;
+  if (moreBtn.getAttribute('aria-expanded') === 'true') { setMore(false); moreBtn.focus({ preventScroll: true }); }
+  else if (menu.classList.contains('open')) { setMenu(false); burger.focus({ preventScroll: true }); }
+  else if (!contact.hidden) setContact(false);
+  else if (searchOpen) { closeSearch(); searchBtn.focus({ preventScroll: true }); }
+});
+const onScroll = () => document.body.classList.toggle('scrolled', window.scrollY > 40);
+window.addEventListener('scroll', onScroll, { passive: true });
+
+/* ======================================================================
+   ABOUT : decoration stickers
+   ====================================================================== */
+function decoSVG(art, box) { return `<svg viewBox="${box.join(' ')}" focusable="false"><use href="#${art}Back"/><use href="#${art}"/></svg>`; }
+const DECO = [['#decoStar', 'starArt', BOX.star], ['#decoCherry', 'cherryArt', BOX.cherry], ['#decoCloud', 'ccloudArt', BOX.ccloud]];
+DECO.forEach(([sel, art, box]) => {
+  const d = $(sel); d.innerHTML = decoSVG(art, box);
+  d.addEventListener('pointerenter', () => { if (!reduced()) gsap.fromTo(d, { rotation: 0 }, { keyframes: { rotation: [0, 9, -6, 3, 0] }, duration: 0.8, overwrite: 'auto' }); });
+});
+$('.aSpark').setAttribute('d', sparkD(98, 112, 34, 40, 0.12));
+$('.aSpark2').setAttribute('d', sparkD(520, 470, 22, 26, 0.12));
+gsap.set('.aHi', { svgOrigin: '414 214' });
+$('#aboutCard').addEventListener('pointerenter', () => { if (!reduced()) gsap.fromTo('.aHi', { scale: 0.7 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1.2,0.4)', overwrite: 'auto' }); });
+
+/* ======================================================================
+   SCROLL : parallax, pinned grid that pops in card by card, entrances
+   ====================================================================== */
+let ambient = !reduced();
+const mm = gsap.matchMedia();
+mm.add({ desk: DESK_Q, compact: `not all and ${DESK_Q}`, rm: RM_Q }, ctx => {
+  const { desk, rm } = ctx.conditions;
+  const navStyle = () => {
+    const set = on => document.body.classList.toggle('in-work', on);
+    ScrollTrigger.create({ trigger: work, start: 'top 45%', onEnter: () => set(true), onLeaveBack: () => set(false) });
+    ScrollTrigger.create({ trigger: about, start: 'top 45%', onEnter: () => set(false), onLeaveBack: () => set(true) });
+  };
+  if (rm) { pinST = popST = null; navStyle(); return; }
+
+  /* stickers drift apart as the page leaves (scrubbed) */
+  const PAR = { ccloud: [-150, 0], pcloud: [-210, 0], cherry: [-120, -6], star: [-170, 8], bcloud: [-40, -3], cat: [-70, 4], title: [-110, 0], copy: [-60, 0], sp0: [-260, 0], sp1: [-240, 0], sp2: [-200, 0] };
+  const htl = gsap.timeline({ scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.5 } });
+  for (const k in PAR) htl.to(ITEMS[k].par, { y: PAR[k][0], rotation: PAR[k][1], ease: 'none' }, 0);
+
+  if (desk) {
+    pinST = ScrollTrigger.create({ trigger: work, start: 'top top', end: '+=100%', pin: true, anticipatePin: 1 });
+    const ptl = gsap.timeline({ scrollTrigger: { trigger: work, start: 'top 70%', end: () => '+=' + Math.round(window.innerHeight * 1.6), scrub: 0.45 } });
+    cards.forEach((c, i) => ptl.fromTo(c.el, { scale: 0.55, y: 26, opacity: 0 }, { scale: 1, y: 0, opacity: 1, duration: 1, ease: 'back.out(1.7)' }, i * 0.5));
+    ptl.to({}, { duration: 0.3 });
+    popST = ptl.scrollTrigger;
+  } else {
+    pinST = popST = null;
+    gsap.set(cards.map(c => c.el), { opacity: 0, scale: 0.55, y: 26 });
+    ScrollTrigger.batch(cards.map(c => c.el), { start: 'top 92%', once: true,
+      onEnter: b => gsap.to(b, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: 'back.out(1.7)', stagger: 0.12, overwrite: true }) });
+    /* no hover on a phone: each character comes alive as it reaches the middle of the screen */
+    cards.forEach(c => ScrollTrigger.create({ trigger: c.el, start: 'top 62%', end: 'bottom 38%',
+      onEnter: () => c.alive.enter(), onEnterBack: () => c.alive.enter(), onLeave: () => c.alive.leave(), onLeaveBack: () => c.alive.leave() }));
+  }
+
+  navStyle();
+  /* about section: elements pop in when they reach the screen */
+  const st = { trigger: '.about-grid', start: 'top 72%' };
+  gsap.from('#aboutCard', { scrollTrigger: st, x: -60, rotation: -4, opacity: 0, duration: 0.7, ease: 'back.out(1.4)' });
+  gsap.from('.aHi', { scrollTrigger: st, scale: 0, duration: 0.5, delay: 0.45, ease: 'back.out(2.4)' });
+  gsap.from('.about-bars rect', { scrollTrigger: st, scaleX: 0, transformOrigin: '0 50%', duration: 0.5, stagger: 0.05, delay: 0.15, ease: 'power3.out' });
+  gsap.from('.chip', { scrollTrigger: st, scale: 0.6, opacity: 0, duration: 0.45, stagger: 0.07, delay: 0.4, ease: 'back.out(2)', clearProps: 'transform,opacity' });
+  gsap.from('.about-actions > *', { scrollTrigger: st, y: 24, opacity: 0, duration: 0.45, stagger: 0.08, delay: 0.55, ease: 'back.out(2)', clearProps: 'transform,opacity' });
+  gsap.from('.deco', { scrollTrigger: st, scale: 0, rotation: -40, duration: 0.6, stagger: 0.12, delay: 0.3, ease: 'back.out(2.2)' });
+
+  /* ambient loops: sparks twinkle, clouds breathe, eyes blink */
+  SPARK_ITEMS.forEach((s, i) => gsap.to(s.wob, { scale: 1.14, duration: 0.6, ease: 'sine.inOut', yoyo: true, repeat: -1, repeatDelay: 1.4 + i * 0.6, delay: i * 0.9 }));
+  ['pcloud', 'ccloud', 'bcloud'].forEach((k, i) => gsap.to(ITEMS[k].wob, { y: i === 2 ? 4 : -6, duration: 2.6 + i * 0.4, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: i * 0.7 }));
+  cards.forEach(c => { const sp = $('.spark', c.svg); if (sp && c.n !== 5) { const [x, y] = CARD_SPARK[c.n]; gsap.to(sp, { scale: 1.12, svgOrigin: `${x} ${y}`, duration: 0.42, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: c.n * 0.3 }); } });
+  gsap.to('.aSpark, .aSpark2', { scale: 1.15, transformOrigin: '50% 50%', duration: 0.55, ease: 'sine.inOut', yoyo: true, repeat: -1, stagger: 0.4 });
+  ambient = true;
+  return () => { ambient = false; pinST = popST = null; document.body.classList.remove('in-work'); };
+});
+
+function scheduleBlink(it) {
+  gsap.delayedCall(rand(2.6, 6.5), () => { if (ambient && !document.hidden && !busy) blink(it); scheduleBlink(it); });
+}
+STICKERS.forEach(scheduleBlink);
+{ const eyes = $('.aEyes'); gsap.set(eyes, { svgOrigin: '300 309' });
+  const loop = () => gsap.delayedCall(rand(3, 6), () => { if (ambient) gsap.to(eyes, { keyframes: { scaleY: [1, 0.1, 1] }, duration: 0.22 }); loop(); }); loop(); }
+
+/* ======================================================================
+   START
+   ====================================================================== */
+let rz = 0;
+window.addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(applyLayout); });
+applyLayout();
+window.scrollTo(0, 0);
+onScroll();
+function layoutText() {
+  fontsReady = true;
+  for (const L of titleEls) fit(L.t, L.ch, L.box, TSW);
+  for (const L of logoEls) fit(L.t, L.ch, L.box, 2.5);
+  $$('.hiText').forEach(t => fit(t, 'HI!', [1041, 1137, 250, 305], 0));
+  fit($('.hiText2'), 'HI!', [424, 506, 116, 164], 0);
+  fit($('.hiText3'), 'HI!', [62, 178, 40, 100], 0);
+}
+Promise.all([document.fonts.load('900 100px "Nunito"', 'MILADRWSH!'), document.fonts.ready]).then(() => {
+  layoutText();
+  ScrollTrigger.refresh();
+  document.documentElement.dataset.ready = '1';
+});
+})();
+</script>
+</body>
+</html>

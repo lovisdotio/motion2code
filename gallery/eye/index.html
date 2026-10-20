@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eye</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@800&display=block&text=LOKSE." rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=League+Gothic&display=block&text=CLOSERNTI" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden}
+  svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  text{text-rendering:geometricPrecision}
+  .fig{font-family:'Figtree',sans-serif;font-weight:800}
+  .lg{font-family:'League Gothic',sans-serif;font-weight:400}
+</style>
+</head>
+<body>
+<svg id="stage" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs id="defs">
+    <clipPath id="frame"><rect width="1920" height="1080"/></clipPath>
+    <!-- soft glow of the lights (the film's only blur, as in the video) -->
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="20"/></filter>
+    <!-- final almond: mask of the word NOTICE -->
+    <clipPath id="almondClip"><path id="almondClipPath" d=""/></clipPath>
+    <!-- LOOK at rest, reused in the grid -->
+    <g id="lookWord"></g>
+  </defs>
+  <rect width="1920" height="1080" fill="#000"/>
+  <g clip-path="url(#frame)">
+    <!-- 1-2. the line opens into an eye, the pupil turns blue -->
+    <g id="sA"></g>
+    <!-- 3. the pupil becomes the O of LOOK -->
+    <g id="sB" display="none"><g id="ring"><circle id="ringOuter"/><ellipse id="ringHole" fill="#000"/></g><g id="lookBig"></g></g>
+    <!-- 4-5. grid of LOOK and blinking eyes, then dive into the pupil -->
+    <g id="sC" display="none"><g id="grid"></g></g>
+    <!-- 6-7. CLOSER on the blue, then compression into a dot -->
+    <g id="sD" display="none"><rect id="blueBg" width="1920" height="1080" fill="#0058E9"/><g id="closer"></g></g>
+    <!-- 8-9. the dot becomes the one in SEE., the letters become three circles -->
+    <g id="sE" display="none"><g id="see"></g><rect id="dot" fill="#fff"/></g>
+    <g id="sF" display="none"><g id="morphs"></g><g id="circles"></g></g>
+    <!-- 10-11. traffic light, the bottom light turns on in blue -->
+    <g id="sG" display="none">
+      <circle id="glowR" fill="#FA0200" filter="url(#glow)"/>
+      <circle id="glowB" fill="#005AEB" filter="url(#glow)"/>
+      <rect id="tlBox" x="810" y="117" width="298" height="848" fill="none" stroke="#fff" stroke-width="4"/>
+      <g id="lights"></g>
+    </g>
+    <!-- 11-12. NOTICE, then the eye closes into a line -->
+    <g id="sH" display="none">
+      <g id="noticeText"></g>
+      <g id="noticePoly" fill="#fff" fill-rule="evenodd"></g>
+      <path id="almondRim" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flubber@0.4.2/build/flubber.min.js"></script>
+<script>
+(() => {
+'use strict';
+/* glyph ink (font units: xMin, yMin, xMax, yMax), measured on the Google Fonts files */
+const FIG = {upm: 1000, cap: 700, ink: {"L":[68,0,527,700],"O":[30,-12,762,711],"K":[68,0,683,700],"S":[35,-12,567,712],"E":[68,0,529,700]}};
+const LG = {upm: 2000, cap: 1470, ink: {"C":[70,-16,646,1486],"L":[80,0,582,1470],"O":[70,-16,646,1486],"S":[36,-16,640,1486],"E":[80,0,574,1470],"R":[80,0,674,1470],"N":[80,0,710,1470],"T":[20,0,644,1470],"I":[80,0,296,1470]}};
+/* flattened outlines of the same glyphs (for the morphs and the almond warp) */
+const POLY_FIG = {"S":[[308,-12,299,-12,290,-12,281,-11,272,-10,263,-9,254,-8,245,-7,236,-5,228,-3,219,-1,210,2,201,4,192,7,183,10,175,14,166,18,158,21,150,25,142,30,134,34,126,38,118,44,110,49,103,55,96,61,89,66,82,72,76,79,71,85,65,92,59,99,54,107,50,114,46,122,42,130,39,138,37,147,35,155,58,161,80,168,103,174,126,181,149,187,171,194,194,200,197,192,202,184,206,177,212,169,218,162,225,156,232,150,240,144,247,140,255,136,264,133,273,131,282,129,292,128,302,127,312,127,322,128,331,129,340,131,348,134,356,137,363,141,370,146,378,152,384,158,389,165,393,173,396,181,397,189,398,198,397,208,395,217,391,226,386,234,378,242,373,247,366,252,359,257,351,261,342,265,333,268,323,271,298,277,274,284,249,290,224,296,215,298,206,301,197,304,188,307,180,311,171,315,163,319,156,323,148,327,141,332,134,337,126,343,119,349,112,355,105,361,99,368,93,375,88,382,83,390,78,398,74,406,69,414,66,422,63,431,60,440,57,449,55,458,54,468,53,478,52,488,52,498,52,508,53,518,54,527,55,537,56,546,58,555,60,563,63,572,66,580,69,588,72,596,76,603,80,610,85,618,90,624,95,631,100,638,106,644,112,650,119,656,125,660,131,665,137,669,144,673,151,677,158,681,165,685,172,688,180,691,188,694,196,697,204,699,212,701,221,703,230,705,239,707,248,708,258,709,267,710,277,711,287,712,297,712,308,712,318,712,328,712,338,711,348,710,357,709,366,708,375,707,384,705,393,703,401,701,409,699,417,696,425,694,434,690,443,686,451,682,459,678,467,673,475,668,483,663,490,657,497,652,504,645,510,639,516,633,522,626,527,620,533,613,538,606,542,598,547,591,551,583,556,575,560,566,563,558,567,549,544,542,522,536,499,529,477,522,454,515,432,509,409,502,406,511,402,519,396,528,390,536,383,544,374,551,368,556,360,561,352,564,344,568,335,570,326,572,316,573,306,573,296,573,286,572,277,570,269,568,261,566,253,562,247,558,240,554,234,548,229,542,225,535,221,527,219,518,217,509,217,499,218,489,220,480,224,472,229,464,236,458,243,452,250,447,258,443,268,439,277,436,288,433,313,427,338,420,362,414,387,408,396,406,405,403,414,400,423,397,431,394,440,390,447,386,455,382,463,378,470,373,477,369,484,364,490,359,497,353,503,348,508,342,514,336,520,330,525,322,531,315,536,307,540,300,545,292,548,284,552,276,555,268,558,260,560,252,562,243,564,235,565,226,566,217,567,208,567,199,567,189,566,179,565,170,564,160,562,151,561,142,558,133,555,125,552,117,549,109,545,101,541,93,536,86,532,79,526,72,521,65,515,59,509,53,502,47,496,42,489,36,481,31,473,26,465,22,457,18,448,14,441,10,433,8,425,5,418,2,409,0,401,-2,393,-4,384,-6,375,-7,366,-8,357,-10,348,-10,338,-11,328,-12,318,-12]],"E":[[68,0,68,23,68,45,68,68,68,90,68,113,68,135,68,158,68,181,68,203,68,226,68,248,68,271,68,294,68,316,68,339,68,361,68,384,68,406,68,429,68,452,68,474,68,497,68,519,68,542,68,565,68,587,68,610,68,632,68,655,68,677,68,700,91,700,114,700,136,700,159,700,182,700,205,700,228,700,250,700,273,700,296,700,319,700,342,700,364,700,387,700,410,700,433,700,456,700,478,700,501,700,524,700,524,675,524,651,524,626,524,601,524,577,524,552,501,552,479,552,456,552,433,552,411,552,388,552,365,552,342,552,320,552,297,552,274,552,252,552,229,552,229,526,229,501,229,475,229,450,229,424,254,424,278,424,303,424,328,424,352,424,377,424,402,424,427,424,451,424,476,424,476,400,476,376,476,352,476,329,476,305,476,281,451,281,427,281,402,281,377,281,352,281,328,281,303,281,278,281,254,281,229,281,229,254,229,228,229,201,229,175,229,148,252,148,275,148,298,148,321,148,344,148,367,148,391,148,414,148,437,148,460,148,483,148,506,148,529,148,529,123,529,99,529,74,529,49,529,25,529,0]]};
+const POLY_LG = {"N":[[80,0,80,46,80,92,80,138,80,184,80,230,80,276,80,322,80,368,80,413,80,459,80,505,80,551,80,597,80,643,80,689,80,735,80,781,80,827,80,873,80,919,80,965,80,1011,80,1057,80,1102,80,1148,80,1194,80,1240,80,1286,80,1332,80,1378,80,1424,80,1470,130,1470,181,1470,232,1470,282,1470,294,1425,306,1380,317,1335,329,1290,341,1245,353,1200,364,1155,376,1110,388,1064,400,1019,411,974,423,929,435,884,447,839,458,794,470,749,482,704,500,636,512,636,512,682,512,729,512,775,512,821,512,868,512,914,512,960,512,1007,512,1053,512,1099,512,1146,512,1192,512,1238,512,1285,512,1331,512,1377,512,1424,512,1470,562,1470,611,1470,660,1470,710,1470,710,1424,710,1378,710,1332,710,1286,710,1240,710,1194,710,1148,710,1102,710,1057,710,1011,710,965,710,919,710,873,710,827,710,781,710,735,710,689,710,643,710,597,710,551,710,505,710,459,710,413,710,368,710,322,710,276,710,230,710,184,710,138,710,92,710,46,710,0,664,0,619,0,574,0,528,0,515,45,502,90,489,135,476,180,463,225,450,270,437,315,424,360,412,406,399,451,386,496,373,541,360,586,347,631,334,676,321,721,308,766,290,834,278,834,278,788,278,741,278,695,278,649,278,602,278,556,278,510,278,463,278,417,278,371,278,324,278,278,278,232,278,185,278,139,278,93,278,46,278,0]],"O":[[358,-16,338,-15,319,-14,301,-11,283,-8,266,-3,249,3,233,9,218,17,204,26,188,37,173,49,159,62,146,76,135,90,124,106,114,122,104,140,97,156,91,173,85,190,81,208,77,226,74,244,72,263,70,282,70,302,70,348,70,393,70,439,70,484,70,530,70,575,70,621,70,667,70,712,70,758,70,803,70,849,70,895,70,940,70,986,70,1031,70,1077,70,1122,70,1168,70,1188,72,1207,74,1226,77,1245,81,1263,85,1281,91,1298,97,1314,104,1330,114,1348,124,1364,135,1380,146,1395,159,1408,173,1421,188,1433,204,1444,218,1453,233,1461,249,1467,266,1473,283,1478,301,1481,319,1484,338,1485,358,1486,378,1485,397,1484,415,1481,433,1478,450,1473,467,1467,483,1461,498,1453,512,1444,528,1433,543,1421,557,1408,570,1394,581,1380,592,1364,602,1348,612,1330,619,1314,625,1297,631,1280,635,1262,639,1244,642,1226,644,1207,646,1188,646,1168,646,1122,646,1077,646,1031,646,986,646,940,646,895,646,849,646,803,646,758,646,712,646,667,646,621,646,575,646,530,646,484,646,439,646,393,646,348,646,302,646,282,644,263,642,244,639,226,635,208,631,190,625,173,619,156,612,140,602,122,592,106,581,90,570,76,557,62,543,49,528,37,512,26,498,17,483,9,467,3,450,-3,433,-8,415,-11,397,-14,378,-15],[358,194,376,196,392,202,404,213,414,228,421,245,426,263,429,282,430,302,430,348,430,393,430,439,430,484,430,530,430,575,430,621,430,667,430,712,430,758,430,803,430,849,430,895,430,940,430,986,430,1031,430,1077,430,1122,430,1168,429,1188,426,1207,420,1225,413,1242,403,1257,391,1268,376,1274,358,1276,341,1274,326,1268,313,1257,304,1242,296,1225,290,1207,287,1188,286,1168,286,1122,286,1077,286,1031,286,986,286,940,286,895,286,849,286,803,286,758,286,712,286,667,286,621,286,575,286,530,286,484,286,439,286,393,286,348,286,302,287,282,290,263,296,245,303,228,313,213,325,202,340,196]],"T":[[224,0,224,46,224,92,224,139,224,185,224,231,224,277,224,324,224,370,224,416,224,462,224,508,224,555,224,601,224,647,224,693,224,740,224,786,224,832,224,878,224,924,224,971,224,1017,224,1063,224,1109,224,1156,224,1202,224,1248,173,1248,122,1248,71,1248,20,1248,20,1304,20,1359,20,1414,20,1470,68,1470,116,1470,164,1470,212,1470,260,1470,308,1470,356,1470,404,1470,452,1470,500,1470,548,1470,596,1470,644,1470,644,1414,644,1359,644,1304,644,1248,593,1248,542,1248,491,1248,440,1248,440,1202,440,1156,440,1109,440,1063,440,1017,440,971,440,924,440,878,440,832,440,786,440,740,440,693,440,647,440,601,440,555,440,508,440,462,440,416,440,370,440,324,440,277,440,231,440,185,440,139,440,92,440,46,440,0]],"I":[[80,0,80,46,80,92,80,138,80,184,80,230,80,276,80,322,80,368,80,413,80,459,80,505,80,551,80,597,80,643,80,689,80,735,80,781,80,827,80,873,80,919,80,965,80,1011,80,1057,80,1102,80,1148,80,1194,80,1240,80,1286,80,1332,80,1378,80,1424,80,1470,134,1470,188,1470,242,1470,296,1470,296,1424,296,1378,296,1332,296,1286,296,1240,296,1194,296,1148,296,1102,296,1057,296,1011,296,965,296,919,296,873,296,827,296,781,296,735,296,689,296,643,296,597,296,551,296,505,296,459,296,413,296,368,296,322,296,276,296,230,296,184,296,138,296,92,296,46,296,0]],"C":[[358,-16,338,-15,318,-14,300,-11,282,-8,264,-3,248,2,232,9,216,17,202,26,186,36,171,48,157,61,145,75,133,89,122,105,112,121,104,139,96,155,90,172,85,189,80,207,77,225,74,243,72,262,70,282,70,302,70,348,70,393,70,439,70,484,70,530,70,575,70,621,70,667,70,712,70,758,70,803,70,849,70,895,70,940,70,986,70,1031,70,1077,70,1122,70,1168,70,1188,72,1207,74,1226,77,1244,81,1262,85,1280,91,1297,97,1314,104,1330,114,1348,124,1364,135,1380,147,1394,160,1408,173,1421,188,1433,204,1444,219,1453,234,1461,250,1467,267,1473,284,1478,301,1481,320,1484,339,1485,358,1486,380,1485,401,1483,422,1480,441,1475,460,1469,478,1461,495,1452,512,1442,527,1431,542,1419,556,1406,568,1392,581,1378,592,1362,602,1346,611,1328,619,1310,626,1292,631,1275,636,1258,639,1241,642,1223,644,1205,646,1187,646,1168,646,1118,646,1067,646,1016,646,966,596,966,545,966,494,966,444,966,444,1016,444,1067,444,1118,444,1168,443,1190,439,1210,433,1229,425,1245,414,1259,400,1268,382,1274,362,1276,343,1274,328,1268,314,1258,304,1244,296,1227,290,1209,287,1189,286,1168,286,1122,286,1077,286,1031,286,986,286,940,286,895,286,849,286,803,286,758,286,712,286,667,286,621,286,575,286,530,286,484,286,439,286,393,286,348,286,302,287,281,291,261,297,243,306,226,316,212,329,202,345,196,362,194,383,196,400,202,415,211,426,225,434,241,439,260,443,280,444,302,444,352,444,403,444,454,444,504,494,504,545,504,596,504,646,504,646,454,646,403,646,352,646,302,646,282,644,263,642,244,639,226,635,208,630,190,625,173,618,156,611,140,602,122,592,106,581,90,569,76,556,62,542,49,527,37,512,26,497,17,482,9,466,3,449,-3,432,-8,415,-11,396,-14,377,-15]],"E":[[80,0,80,46,80,92,80,138,80,184,80,230,80,276,80,322,80,368,80,413,80,459,80,505,80,551,80,597,80,643,80,689,80,735,80,781,80,827,80,873,80,919,80,965,80,1011,80,1057,80,1102,80,1148,80,1194,80,1240,80,1286,80,1332,80,1378,80,1424,80,1470,129,1470,179,1470,228,1470,278,1470,327,1470,376,1470,426,1470,475,1470,525,1470,574,1470,574,1414,574,1359,574,1304,574,1248,528,1248,481,1248,435,1248,389,1248,342,1248,296,1248,296,1198,296,1149,296,1100,296,1050,296,1000,296,951,296,902,296,852,346,852,396,852,446,852,496,852,496,798,496,744,496,690,496,636,446,636,396,636,346,636,296,636,296,590,296,544,296,498,296,452,296,406,296,360,296,314,296,268,296,222,342,222,389,222,435,222,481,222,528,222,574,222,574,166,574,111,574,56,574,0]]};
+const C = { black: '#000000', white: '#FFFFFF', blue: '#0058E9', light: '#005AEB', red: '#FA0200' };
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const show = (e, on) => e.setAttribute('display', on ? 'inline' : 'none');
+const set = (e, attrs) => { for (const k in attrs) e.setAttribute(k, typeof attrs[k] === 'number' ? +attrs[k].toFixed(3) : attrs[k]); };
+
+/* ---------- time & easings (GSAP) ---------- */
+const easeCache = {};
+const ease = n => easeCache[n] || (easeCache[n] = gsap.parseEase(n));
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const prog = (t, a, b, e = 'power2.inOut') => ease(e)(clamp((t - a) / (b - a)));
+const mixHex = (a, b, p) => { const pa = [1, 3, 5].map(i => parseInt(a.substr(i, 2), 16)), pb = [1, 3, 5].map(i => parseInt(b.substr(i, 2), 16)); return 'rgb(' + pa.map((v, i) => Math.round(lerp(v, pb[i], p))).join(',') + ')'; };
+
+/* curves sampled frame by frame from the video (24 fps), smoothed with monotone Hermite */
+function mono(pts) {
+  const n = pts.length, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), d = [], m = [];
+  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+  m[0] = d[0]; m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i + 1] / d[i], h = a * a + b * b;
+    if (h > 9) { const k = 3 / Math.sqrt(h); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; }
+  }
+  return t => {
+    if (t <= xs[0]) return ys[0];
+    if (t >= xs[n - 1]) return ys[n - 1];
+    let i = 0; while (t > xs[i + 1]) i++;
+    const h = xs[i + 1] - xs[i], s = (t - xs[i]) / h, s2 = s * s, s3 = s2 * s;
+    return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (3 * s2 - 2 * s3) * ys[i + 1] + (s3 - s2) * h * m[i + 1];
+  };
+}
+/* steps: exact value on each frame, no interpolation (appearances, cuts) */
+const steps = pts => t => { let v = pts[0][1]; for (const [x, y] of pts) if (t >= x) v = y; return v; };
+
+/* ---------- 2D matrices (SVG format a b c d e f) ---------- */
+const mul = (A, B) => [A[0] * B[0] + A[2] * B[1], A[1] * B[0] + A[3] * B[1], A[0] * B[2] + A[2] * B[3], A[1] * B[2] + A[3] * B[3], A[0] * B[4] + A[2] * B[5] + A[4], A[1] * B[4] + A[3] * B[5] + A[5]];
+const T = (x, y) => [1, 0, 0, 1, x, y];
+const Sc = (sx, sy = sx) => [sx, 0, 0, sy, 0, 0];
+const Ro = deg => { const r = deg * Math.PI / 180, c = Math.cos(r), s = Math.sin(r); return [c, s, -s, c, 0, 0]; };
+const about = (cx, cy, M) => mul(T(cx, cy), mul(M, T(-cx, -cy)));
+const mstr = M => 'matrix(' + M.map(v => +v.toFixed(5)).join(' ') + ')';
+const zoomAt = (cx, cy, s) => `translate(${cx} ${cy}) scale(${s}) translate(${-cx} ${-cy})`;
+
+/* ---------- typography: each letter placed in its box measured on the video ----------
+   text at font-size 1000: a font point (u, v) maps to (u·k, −v·k), k = 1000 / upm */
+const K = f => 1000 / f.upm;
+function fitInk(f, ch, [x0, x1, top, bot]) {
+  const k = K(f), [l, b, r, t] = f.ink[ch], sx = (x1 - x0) / ((r - l) * k), sy = (bot - top) / ((t - b) * k);
+  return [sx, 0, 0, sy, x0 - sx * l * k, top + sy * t * k];
+}
+function fitCap(f, ch, x0, x1, capTop, base) {
+  const k = K(f), [l, , r] = f.ink[ch], sx = (x1 - x0) / ((r - l) * k), sy = (base - capTop) / (f.cap * k);
+  return [sx, 0, 0, sy, x0 - sx * l * k, base];
+}
+function glyph(parent, cls, ch, fill = C.white) { const e = el('text', { x: 0, y: 0, 'font-size': 1000, class: cls, fill }, parent); e.textContent = ch; return e; }
+/* flattened outline of the same glyph, transformed by the same matrix as the text */
+function polyPts(f, P, ch, M) {
+  const k = K(f);
+  return P[ch].map(c => { const out = []; for (let i = 0; i < c.length; i += 2) { const x = c[i] * k, y = -c[i + 1] * k; out.push([M[0] * x + M[2] * y + M[4], M[1] * x + M[3] * y + M[5]]); } return out; });
+}
+const ringsToD = rings => rings.map(r => 'M' + r.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + 'Z').join('');
+
+/* ---------- the eye: almond (power 2.1 sampled from the video), pupil, rim ---------- */
+function almond(cx, cy, W, ht, hb, n = 96) {
+  let top = '', bot = '';
+  for (let i = 0; i <= n; i++) {
+    const u = -1 + 2 * i / n, f = 1 - Math.pow(Math.abs(u), 2.1), x = (cx + u * W).toFixed(1);
+    top += (i ? 'L' : 'M') + x + ' ' + (cy - ht * f).toFixed(1);
+    if (i < n) bot = 'L' + x + ' ' + (cy + hb * f).toFixed(1) + bot;
+  }
+  return top + bot + 'Z';
+}
+let eyeId = 0;
+/* local coordinates = those of the big eye (center 960, 544; half-width 960) */
+function makeEye(parent) {
+  const id = 'eyeClip' + (eyeId++), g = el('g', {}, parent);
+  const cp = el('clipPath', { id }, $('defs')), cpath = el('path', {}, cp);
+  const white = el('path', { fill: C.white }, g);
+  const pup = el('g', { 'clip-path': `url(#${id})` }, g);
+  const half = el('circle', { cx: 960, cy: 889, r: 392, fill: C.black }, pup);
+  const black = el('ellipse', { cx: 960, cy: 541.5, rx: 410, ry: 417, fill: C.black }, pup);
+  const blue = el('ellipse', { cx: 959, cy: 540, fill: C.blue }, pup);
+  const rim = el('path', { fill: 'none', stroke: C.white, 'stroke-width': 6, 'stroke-linejoin': 'round' }, g);
+  return { g, cpath, white, half, black, blue, rim };
+}
+/* ht / hb: top / bottom opening; full: centered pupil; br: blue radius; hideBlack: blue covering the black */
+function setEye(E, ht, hb, full, br, hideBlack = 416) {
+  const d = almond(960, 544, 960, ht, hb);
+  E.white.setAttribute('d', d); E.cpath.setAttribute('d', d);
+  E.rim.setAttribute('d', almond(960, 544, 960, Math.max(0, ht - 3), Math.max(0, hb - 3)));
+  show(E.half, !full);
+  show(E.black, full && br < hideBlack);
+  show(E.blue, full && br > 0.5);
+  if (full && br > 0.5) set(E.blue, { rx: br * 0.982, ry: br });
+}
+
+/* ================= SHOTS 1-2: the line opens, the pupil turns blue (0 -> 1.75 s) ================= */
+const eyeA = makeEye($('sA'));
+const TOP_A = mono([[0.396, 0], [0.417, 4], [0.458, 16], [0.5, 83], [0.542, 338], [0.583, 416], [0.625, 453], [0.667, 476], [0.708, 492], [0.75, 501], [0.792, 506], [0.833, 511], [0.875, 514],
+  [1.5, 514], [1.542, 513], [1.583, 510], [1.625, 504], [1.667, 491], [1.708, 460], [1.75, 380]]);
+const BOT_A = mono([[0.396, 0], [0.417, 10], [0.458, 39], [0.5, 152], [0.542, 370], [0.583, 431], [0.625, 459], [0.667, 477], [0.708, 490], [0.75, 499], [0.792, 504], [0.833, 507], [0.875, 509], [0.917, 510],
+  [1.542, 510], [1.583, 507], [1.625, 503], [1.667, 493], [1.708, 468], [1.75, 390]]);
+const BLUE_A = mono([[0.792, 0], [0.833, 23], [0.875, 89], [0.917, 202], [0.958, 321], [1.0, 368], [1.042, 392], [1.083, 405], [1.125, 415], [1.167, 417], [1.583, 417], [1.625, 416], [1.667, 412.5], [1.708, 400.5], [1.75, 343]]);
+const BLACK_CY = mono([[0.792, 549], [0.833, 541.5], [0.875, 541]]), BLACK_R = mono([[0.792, 411], [0.833, 416.5], [0.875, 417]]);
+function sceneA(t) {
+  const full = t >= 0.78;
+  set(eyeA.black, { cy: BLACK_CY(t), ry: BLACK_R(t) });
+  setEye(eyeA, TOP_A(t), BOT_A(t), full, full ? BLUE_A(t) : 0, t >= 1.16 ? -1 : 416);   // once covered, the black does not come back
+}
+
+/* ================= SHOT 3: the pupil becomes the O of LOOK (1.75 -> 2.625 s) ================= */
+const LOOK_BOX = { L: [64, 386, 293, 799], O1: [374, 872, 293, 799], O2: [899, 1396, 293, 799], K: [1442, 1865, 293, 799] };
+const LOOK_KEYS = ['L', 'O1', 'O2', 'K'];
+const lookFit = {}; for (const key of LOOK_KEYS) lookFit[key] = fitInk(FIG, key[0], LOOK_BOX[key]);
+for (const key of LOOK_KEYS) glyph($('lookWord'), 'fig', key[0]).setAttribute('transform', mstr(lookFit[key]));
+const lookBig = {}; for (const key of LOOK_KEYS) lookBig[key] = glyph($('lookBig'), 'fig', key[0]);
+/* the letters arrive one by one and slide left to recenter the word (sampled px offset) */
+const LOOK_DX = {
+  L: mono([[1.792, 116], [1.833, 68], [1.875, 42], [1.917, 25], [1.958, 14], [2.0, 6], [2.042, 2], [2.083, 0]]),
+  O1: mono([[1.833, 155.5], [1.875, 100.5], [1.917, 66.5], [1.958, 43], [2.0, 27], [2.042, 14.5], [2.083, 7], [2.125, 2.5], [2.167, 0]]),
+  O2: mono([[1.917, 139], [1.958, 88], [2.0, 56], [2.042, 35], [2.083, 20], [2.125, 10], [2.167, 0]]),
+  K: mono([[2.0, 116], [2.042, 72], [2.083, 45], [2.125, 26], [2.167, 5], [2.208, 1], [2.25, 0]])
+};
+const LOOK_IN = { L: 1.771, O1: 1.825, O2: 1.896, K: 1.979 };
+const RING_R = mono([[1.708, 400.5], [1.75, 343], [1.792, 264], [1.833, 251]]);
+const RING_X = mono([[1.708, 959], [1.75, 959], [1.792, 951.5], [1.833, 778.5]]);
+const RING_Y = mono([[1.75, 540], [1.792, 540.5], [1.833, 546]]);
+function sceneB(t) {
+  const ringOn = t < LOOK_IN.O1;
+  show($('ring'), ringOn);
+  if (ringOn) {
+    const r = RING_R(t), x = RING_X(t), y = RING_Y(t), w = prog(t, 1.79, 1.833, 'power1.in'), h = prog(t, 1.765, 1.833, 'none');
+    set($('ringOuter'), { cx: x, cy: y, r, fill: mixHex(C.blue, C.white, w) });
+    set($('ringHole'), { cx: x - 30 * (1 - h), cy: y, rx: 141 * h * r / 251, ry: 152 * h * r / 251, 'fill-opacity': lerp(0.28, 1, w) });   // the hole of the O opens up
+  }
+  for (const key of LOOK_KEYS) {
+    const on = t >= LOOK_IN[key];
+    show(lookBig[key], on);
+    if (on) lookBig[key].setAttribute('transform', mstr(mul(T(LOOK_DX[key](t), 0), lookFit[key])));
+  }
+}
+
+/* ================= SHOTS 4-5: grid of LOOK and eyes, then dive into the pupil (2.625 -> 4.35 s) ================= */
+const ROWS = [182, 543.5, 905], COLS = [320, 960, 1600];
+/* grid LOOK = shot 3 LOOK scaled down (0.332 x 0.314, measured on the stems) */
+const LOOK_CX = [322, 962, 1599], LOOK_CY = [181.5, 544.5, 907.5];
+const grid = $('grid');
+const lookUses = {};
+for (const [c, r, name] of [[0, 0, 'TL'], [2, 0, 'TR'], [1, 1, 'MC'], [0, 2, 'BL'], [2, 2, 'BR']])
+  lookUses[name] = el('use', { href: '#lookWord', transform: `translate(${LOOK_CX[c]} ${LOOK_CY[r]}) scale(0.332 0.314) translate(-964.5 -546)` }, grid);
+const eyesC = {};
+for (const [c, r, name] of [[1, 0, 'TC'], [0, 1, 'ML'], [2, 1, 'MR'], [1, 2, 'BC'], [1, 1, 'MC']]) {
+  const E = makeEye(grid); E.g.setAttribute('transform', `translate(${COLS[c]} ${ROWS[r]}) scale(${1 / 3}) translate(-960 -544)`); eyesC[name] = E;
+}
+/* top / bottom eye opening (big-eye units), slightly staggered: top, bottom, then sides */
+const OPEN = {
+  TC: [mono([[2.854, 0], [2.875, 12], [2.917, 168], [2.958, 372], [3.0, 438], [3.042, 462], [3.083, 480], [3.125, 489], [3.167, 501], [3.25, 510]]),
+       mono([[2.854, 0], [2.875, 33], [2.917, 201], [2.958, 396], [3.0, 453], [3.042, 480], [3.083, 498], [3.125, 506], [3.167, 510]])],
+  BC: [mono([[2.854, 0], [2.875, 3], [2.917, 72], [2.958, 324], [3.0, 432], [3.042, 465], [3.083, 483], [3.125, 492], [3.167, 504], [3.25, 510]]),
+       mono([[2.854, 0], [2.875, 12], [2.917, 120], [2.958, 354], [3.0, 438], [3.042, 465], [3.083, 483], [3.125, 495], [3.167, 504], [3.25, 508]])],
+  ML: [mono([[2.896, 0], [2.917, 31.5], [2.958, 199.5], [3.0, 412.5], [3.042, 454.5], [3.083, 472.5], [3.125, 484.5], [3.167, 502.5], [3.25, 510]]),
+       mono([[2.896, 0], [2.917, 64.5], [2.958, 286.5], [3.0, 433.5], [3.042, 466.5], [3.083, 487.5], [3.125, 496.5], [3.167, 505.5], [3.25, 508]])]
+};
+OPEN.MR = OPEN.ML; OPEN.MC = [() => 510, () => 508];
+/* the blue pupil grows in each eye (radius in big-eye units) */
+const BLUE_MC = mono([[3.146, 0], [3.167, 54], [3.208, 121.5], [3.25, 216], [3.292, 301], [3.333, 355], [3.375, 386], [3.417, 406], [3.5, 416]]);
+const BLUE_TC = mono([[3.146, 0], [3.167, 78], [3.208, 198], [3.25, 285], [3.292, 340], [3.333, 373], [3.375, 397], [3.417, 409], [3.5, 416]]);
+const BLUE_ML = mono([[3.146, 0], [3.167, 57], [3.208, 157.5], [3.25, 255], [3.292, 328], [3.333, 367], [3.375, 394], [3.417, 408], [3.5, 416]]);
+const BLUE_C = { TC: BLUE_TC, BC: BLUE_TC, ML: BLUE_ML, MR: BLUE_ML, MC: BLUE_MC };
+/* zoom into the center eye's pupil, sampled from the eye width then the blue radius */
+const ZOOM = mono([[3.25, 1], [3.292, 1.006], [3.333, 1.03], [3.375, 1.078], [3.417, 1.217], [3.458, 1.506], [3.5, 1.951], [3.542, 2.41], [3.583, 2.75], [3.625, 3.078], [3.667, 3.338],
+  [3.708, 3.558], [3.75, 3.753], [3.792, 3.936], [3.833, 4.134], [3.875, 4.439], [3.917, 4.956], [3.958, 5.605], [4.0, 6.148], [4.042, 6.596], [4.083, 6.963], [4.125, 7.32],
+  [4.167, 7.74], [4.208, 7.92], [4.25, 8.04], [4.292, 8.2], [4.354, 8.3]]);
+const GRID_DY = mono([[3.5, 0], [3.542, 1], [3.625, 2.5], [3.708, 4.5], [3.833, 6.5], [4.0, 8]]);   // the camera slides down a little during the dive
+function sceneC(t) {
+  const swap = t >= 3.15;                    // the center LOOK becomes an eye, all pupils recenter
+  show(lookUses.MC, !swap); show(eyesC.MC.g, swap);
+  for (const name in eyesC) {
+    if (name === 'MC' && !swap) continue;
+    const [ot, ob] = OPEN[name], br = swap ? BLUE_C[name](t) : 0;
+    setEye(eyesC[name], ot(t), ob(t), swap, br, 400);
+  }
+  grid.setAttribute('transform', `translate(0 ${GRID_DY(t).toFixed(2)}) ` + zoomAt(960, 543.5, ZOOM(t)));
+}
+
+/* ================= SHOTS 6-7: CLOSER, then compression into a dot (4.33 -> 5.375 s) ================= */
+const CLOSER_BOX = [['C', 8, 330], ['L', 346, 614], ['O', 604, 925], ['S', 933, 1281], ['E', 1291, 1562], ['R', 1576, 1907]];
+const closer = CLOSER_BOX.map(([ch, x0, x1]) => ({ e: glyph($('closer'), 'lg', ch), M: fitCap(LG, ch, x0, x1, 19.5, 1075), cx: (x0 + x1) / 2 }));
+/* each letter arrives in one frame, some with a quick fade */
+const CLOSER_OP = [
+  mono([[4.312, 0], [4.333, 0.93], [4.354, 1]]), steps([[0, 0], [4.354, 1]]), mono([[4.396, 0], [4.417, 0.74], [4.458, 1]]),
+  mono([[4.437, 0], [4.458, 0.6], [4.5, 1]]), steps([[0, 0], [4.521, 1]]), mono([[4.562, 0], [4.583, 0.55], [4.625, 1]])
+];
+/* sampled horizontal compression (letter spacing); the letters thin out more slowly (exponent 0.75) and overlap */
+const SQUEEZE = mono([[4.625, 1], [4.708, 0.9984], [4.75, 0.9962], [4.792, 0.9923], [4.833, 0.9846], [4.875, 0.9758], [4.917, 0.9637], [4.958, 0.9478], [5.0, 0.9264], [5.042, 0.8973],
+  [5.083, 0.8601], [5.125, 0.8093], [5.167, 0.6191], [5.208, 0.4417], [5.25, 0.2506], [5.292, 0.0998], [5.333, 0.0255]]);
+const SQ_CX = mono([[4.708, 958.5], [4.917, 960], [5.042, 961.5], [5.125, 964], [5.167, 965], [5.25, 966], [5.292, 965], [5.333, 958.5]]);
+function sceneD(t) {
+  show($('blueBg'), t < 4.354);
+  const sx = SQUEEZE(t), w = Math.pow(sx, 0.75), cx = SQ_CX(t);
+  closer.forEach((L, i) => {
+    const op = CLOSER_OP[i](t);
+    show(L.e, op > 0.004);
+    L.e.setAttribute('fill-opacity', op.toFixed(3));
+    L.e.setAttribute('transform', mstr(mul(T(cx + (L.cx - cx) * sx - L.cx, 0), mul(about(L.cx, 547, Sc(w, 1 + 0.012 * (1 - sx))), L.M))));
+  });
+}
+
+/* ================= SHOTS 8-9: the dot, SEE., the letters become circles (5.333 -> 7 s) ================= */
+const SEE_BOX = [['S', [103, 592, 229, 860]], ['E', [653, 1067, 241, 843]], ['E', [1141, 1556, 241, 843]]];
+const see = SEE_BOX.map(([ch, box]) => ({ ch, e: glyph($('see'), 'fig', ch), M: fitInk(FIG, ch, box), cx: (box[0] + box[1]) / 2, cy: (box[2] + box[3]) / 2 }));
+const SEE_IN = [5.896, 5.979, 6.062];
+const DOT_R = mono([[5.375, 65], [5.417, 68.5], [5.458, 70.5], [5.5, 71.5], [5.542, 72.5], [5.917, 72.5], [6.0, 73], [6.042, 74], [6.875, 74], [6.958, 58], [7.0, 34], [7.042, 0]]);
+const DOT_X = mono([[5.625, 958.5], [5.667, 961], [5.708, 968.5], [5.75, 984.5], [5.792, 1010.5], [5.833, 1056], [5.875, 1136.5], [5.917, 1304.5], [5.958, 1538], [6.0, 1602],
+  [6.042, 1633], [6.083, 1651], [6.125, 1663.5], [6.167, 1679], [6.208, 1683], [6.25, 1685], [6.292, 1686], [6.875, 1686], [6.958, 1698], [7.0, 1712]]);
+const DOT_Y = mono([[5.375, 540], [5.875, 540.5], [5.917, 548.5], [5.958, 630.5], [6.0, 683.5], [6.042, 716], [6.083, 736.5], [6.125, 751.5], [6.167, 771], [6.208, 776.5],
+  [6.25, 779], [6.292, 780], [6.875, 780], [6.958, 806], [7.0, 830]]);
+/* anticipation: slight swell, the Es tilt clockwise, the S the other way */
+const SEE_S = mono([[6.583, 1], [6.625, 1.005], [6.667, 1.012], [6.708, 1.025], [6.75, 1.028], [6.792, 1.04], [6.833, 1.045], [6.875, 1.03], [6.917, 1.0]]);
+const E_ROT = mono([[6.625, 0], [6.667, 0.5], [6.708, 1], [6.75, 3], [6.792, 5], [6.833, 9], [6.875, 20.3], [6.917, 80]]);
+const SEE_ROT = [mono([[6.708, 0], [6.75, 0], [6.792, -1], [6.833, -3], [6.875, -12], [6.917, -20]]), E_ROT, E_ROT];
+const SEE_DX = [mono([[6.667, 0], [6.708, 1], [6.75, 3], [6.792, 6], [6.833, 10], [6.875, 12], [6.917, 0]]), mono([[6.708, 0], [6.75, 2], [6.792, 7], [6.833, 12], [6.875, 30], [6.917, 52]]),
+  mono([[6.667, 0], [6.708, 2], [6.75, 7], [6.792, 13], [6.833, 23.5], [6.875, 47], [6.917, 150]])];
+const SEE_DY = [() => 0, mono([[6.75, 0], [6.792, -2], [6.833, -4.5], [6.875, -10], [6.917, 18]]), mono([[6.708, 0], [6.75, -1], [6.792, -5], [6.833, -7.5], [6.875, -15.5], [6.917, -22]])];
+const seeM = (i, t) => { const L = see[i]; return mul(T(SEE_DX[i](t), SEE_DY[i](t)), mul(about(L.cx, L.cy, mul(Ro(SEE_ROT[i](t)), Sc(SEE_S(t)))), L.M)); };
+function sceneE(t) {
+  const dot = $('dot');
+  if (t < 5.375) {                               // the bar squashes into a dot (squash)
+    const p = prog(t, 5.333, 5.375, 'power2.out'), w = lerp(61, 130, p), h = lerp(1080, 130, p);
+    set(dot, { x: 958.5 - w / 2, y: 540 - h / 2, width: w, height: h, rx: Math.min(w, h) / 2 });
+  } else {
+    const r = DOT_R(t), x = t < 5.625 ? 959 : DOT_X(t), y = DOT_Y(t);
+    set(dot, { x: x - r, y: y - r, width: 2 * r, height: 2 * r, rx: r });
+  }
+  show(dot, DOT_R(t) > 0.5 || t < 5.375);
+  see.forEach((L, i) => {
+    const on = t >= SEE_IN[i] && t < MORPH0;
+    show(L.e, on);
+    if (on) L.e.setAttribute('transform', mstr(seeM(i, t)));
+  });
+}
+
+/* ---------- the three letters morph into three circles (flubber) ---------- */
+const MORPH0 = 6.917, MORPH1 = 6.958;   // the letters pivot (anticipation), then snap into circles
+const CIRC_R = mono([[6.958, 315], [7.0, 320.5], [7.042, 322.5], [7.083, 324], [7.125, 324.5], [7.167, 325], [7.458, 325], [7.5, 326.5]]);
+const C1X = mono([[6.958, 319], [7.0, 323.5], [7.042, 324.5], [7.083, 326], [7.167, 327]]);
+const C3X = mono([[6.958, 1557], [7.0, 1572.5], [7.042, 1579.5], [7.083, 1585], [7.125, 1587.5], [7.167, 1590]]);
+const morphPaths = [], morphFns = [];
+function buildMorphs() {
+  const targets = [[C1X(MORPH1), 540], [(C1X(MORPH1) + C3X(MORPH1)) / 2, 540], [C3X(MORPH1), 540]];
+  see.forEach((L, i) => {
+    const ring = polyPts(FIG, POLY_FIG, L.ch, seeM(i, MORPH0))[0];
+    morphFns.push(flubber.toCircle(ring, targets[i][0], targets[i][1], CIRC_R(MORPH1), { maxSegmentLength: 6 }));
+    morphPaths.push(el('path', { fill: C.white }, $('morphs')));
+  });
+}
+/* stacking: the spacing tightens, the row turns 90°, the circles shrink down to the lights */
+const SPREAD = mono([[7.25, 631.5], [7.292, 630], [7.333, 620.5], [7.375, 604.5], [7.417, 573.5], [7.458, 518], [7.5, 393.5], [7.542, 123.5], [7.583, 228.5], [7.625, 262.5], [7.667, 274.5]]);
+const STACK_ROT = mono([[7.5, 0], [7.521, 50], [7.542, 88], [7.583, 90]]);
+const R_MID = mono([[7.5, 326.5], [7.542, 298], [7.583, 183], [7.625, 144.5], [7.667, 122.5]]);
+const R_END = mono([[7.5, 326.5], [7.542, 240], [7.583, 183], [7.625, 144.5], [7.667, 122.5]]);
+const STACK_Y = mono([[7.5, 540], [7.542, 543.5], [7.583, 538.5], [7.625, 541.5]]);
+const circles = [0, 1, 2].map(() => el('circle', { fill: C.white }, $('circles')));
+function sceneF(t) {
+  const morphing = t >= MORPH0 && t < MORPH1;
+  show($('morphs'), morphing); show($('circles'), t >= MORPH1);
+  if (morphing) { const p = prog(t, MORPH0, MORPH1, 'power1.inOut'); morphFns.forEach((f, i) => morphPaths[i].setAttribute('d', f(p))); return; }
+  if (t < 7.25) {
+    const r = CIRC_R(t), x1 = C1X(t), x3 = C3X(t);
+    [x1, (x1 + x3) / 2, x3].forEach((x, i) => set(circles[i], { cx: x, cy: 540, r }));
+  } else if (t < 7.5) {
+    const d = SPREAD(t), r = CIRC_R(t);
+    [-1, 0, 1].forEach((k, i) => set(circles[i], { cx: 958.5 + k * d, cy: 540, r }));
+  } else {
+    const d = SPREAD(t), a = STACK_ROT(t) * Math.PI / 180, cy = STACK_Y(t);
+    [-1, 0, 1].forEach((k, i) => set(circles[i], { cx: 958.5 + k * d * Math.cos(a), cy: cy + k * d * Math.sin(a), r: k ? R_END(t) : R_MID(t) }));
+  }
+}
+
+/* ================= SHOTS 10-11: the traffic light, the bottom lights up in blue (7.58 -> 8.65 s) ================= */
+const LIGHT_Y = [267, 541.5, 816];
+const lights = LIGHT_Y.map(y => el('circle', { cx: 959, cy: y, r: 122.5, stroke: C.white, 'stroke-width': 4 }, $('lights')));
+const BOX_OP = mono([[7.562, 0], [7.583, 0.25], [7.625, 1]]);
+const FILL_TOP = t => t < 7.646 ? C.white : t < 7.688 ? '#A20000' : t < 7.729 ? '#F50200' : C.red;
+const FILL_OFF = t => t < 7.646 ? C.white : t < 7.688 ? '#6A6A66' : C.black;
+function sceneG(t) {
+  $('tlBox').setAttribute('stroke-opacity', BOX_OP(t).toFixed(3));
+  const on = t >= 7.646;
+  show($('lights'), on);
+  if (on) {
+    lights[0].setAttribute('fill', FILL_TOP(t)); lights[1].setAttribute('fill', FILL_OFF(t));
+    lights[2].setAttribute('fill', t >= 8.146 ? C.light : FILL_OFF(t));
+  }
+  set($('glowR'), { cx: 959, cy: 267, r: 128, 'fill-opacity': 0.45 * prog(t, 7.66, 7.72, 'power1.out') });
+  const fb = t >= 8.146 ? 0.42 + 0.3 * (1 - prog(t, 8.146, 8.35, 'power2.out')) : 0;   // flash then glow
+  set($('glowB'), { cx: 959, cy: 816, r: 128, 'fill-opacity': fb });
+}
+
+/* ================= SHOTS 11-12: NOTICE, the eye closes into a line (8.54 -> 10 s) ================= */
+const NOTICE_BOX = [['N', 4, 360], ['O', 394, 732], ['T', 729, 1088], ['I', 1105, 1234], ['C', 1269, 1609], ['E', 1633, 1913]];
+const notice = NOTICE_BOX.map(([ch, x0, x1]) => ({ ch, e: glyph($('noticeText'), 'lg', ch), M: fitCap(LG, ch, x0, x1, 23.5, 1073.5) }));
+notice.forEach(L => L.e.setAttribute('transform', mstr(L.M)));
+const NOTICE_OP = [
+  steps([[0, 0], [8.521, 1]]), mono([[8.562, 0], [8.583, 0.72], [8.625, 1]]), steps([[0, 0], [8.646, 1]]),
+  steps([[0, 0], [8.687, 1]]), mono([[8.729, 0], [8.75, 0.78], [8.792, 1]]), steps([[0, 0], [8.812, 1]])
+];
+const noticeRings = notice.map(L => polyPts(LG, POLY_LG, L.ch, L.M));
+const noticePaths = notice.map(() => el('path', {}, $('noticePoly')));   // one path per letter: overlaps add up
+const WARP0 = 8.958;
+/* the letters tighten around the T (slide sampled on the stems), then bulge */
+const N_P = mono([[8.958, 0], [9.0, 0.034], [9.042, 0.063], [9.083, 0.101], [9.125, 0.15], [9.167, 0.285], [9.208, 0.391], [9.25, 0.531], [9.292, 0.763], [9.333, 0.899],
+  [9.375, 0.957], [9.417, 0.99], [9.458, 1]]);
+const N_SHIFT = [106, 77.7, 7, -61.5, -97.3, -124], N_W = [1, 0.955, 0.93, 0.93, 0.94, 0.98];
+/* envelope: the word gradually takes the almond's shape (0 = straight, 1 = almond height at each x) */
+const ENVELOPE = mono([[9.083, 0], [9.125, 0.06], [9.167, 0.11], [9.208, 0.16], [9.25, 0.3], [9.292, 0.6], [9.333, 0.85], [9.417, 1]]);
+/* the almond arrives slightly too large, settles on the eye from the start, then closes */
+const ALM_A = mono([[9.229, 1.33], [9.25, 1.25], [9.292, 1.13], [9.333, 1.04], [9.375, 1.015], [9.417, 1]]);
+const ALM_H = mono([[9.417, 512], [9.458, 497], [9.5, 469], [9.542, 405], [9.583, 225], [9.625, 64.5], [9.667, 26.5], [9.708, 9], [9.75, 0]]);
+function sceneH(t) {
+  const warp = t >= WARP0;
+  show($('noticeText'), !warp);
+  notice.forEach((L, i) => { const op = NOTICE_OP[i](t); show(L.e, op > 0.004); L.e.setAttribute('fill-opacity', op.toFixed(3)); });
+  const almondOn = t >= 9.229;
+  show($('almondRim'), almondOn);
+  let A = 1, H = 0;
+  if (almondOn) {
+    A = ALM_A(t); H = t < 9.417 ? 512 * A : ALM_H(t);
+    const W = 960 * A;
+    $('almondClipPath').setAttribute('d', almond(960, 545, W, H, H));
+    $('almondRim').setAttribute('d', almond(960, 545, W, Math.max(0, H - 3), Math.max(0, H - 3)));
+  }
+  const k = ENVELOPE(t), Hc = t < 9.417 ? 512 * ALM_A(t) : ALM_H(t), sy = lerp(1, Math.min(1, Hc / 525), k), We = 960 * ALM_A(t);
+  show($('noticePoly'), warp && sy > 0.002);
+  if (!warp || sy <= 0.002) return;
+  const P = N_P(t), cy = 546.5;
+  noticeRings.forEach((letter, i) => {
+    const c = (NOTICE_BOX[i][1] + NOTICE_BOX[i][2]) / 2, dx = N_SHIFT[i] * P, w = lerp(1, N_W[i], P);
+    noticePaths[i].setAttribute('d', ringsToD(letter.map(ring => ring.map(([x, y]) => {
+      const X = c + dx + (x - c) * w, u = Math.min(1, Math.abs(X - 960) / We);
+      return [X, cy + (y - cy) * sy * (1 - k * Math.pow(u, 2.1))];
+    }))));
+  });
+  const poly = $('noticePoly');
+  if (almondOn) poly.setAttribute('clip-path', 'url(#almondClip)'); else poly.removeAttribute('clip-path');
+}
+
+/* ================= GLOBAL RENDER ================= */
+const DUR = 10;
+const SCENES = [
+  ['sA', 0, 1.75, sceneA], ['sB', 1.75, 2.625, sceneB], ['sC', 2.625, 4.354, sceneC], ['sD', 4.333, 5.354, sceneD],
+  ['sE', 5.333, 7.042, sceneE], ['sF', 6.875, 7.646, sceneF], ['sG', 7.583, 8.646, sceneG], ['sH', 8.521, 10.01, sceneH]
+];
+function render(t) {
+  t = clamp(t, 0, DUR);
+  for (const [id, a, b, fn] of SCENES) { const on = t >= a && t < b; show($(id), on); if (on) fn(t); }
+  // the circles go under the light as soon as it appears; the final dot stays visible to the end
+}
+
+/* ---------- GSAP clock ---------- */
+const clock = { t: 0 };
+const tl = gsap.timeline({ repeat: -1, paused: true });
+tl.fromTo(clock, { t: 0 }, { t: DUR, duration: DUR, ease: 'none', onUpdate: () => render(clock.t) });
+window.anim = {
+  tl, duration: DUR,
+  seek(t) { t = clamp(t, 0, DUR); tl.pause(); tl.time(t, true); render(t); },
+  play(from = 0) { tl.restart(); tl.time(from); tl.play(); },
+  pause() { tl.pause(); }
+};
+const qs = new URLSearchParams(location.search);
+render(0);
+Promise.all([document.fonts.load('800 100px "Figtree"', 'LOKSE.'), document.fonts.load('400 100px "League Gothic"', 'CLOSERNTI'), document.fonts.ready]).then(() => {
+  buildMorphs();
+  if (qs.has('t')) anim.seek(parseFloat(qs.get('t')));
+  else if (!qs.has('external')) tl.play(0);
+  document.documentElement.dataset.ready = '1';
+});
+})();
+</script>
+</body>
+</html>

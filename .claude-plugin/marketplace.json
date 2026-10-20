@@ -1,0 +1,14 @@
+{
+  "name": "motion2code",
+  "description": "Motion design video to code skills for coding agents",
+  "owner": { "name": "lovisdotio", "url": "https://github.com/lovisdotio" },
+  "plugins": [
+    {
+      "name": "motion2code",
+      "source": "./",
+      "description": "Rebuild a motion design video as looping SVG + GSAP code, verified frame by frame against the source",
+      "category": "development",
+      "tags": ["svg", "gsap", "motion-design", "animation", "scrolltrigger"]
+    }
+  ]
+}

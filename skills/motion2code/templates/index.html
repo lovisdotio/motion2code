@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop in code</title>
+<link rel="icon" href="data:,">
+<!-- Fonts: the closest Google Font, subset with &text= to the exact letters used, display=block (no fallback flash) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@900&display=block&text=LOP" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #D4A5CE; overflow: hidden }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block }
+  text { font-family: 'Rubik', sans-serif; font-weight: 900 }
+</style>
+</head>
+<body>
+<!--
+  Contract (motion2code):
+  - one stage at the source resolution (viewBox 0 0 1920 1080, or 0 0 1080 1920 for vertical sources)
+  - window.anim = { tl, duration, seek(t), play(from), pause() }
+  - ?t=6.5 freezes at 6.5 s, ?external=1 does not autoplay (compare.html / renderers drive it)
+  - <html data-ready="1"> once fonts are loaded and the first frame is drawn
+  - with no parameter: plays by itself and loops; frame(duration) === frame(0)
+  Palette sampled from the source with scripts/palette.py. Flat fills only.
+-->
+<svg id="stage" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs><clipPath id="frame"><rect width="1920" height="1080"/></clipPath></defs>
+  <g clip-path="url(#frame)">
+    <rect id="bg" width="1920" height="1080" fill="#D4A5CE"/>
+    <!-- shapes are drawn around their own origin (0,0), then placed with GSAP x/y: easy to retime and reuse -->
+    <g id="blob" transform="translate(960 560)">
+      <rect id="blobShape" x="-170" y="-170" width="340" height="340" rx="170" fill="#018322" stroke="#F9F9F9" stroke-width="18"/>
+      <g id="eyes" fill="#111">
+        <circle cx="-60" cy="-30" r="22"/><circle cx="60" cy="-30" r="22"/>
+      </g>
+    </g>
+    <g id="word" fill="#CA003B" stroke="#F9F9F9" stroke-width="14" paint-order="stroke" font-size="260" text-anchor="middle">
+      <text class="l" x="660" y="1000">L</text><text class="l" x="880" y="1000">O</text>
+      <text class="l" x="1100" y="1000">O</text><text class="l" x="1300" y="1000">P</text>
+    </g>
+  </g>
+</svg>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(() => {
+const DUR = 6;                       // = source duration (ffprobe), 10 or 15 s for most clips
+const C = { lilac: '#D4A5CE', green: '#018322', cherry: '#CA003B', cream: '#F6EECD', white: '#F9F9F9' };
+
+// The opening frame, defined once. The last shot tweens back to exactly these values: that is the loop.
+const OPEN = {
+  blob: { x: 960, y: 560, scaleX: 1, scaleY: 1, rotation: 0 },
+  shape: { attr: { rx: 170 }, fill: C.green },
+  bg: { fill: C.lilac },
+  letters: { scale: 0, y: 0, transformOrigin: '50% 100%' }
+};
+
+function setOpening() {
+  gsap.set('#blob', OPEN.blob);
+  gsap.set('#blobShape', OPEN.shape);
+  gsap.set('#bg', OPEN.bg);
+  gsap.set('#word .l', OPEN.letters);
+}
+
+// ---------- one timeline = the only clock ----------
+const tl = gsap.timeline({ paused: true, repeat: -1, defaults: { ease: 'power2.inOut' } });
+
+function build() {
+  setOpening();
+  // shot 1 (0.0-1.2 s): anticipation squash, then a hop with stretch
+  tl.to('#blob', { scaleX: 1.18, scaleY: 0.82, duration: 0.35, ease: 'power2.in' }, 0.4)
+    .to('#blob', { y: 380, scaleX: 0.88, scaleY: 1.14, duration: 0.35, ease: 'power3.out' }, 0.75)
+  // shot 2 (1.1-2.4 s): lands, squashes, background flips, the circle becomes a rounded square
+    .to('#blob', { y: 560, scaleX: 1, scaleY: 1, duration: 0.3, ease: 'power2.in' }, 1.1)
+    .to('#blob', { scaleX: 1.22, scaleY: 0.8, duration: 0.08, ease: 'none' }, 1.4)
+    .to('#blob', { scaleX: 1, scaleY: 1, duration: 0.5, ease: 'elastic.out(1.1, 0.4)' }, 1.48)
+    .to('#bg', { fill: C.cream, duration: 0.01 }, 1.4)
+    .to('#blobShape', { attr: { rx: 48 }, fill: C.cherry, duration: 0.45, ease: 'back.out(2)' }, 1.45)
+  // shot 3 (2.4-4.2 s): the word pops letter by letter, the shape spins once
+    .to('#word .l', { scale: 1, duration: 0.4, ease: 'back.out(3)', stagger: 0.12 }, 2.4)
+    .to('#blob', { rotation: 360, duration: 1.2, ease: 'power3.inOut' }, 2.6)
+    .to('#blob', { y: 420, duration: 0.6 }, 3.0)
+  // shot 4 (4.4-6.0 s): everything returns to OPEN, hard stop on the opening frame
+    .to('#word .l', { scale: 0, duration: 0.3, ease: 'back.in(2)', stagger: { each: 0.06, from: 'end' } }, 4.4)
+    .to('#bg', { fill: C.lilac, duration: 0.01 }, 5.0)
+    .to('#blobShape', { ...OPEN.shape, duration: 0.45, ease: 'back.out(1.6)' }, 5.0)
+    .to('#blob', { ...OPEN.blob, rotation: 360, duration: 0.6, ease: 'power3.out' }, 5.0)
+    .set('#blob', { rotation: 0 }, 5.6)        // 360 == 0 visually: reset so the wrap is exact
+    .set({}, {}, DUR);                          // pad the timeline to exactly DUR
+  // Procedural parts (particles, morphs, physics) go in draw(t), called with the same clock:
+  tl.eventCallback('onUpdate', () => draw(tl.time()));
+}
+
+function draw(t) {
+  // pure function of t: no Math.random at draw time (precompute seeded values in build), no hidden state
+}
+
+window.anim = {
+  tl, duration: DUR,
+  seek(t) { t = Math.min(DUR, Math.max(0, t)); tl.pause(); tl.time(t, false); draw(t); },
+  play(from = 0) { tl.time(from); tl.play(); },
+  pause() { tl.pause(); }
+};
+
+const qs = new URLSearchParams(location.search);
+const fontsReady = Promise.race([
+  Promise.all([document.fonts.load('900 100px "Rubik"', 'LOOP'), document.fonts.ready]),
+  new Promise(r => setTimeout(r, 4000))
+]);
+fontsReady.then(() => {
+  build();
+  anim.seek(0);
+  if (qs.has('t')) anim.seek(parseFloat(qs.get('t')));
+  else if (!qs.has('external')) tl.play(0);
+  document.documentElement.dataset.ready = '1';
+});
+})();
+</script>
+</body>
+</html>

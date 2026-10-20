@@ -1,0 +1,11 @@
+{
+  "name": "motion2code",
+  "displayName": "Motion2Code",
+  "version": "1.0.0",
+  "description": "Motion design video to code: rebuild an AI-generated (or any) flat motion clip as editable SVG + GSAP that loops seamlessly, checked side by side against the source, and optionally as a real interactive site with ScrollTrigger. Scripts to study the video, render frame by frame, compare and check.",
+  "author": { "name": "Lovis Odin", "url": "https://github.com/lovisdotio" },
+  "homepage": "https://github.com/lovisdotio/motion2code",
+  "repository": "https://github.com/lovisdotio/motion2code",
+  "license": "MIT",
+  "keywords": ["svg", "gsap", "motion-design", "animation", "video-to-code", "scrolltrigger", "lottie-alternative", "web-animation"]
+}

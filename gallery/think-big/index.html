@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Think Big</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=League+Gothic:wdth@75..100&display=block&text=THINKBGSARML" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#007BE4;overflow:hidden}
+  svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  text{text-rendering:geometricPrecision}
+  /* THINK and BIG: Archivo variable, wdth 70 / wght 900; START SMALL: League Gothic, wdth 92 */
+  .ar{font-family:'Archivo',sans-serif;font-weight:900;font-stretch:70%;font-variation-settings:"wdth" 70,"wght" 900}
+  .lg{font-family:'League Gothic',sans-serif;font-weight:400;font-stretch:92%;font-variation-settings:"wdth" 92}
+</style>
+</head>
+<body>
+<svg id="stage" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="frame"><rect width="1920" height="1080"/></clipPath>
+    <!-- START SMALL rises out of the horizon line: nothing exists below the baseline -->
+    <clipPath id="rise"><rect x="-200" y="-200" width="2320" height="940"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="1920" height="1080" fill="#007BE4"/>
+    <!-- the white paper: full frame, or a circular iris that opens / closes -->
+    <circle id="paper" cx="960" cy="540" r="0" fill="#FDFCF8"/>
+
+    <!-- ===== 1–2. the square, THINK, the I that becomes a bar ===== -->
+    <g id="s2"><g id="cam2">
+      <g id="think"></g>
+      <rect id="ifill" x="903" y="374" width="95.5" height="0" fill="#F4E001"/>
+      <rect id="sq" fill="#F4E001"/>
+    </g></g>
+    <polygon id="bar" fill="#F4E001" display="none"/>
+
+    <!-- ===== 3. BIG ===== -->
+    <g id="s3" display="none"><g id="cam3"><g id="big"></g></g></g>
+
+    <!-- ===== 4–5. horizon, START SMALL ===== -->
+    <g id="s4" display="none">
+      <rect id="line" fill="#007AE0"/>
+      <g clip-path="url(#rise)"><g id="start"></g></g>
+    </g>
+
+    <!-- the dot: BIG's period, full-frame disc, then sun -->
+    <circle id="dot" fill="#F4E001" display="none"/>
+    <!-- the final square: wipe over START SMALL, then back to the small square from the start -->
+    <rect id="wipe" fill="#F4E001" display="none"/>
+  </g>
+</svg>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(() => {
+'use strict';
+const C = { blue: '#007BE4', ink: '#007AE0', yellow: '#F4E001', paper: '#FDFCF8' };
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const show = (e, on) => e.setAttribute('display', on ? 'inline' : 'none');
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const f2 = v => v.toFixed(2);
+const zoomAt = (cx, cy, s) => `translate(${f2(cx)} ${f2(cy)}) scale(${s.toFixed(5)}) translate(${f2(-cx)} ${f2(-cy)})`;
+function rect(e, x0, x1, y0, y1) { e.setAttribute('x', f2(x0)); e.setAttribute('y', f2(y0)); e.setAttribute('width', f2(Math.max(0, x1 - x0))); e.setAttribute('height', f2(Math.max(0, y1 - y0))); }
+
+/* Curves sampled frame by frame from the video (24 fps), smoothed with monotone Hermite:
+   the original's anticipations, overshoots and whip moves are in the data. */
+function mono(pts) {
+  const n = pts.length, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), d = [], m = [];
+  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+  m[0] = d[0]; m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i + 1] / d[i], h = a * a + b * b;
+    if (h > 9) { const k = 3 / Math.sqrt(h); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; }
+  }
+  return t => {
+    if (t <= xs[0]) return ys[0];
+    if (t >= xs[n - 1]) return ys[n - 1];
+    let i = 0; while (t > xs[i + 1]) i++;
+    const h = xs[i + 1] - xs[i], s = (t - xs[i]) / h, s2 = s * s, s3 = s2 * s;
+    return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (3 * s2 - 2 * s3) * ys[i + 1] + (s3 - s2) * h * m[i + 1];
+  };
+}
+
+/* ---------- type: each letter is placed exactly in its ink box measured on the video ----------
+   INK = glyph ink box [left, right, top, bottom] at 1000 px (fontTools, same instance as Google Fonts). */
+const INK_AR = { T: [16.7, 509.5, -688, 0], H: [47.2, 533.2, -688, 0], I: [47.2, 238.2, -688, 0], N: [47.2, 537.2, -688, 0], K: [47.2, 579, -688, 0], B: [47.2, 540.6, -688, 0], G: [33.2, 563.2, -700, 12] };
+const INK_LG = { S: [12.9, 283.5, -743, 8], T: [10, 287.8, -735, 0], A: [15.1, 332.6, -735, 0], R: [33.6, 301.1, -735, 0], M: [33.6, 393.1, -735, 0], L: [33.6, 258.4, -735, 0] };
+function glyph(parent, ch, cls, fill) { const e = el('text', { x: 0, y: 0, 'font-size': 1000, fill, class: cls }, parent); e.textContent = ch; return e; }
+/* box = [x0, x1, top, bottom] on screen */
+function fit(e, ink, box) {
+  const [l, r, t, b] = ink, sx = (box[1] - box[0]) / (r - l), sy = (box[3] - box[2]) / (b - t);
+  e.setAttribute('transform', `matrix(${sx.toFixed(5)} 0 0 ${sy.toFixed(5)} ${f2(box[0] - sx * l)} ${f2(box[2] - sy * t)})`);
+}
+
+/* =============== SHOTS 1–2: the square, THINK (0 -> 2.08 s) =============== */
+// square (THINK scene coordinates; neutral camera before 1.6 s)
+const SQW = mono([[0, 89], [0.042, 90], [0.083, 91], [0.125, 92], [0.167, 92.5], [0.208, 96], [0.25, 100], [0.292, 104], [0.333, 112], [0.375, 120], [0.417, 132], [0.458, 150],
+  [0.5, 200], [0.542, 275], [0.583, 304], [0.625, 320], [0.667, 332], [0.708, 340], [0.75, 346], [0.792, 352], [0.833, 352.5], [0.875, 352], [0.917, 344], [0.958, 320],
+  [1.0, 240], [1.042, 140], [1.083, 107], [1.125, 95], [1.167, 94]]);
+const SQH = mono([[0, 91], [0.125, 94], [0.208, 98], [0.25, 102], [0.292, 107], [0.333, 114], [0.375, 122], [0.417, 134], [0.458, 152], [0.5, 202], [0.542, 278], [0.583, 306],
+  [0.625, 322], [0.667, 334], [0.708, 343], [0.75, 352], [0.792, 356], [0.833, 356], [0.875, 354], [0.917, 348], [0.958, 326], [1.0, 241], [1.042, 150], [1.083, 126], [1.125, 99], [1.167, 97]]);
+const SQX = mono([[0, 960], [0.958, 960], [1.0, 959.5], [1.042, 957.5], [1.083, 953], [1.125, 951], [1.167, 950.75]]);
+// rises to become the dot of the i, then drops into the stem
+const SQY = mono([[0, 539.5], [0.958, 539], [1.0, 535], [1.042, 518.5], [1.083, 470], [1.125, 413.5], [1.167, 362.5], [1.208, 343], [1.25, 328.5], [1.292, 317.5], [1.333, 311.5],
+  [1.375, 307], [1.417, 302.5], [1.458, 299.5], [1.5, 297.5], [1.542, 296.5], [1.625, 295.5], [1.667, 294.5], [1.75, 294.5], [1.792, 297.5], [1.833, 306], [1.875, 314.5],
+  [1.917, 329.5], [1.958, 355.5], [2.0, 389.5], [2.042, 417.5], [2.083, 422.5]]);
+// THINK: the letters slam into the center, stacked, then spread out to their kerning
+const TB = { T: [372, 606], H: [620, 872], I: [903, 998.5], N: [1030, 1262], K: [1293, 1559] }, T_TOP = 374, T_BOT = 724, T_CY = 549, I_CX = 950.75;
+const TS = mono([[1.05, 0.34], [1.083, 0.62], [1.125, 0.76], [1.167, 0.865], [1.208, 0.908], [1.25, 0.934], [1.292, 0.954], [1.333, 0.968], [1.375, 0.977], [1.417, 0.989],
+  [1.458, 0.993], [1.5, 0.997], [1.542, 1]]);
+const TSP = mono([[1.05, 0], [1.083, 0.015], [1.125, 0.28], [1.167, 0.53], [1.208, 0.656], [1.25, 0.753], [1.292, 0.822], [1.333, 0.875], [1.375, 0.917], [1.417, 0.945],
+  [1.458, 0.97], [1.5, 0.984], [1.542, 0.994], [1.583, 1]]);
+// while diving into the I, the other letters are pushed out of frame
+const PUSH = mono([[2.0, 0], [2.042, 6], [2.083, 36], [2.125, 85], [2.167, 115], [2.208, 150], [2.25, 200]]);
+// the yellow flows from the dot down the stem of the I
+const FILL = mono([[1.9, 374], [1.917, 378], [1.958, 418], [2.0, 502], [2.042, 619], [2.083, 724]]);
+// camera dive into the I
+const Z2 = mono([[1.583, 1], [1.667, 1], [1.708, 1.004], [1.75, 1.013], [1.792, 1.03], [1.833, 1.063], [1.875, 1.112], [1.917, 1.198], [1.958, 1.381], [2.0, 1.82],
+  [2.042, 2.65], [2.083, 3.5], [2.125, 4.05], [2.167, 4.7], [2.208, 4.94], [2.25, 5.08]]);
+const CY2 = mono([[1.6, 536], [2.0, 536], [2.042, 541], [2.083, 540], [2.125, 532], [2.2, 520]]);
+
+const TL = {};
+for (const ch of 'THINK') TL[ch] = glyph($('think'), ch, 'ar', C.ink);
+function scene2(t) {
+  const z = Z2(t);
+  $('cam2').setAttribute('transform', t < 1.6 ? '' : zoomAt(955, CY2(t), z));
+  const inLetters = t >= 1.05;
+  show($('think'), inLetters);
+  if (inLetters) {
+    const s = TS(t), sp = TSP(t), push = PUSH(t);
+    for (const ch of 'THINK') {
+      const [x0, x1] = TB[ch], cx0 = (x0 + x1) / 2, sign = ch === 'I' ? 0 : (cx0 < I_CX ? -1 : 1);
+      const cx = I_CX + (cx0 - I_CX) * sp + sign * push, hw = (x1 - x0) / 2 * s, hh = (T_BOT - T_TOP) / 2 * s;
+      fit(TL[ch], INK_AR[ch], [cx - hw, cx + hw, T_CY - hh, T_CY + hh]);
+    }
+    show(TL.I, t < 2.083);
+  }
+  const inFill = t >= 1.9 && t < 2.083;
+  show($('ifill'), inFill);
+  if (inFill) $('ifill').setAttribute('height', f2(FILL(t) - 374));
+  const inSq = t < 2.083;
+  show($('sq'), inSq);
+  if (inSq) { const w = SQW(t), h = SQH(t), x = SQX(t), y = SQY(t); rect($('sq'), x - w / 2, x + w / 2, y - h / 2, y + h / 2); }
+}
+
+/* =============== SHOT 3: the bar leans left, then shoots right (2.08 -> 3.08 s) =============== */
+// edges sampled at y = 540 (screen px), slant (dx/dy) and bar top
+const BXL = mono([[2.083, 778], [2.125, 754], [2.167, 720], [2.208, 708], [2.25, 700], [2.292, 694], [2.333, 692], [2.375, 692], [2.417, 700], [2.458, 712], [2.5, 730],
+  [2.542, 752], [2.583, 782], [2.625, 818], [2.667, 868], [2.708, 934], [2.75, 1018], [2.792, 1140], [2.833, 1322], [2.875, 1532], [2.917, 1678], [2.958, 1768],
+  [3.0, 1830], [3.042, 1868], [3.083, 1892]]);
+const BW = mono([[2.083, 333], [2.125, 385], [2.167, 447], [2.208, 469], [2.25, 483], [2.292, 495], [2.333, 503], [2.375, 507], [2.458, 509], [2.625, 509], [2.667, 505],
+  [2.708, 501], [2.75, 501], [2.792, 499], [2.833, 493], [2.875, 490], [3.1, 490]]);
+const BK = mono([[2.083, -0.017], [2.125, -0.005], [2.167, 0.037], [2.208, 0.05], [2.25, 0.0615], [2.292, 0.069], [2.333, 0.071], [2.375, 0.075], [2.417, 0.077], [2.5, 0.077],
+  [2.542, 0.075], [2.583, 0.076], [2.625, 0.077], [2.667, 0.077], [2.708, 0.075], [2.75, 0.071], [2.792, 0.063], [2.833, 0.049], [2.875, 0.023], [2.917, -0.004],
+  [2.958, -0.015], [3.0, -0.019], [3.042, -0.023], [3.083, -0.025]]);
+const BTOP = mono([[2.083, 58], [2.125, 70], [2.167, 30], [2.208, 4], [2.25, -60], [2.3, -200]]);
+function bar(t) {
+  const xl = BXL(t), xr = xl + BW(t), k = BK(t), yt = BTOP(t), yb = 1300;
+  const at = (x, y) => `${f2(x + k * (y - 540))},${f2(y)}`;
+  $('bar').setAttribute('points', `${at(xl, yt)} ${at(xr, yt)} ${at(xr, yb)} ${at(xl, yb)}`);
+}
+
+/* =============== SHOT 4: BIG, and its dot (3.08 -> 5.17 s) =============== */
+const BIGB = { B: [61, 746, 51, 1027], I: [800, 1061, 51, 1027], G: [1128, 1857, 28, 1053] };
+for (const ch of 'BIG') fit(glyph($('big'), ch, 'ar', C.paper), INK_AR[ch], BIGB[ch]);
+// horizontal dolly (enters from the right, holds, then whips to the left)
+const DX3 = mono([[3.083, 571], [3.125, 407], [3.167, 227], [3.208, 173], [3.25, 132], [3.292, 99], [3.333, 75], [3.375, 53], [3.417, 38], [3.458, 25], [3.5, 15],
+  [3.542, 8], [3.583, 3], [3.625, 1], [3.667, 0], [3.75, 0], [3.792, -2], [3.833, -10], [3.875, -21], [3.917, -39], [3.958, -64], [4.0, -98], [4.042, -141],
+  [4.083, -194], [4.125, -274], [4.167, -696], [4.208, -877], [4.25, -977], [4.292, -1040], [4.333, -1086], [4.375, -1122], [4.417, -1148], [4.458, -1170],
+  [4.5, -1189], [4.542, -1204], [4.583, -1217], [4.625, -1230], [4.667, -1240], [4.708, -1248], [4.75, -1254], [4.8, -1258], [4.9, -1262], [5.0, -1264], [5.2, -1266]]);
+const Z3 = mono([[4.5, 1], [4.542, 1.01], [4.583, 1.025], [4.625, 1.04], [4.667, 1.055], [4.708, 1.07], [4.75, 1.095], [4.792, 1.14], [4.833, 1.19], [4.875, 1.28],
+  [4.917, 1.39], [4.958, 1.53], [5.0, 1.72], [5.042, 2.0], [5.083, 2.5], [5.125, 3.3], [5.167, 4.3]]);
+function scene3(t) {
+  $('cam3').setAttribute('transform', `${zoomAt(1005, 560, Z3(t))} translate(${f2(DX3(t))} 0)`);
+}
+
+/* the yellow dot: enters from the right at the foot of the G, shoots into the void, the camera dives into it,
+   it fills the frame, then pulls back and rises as the sun */
+const DOTX = mono([[3.55, 2140], [3.625, 2023.5], [3.75, 2023.5], [3.792, 2021.5], [3.833, 2013.5], [3.875, 2001.5], [3.917, 1983.5], [3.958, 1959.5], [4.0, 1927.5],
+  [4.042, 1883.5], [4.083, 1827.5], [4.125, 1751.5], [4.167, 1424.5], [4.208, 1308.5], [4.25, 1224.5], [4.292, 1168.5], [4.333, 1124], [4.375, 1088], [4.417, 1059.5],
+  [4.458, 1036], [4.5, 1015.5], [4.542, 1001], [4.583, 987.5], [4.625, 978.5], [4.667, 972.5], [4.708, 968], [4.75, 966.5], [4.792, 963.5], [4.833, 962.5],
+  [4.875, 961.5], [4.958, 961.5], [5.0, 960.5], [7.2, 960.5]]);
+const DOTY = mono([[3.6, 936], [4.167, 935], [4.208, 904.5], [4.25, 805.5], [4.292, 751.5], [4.333, 715], [4.375, 683.5], [4.417, 660.5], [4.458, 641.5], [4.5, 623.5],
+  [4.542, 609.5], [4.583, 597.5], [4.625, 587.5], [4.667, 578.5], [4.708, 570.5], [4.75, 563.5], [4.792, 556.5], [4.833, 551.5], [4.875, 547.5], [4.917, 542.5],
+  [4.958, 540.5], [5.0, 539], [5.5, 540], [5.583, 539.5], [5.667, 538.5], [5.75, 538], [5.833, 539.5], [5.875, 541.5], [5.917, 543.5], [5.958, 547.5], [6.0, 552],
+  [6.042, 560.5], [6.083, 572.5], [6.125, 578], [6.167, 469.5], [6.208, 445.5], [6.25, 428.5], [6.292, 414.5], [6.333, 403.5], [6.375, 394.5], [6.417, 386.5],
+  [6.458, 381.5], [6.5, 376], [6.542, 371.5], [6.583, 368.5], [6.625, 365.5], [6.667, 363.5], [6.708, 361.5], [6.75, 360], [6.792, 359.5], [6.833, 359], [7.2, 359]]);
+const DOTD = mono([[3.6, 211], [4.125, 211], [4.167, 209], [4.25, 205], [4.333, 204], [4.417, 203], [4.583, 203], [4.625, 205], [4.667, 209], [4.708, 214], [4.75, 221],
+  [4.792, 231], [4.833, 241], [4.875, 259], [4.917, 283], [4.958, 311], [5.0, 349], [5.042, 409], [5.083, 505], [5.125, 669], [5.167, 861], [5.208, 909], [5.25, 942],
+  [5.292, 971], [5.333, 991], [5.375, 1007], [5.417, 1021], [5.458, 1031], [5.5, 1039], [5.542, 1043], [5.583, 1044], [5.625, 1043], [5.667, 1040], [5.708, 1033],
+  [5.75, 1023], [5.792, 1003], [5.833, 983], [5.875, 955], [5.917, 917], [5.958, 872], [6.0, 813], [6.042, 739], [6.083, 627], [6.125, 481], [6.167, 357], [6.208, 342],
+  [6.25, 329], [6.292, 320], [6.333, 315], [6.375, 311], [6.417, 307], [6.458, 303], [6.5, 301], [6.542, 299], [6.583, 298], [6.625, 297], [6.667, 296], [6.708, 295],
+  [7.125, 295], [7.146, 190], [7.167, 0]]);
+
+/* the paper: white iris opening behind the dot (5.1 s) and closing on the square (8.9 s) */
+const IRIS_OPEN = mono([[5.104, 0], [5.125, 300], [5.167, 663], [5.208, 773], [5.25, 853], [5.292, 920], [5.333, 972], [5.375, 1013], [5.417, 1045], [5.458, 1070],
+  [5.5, 1090], [5.542, 1110], [5.6, 1200]]);
+const IRIS_CLOSE = mono([[8.85, 1250], [8.875, 1098], [8.917, 1075], [8.958, 1044], [9.0, 1003], [9.042, 940], [9.083, 858], [9.125, 727], [9.167, 243], [9.2, 120], [9.208, 0]]);
+function paperR(t) {
+  if (t < 1) return 0;
+  if (t < 3.083) return 2400;
+  if (t < 5.104) return 0;
+  if (t < 5.6) return IRIS_OPEN(t);
+  if (t < 8.85) return 2400;
+  if (t < 9.208) return IRIS_CLOSE(t);
+  return 0;
+}
+
+/* =============== SHOTS 5–6: sun, horizon, START SMALL (5.5 -> 8.8 s) =============== */
+const LINEY = mono([[5.85, 1092], [5.875, 1075], [5.917, 1059], [5.958, 1038], [6.0, 1008], [6.042, 973], [6.083, 921.5], [6.125, 853], [6.167, 799.5], [6.208, 784.5],
+  [6.25, 773], [6.292, 765.5], [6.333, 758.5], [6.375, 752.5], [6.417, 747.5], [6.458, 743.5], [6.5, 740.5], [6.542, 738.5], [6.583, 736.5], [6.625, 734.5],
+  [6.667, 734], [6.708, 733], [6.75, 732], [6.8, 732]]);
+const LINEHW = mono([[5.85, 1700], [6.0, 1350], [6.083, 1130], [6.125, 1045], [6.167, 985], [6.208, 934], [6.25, 913.5], [6.292, 894.5], [6.333, 879.5], [6.375, 866],
+  [6.417, 854.5], [6.458, 845.5], [6.5, 837], [6.542, 830.5], [6.583, 824.5], [6.625, 820.5], [6.667, 816.5], [6.708, 814.5], [6.75, 812.5], [6.8, 811.5]]);
+// the line is "eaten" from left to right as the letters come out of it
+const FRONT = mono([[6.9, 150], [6.958, 293], [7.0, 448], [7.042, 580], [7.083, 760], [7.125, 976], [7.167, 1262], [7.208, 1528], [7.25, 1780]]);
+const SB = [['S', [144, 294, 346, 739]], ['T', [296, 436, 352, 733]], ['A', [425, 585, 352, 733]], ['R', [600, 756, 352, 733]], ['T', [754, 895, 352, 733]],
+  ['S', [974, 1124, 346, 739]], ['M', [1140, 1341, 352, 734]], ['A', [1354, 1515, 352, 734]], ['L', [1530, 1646, 353, 734]], ['L', [1660, 1776, 353, 734]]];
+/* visible part of each letter (0 -> 1), sampled frame by frame from 6.75 to 7.71 s (1/24 s step) */
+const RISE = [
+  [0, .041, .046, .056, .074, .099, .155, .313, .506, .649, .807, .852, .893, .919, .941, .959, .975, .985, .992, .995, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, .026, .05, .157, .331, .528, .759, .819, .869, .9, .929, .95, .969, .979, .99, .995, .997, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, .02, .063, .213, .436, .727, .798, .85, .887, .919, .942, .961, .976, .987, .995, .997, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, .02, .084, .318, .669, .756, .819, .864, .898, .927, .948, .966, .976, .987, .995, .997, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, .02, .15, .588, .698, .777, .829, .874, .908, .934, .953, .969, .982, .99, .997, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, .046, .071, .389, .588, .705, .779, .832, .873, .903, .929, .949, .964, .977, .987, .995, .997],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, .02, .126, .387, .592, .712, .785, .84, .88, .911, .935, .953, .969, .979, .99, .995],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .02, .178, .445, .623, .728, .801, .851, .89, .919, .942, .958, .974, .984, .99],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .042, .26, .499, .656, .748, .814, .861, .898, .924, .945, .963, .976, .987],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .01, .089, .333, .53, .667, .753, .816, .866, .903, .929, .953, .969, .979]
+].map(row => mono([...row.map((v, i) => [6.75 + i / 24, v]), [7.85, 1]]));
+// compression: the letters squeeze toward the center, overlapping
+const COMP = mono([[8.0, 1], [8.042, 0.995], [8.083, 0.985], [8.125, 0.972], [8.167, 0.919], [8.208, 0.875], [8.25, 0.82], [8.292, 0.715], [8.333, 0.49], [8.375, 0.36],
+  [8.417, 0.29], [8.458, 0.25], [8.5, 0.222], [8.542, 0.205], [8.583, 0.19], [8.625, 0.18], [8.667, 0.17], [8.708, 0.168], [8.75, 0.167]]);
+const SL = SB.map(([ch, box]) => {
+  const g = el('g', {}, $('start'));
+  fit(glyph(g, ch, 'lg', C.ink), INK_LG[ch], box);
+  return { g, cx: (box[0] + box[1]) / 2, h: box[3] - box[2] };
+});
+// while squeezing, the center letters pass in front (S and M stay readable, as in the original)
+[...SL].sort((a, b) => Math.abs(b.cx - 960) - Math.abs(a.cx - 960)).forEach(L => $('start').appendChild(L.g));
+function scene4(t) {
+  const y = LINEY(t), hw = LINEHW(t), left = Math.max(961.5 - hw, t > 6.85 ? FRONT(t) : -100), right = 961.5 + hw;
+  const lineOn = t < 7.25 && right > left;
+  show($('line'), lineOn);
+  if (lineOn) rect($('line'), left, Math.min(right, 1773 + Math.max(0, hw - 811.5)), y - 5, y + 5);
+  const lettersOn = t >= 6.75 && t < 8.79;
+  show($('start'), lettersOn);
+  if (lettersOn) {
+    const c = COMP(t);
+    SL.forEach((L, i) => {
+      const f = RISE[i](t), dy = (1 - f) * (L.h + 8), dx = (960 + (L.cx - 960) * c) - L.cx;
+      L.g.setAttribute('transform', `translate(${f2(dx)} ${f2(dy)})`);
+    });
+  }
+}
+
+/* =============== SHOT 7: the yellow wipe becomes the square, the blue iris closes (8.5 -> 10 s) =============== */
+const WL = mono([[8.48, 742], [8.5, 742], [8.542, 754], [8.583, 760], [8.625, 764], [8.667, 766], [8.708, 766.5], [8.75, 768], [8.792, 768.5]]);
+const WR = mono([[8.48, 742], [8.5, 746], [8.542, 817], [8.583, 927], [8.625, 1025], [8.667, 1093], [8.708, 1125], [8.75, 1141], [8.792, 1151.5]]);
+const WT = mono([[8.48, 346], [8.542, 346], [8.583, 340], [8.625, 340], [8.667, 342], [8.708, 344], [8.75, 348], [8.792, 348]]);
+const WB = mono([[8.48, 741], [8.542, 741], [8.583, 741], [8.625, 743], [8.667, 739], [8.708, 737], [8.75, 735], [8.792, 735]]);
+const FW = mono([[8.917, 383], [8.958, 379], [9.0, 374], [9.042, 367], [9.083, 353], [9.125, 337], [9.167, 277], [9.208, 223], [9.25, 177], [9.292, 151], [9.333, 131],
+  [9.375, 119], [9.417, 109], [9.458, 103], [9.5, 99], [9.542, 95], [9.583, 91.5], [9.625, 91], [9.667, 90.5], [9.708, 89.5], [9.75, 88.5], [9.85, 88.6], [10, 89]]);
+const FY = mono([[8.917, 541.5], [9.0, 541.5], [9.125, 540.5], [9.25, 540.2], [9.333, 539.5], [10, 539.5]]);
+function scene7(t) {
+  if (t < 8.917) { rect($('wipe'), WL(t), WR(t), WT(t), WB(t)); return; }
+  const w = FW(t), h = w + 2 + 2 * (w - 89) / 294, y = FY(t), x = 959.75 + 0.25 * clamp((383 - w) / 294);
+  rect($('wipe'), x - w / 2, x + w / 2, y - h / 2, y + h / 2);
+}
+
+/* ================= GLOBAL RENDER ================= */
+const DUR = 10;
+function render(t) {
+  t = clamp(t, 0, DUR);
+  $('paper').setAttribute('r', f2(paperR(t)));
+  const in2 = t < 2.21; show($('s2'), in2); if (in2) scene2(t);
+  const inBar = t >= 2.083 && t < 3.083; show($('bar'), inBar); if (inBar) bar(t);
+  const in3 = t >= 3.083 && t < 5.17; show($('s3'), in3); if (in3) scene3(t);
+  const inDot = t >= 3.6 && t < 7.167; show($('dot'), inDot);
+  if (inDot) { const d = $('dot'); d.setAttribute('cx', f2(DOTX(t))); d.setAttribute('cy', f2(DOTY(t))); d.setAttribute('r', f2(Math.max(0, DOTD(t) / 2))); }
+  const in4 = t >= 5.85 && t < 8.79; show($('s4'), in4); if (in4) scene4(t);
+  const in7 = t >= 8.48; show($('wipe'), in7); if (in7) scene7(t);
+}
+
+/* ---------- GSAP clock ---------- */
+const clock = { t: 0 };
+const tl = gsap.timeline({ repeat: -1, paused: true });
+tl.fromTo(clock, { t: 0 }, { t: DUR, duration: DUR, ease: 'none', onUpdate: () => render(clock.t) });
+window.anim = {
+  tl, duration: DUR,
+  seek(t) { t = clamp(t, 0, DUR); tl.pause(); tl.time(t, true); render(t); },
+  play(from = 0) { tl.restart(); tl.time(from); tl.play(); },
+  pause() { tl.pause(); }
+};
+const qs = new URLSearchParams(location.search);
+render(0);
+Promise.all([document.fonts.load('900 100px "Archivo"', 'THINKBG'), document.fonts.load('400 100px "League Gothic"', 'STARML'), document.fonts.ready]).then(() => {
+  if (qs.has('t')) anim.seek(parseFloat(qs.get('t')));
+  else if (!qs.has('external')) tl.play(0);
+  document.documentElement.dataset.ready = '1';
+});
+})();
+</script>
+</body>
+</html>

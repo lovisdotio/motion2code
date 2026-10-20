@@ -1,0 +1,15 @@
+---
+description: Rebuilding a motion design video as SVG + GSAP code (replay, compare, loop, real site)
+globs: **/index.html,**/compare.html,**/site.html,**/*.svg
+alwaysApply: false
+---
+
+Copy this file into your project's `.cursor/rules/`. Install the skill too (Cursor reads `~/.cursor/skills`,
+`~/.claude/skills` and `.agents/skills`), so the rule can point at it.
+
+- Use the `motion2code` skill: `scripts/study_video.py` before writing code, `scripts/frame_diff.py` and
+  `scripts/check_anim.py --runtime` before calling it done.
+- One inline SVG at the source resolution, one GSAP timeline as the only clock, `window.anim = { tl, duration,
+  seek, play, pause }`, `?t=`, `?external=1`, `data-ready`.
+- Only the given source video, never regenerated or embedded; words exactly as in the prompt; flat sampled colors.
+- frame(duration) equals frame(0): the loop is done in code.

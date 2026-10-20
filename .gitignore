@@ -1,0 +1,13 @@
+.env
+.DS_Store
+__pycache__/
+tmp/
+build/
+study/
+diff/
+*.mp4
+*.mov
+*.webm
+*.wav
+*.mp3
+!gallery/*/source.mp4

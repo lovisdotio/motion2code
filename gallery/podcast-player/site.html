@@ -1,0 +1,1371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Podcast Player</title>
+<meta name="description" content="EP 12, a flat-design podcast player: play, scrub, read along and jump through the episode.">
+<meta name="theme-color" content="#0F120F">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F120F;--coral:#F37448;--cream:#F8EACB;--teal:#006860;--lteal:#A9CCB9;--line:#2C302B;
+  --grey:#8E918A;--tip:#1A1E19;--nav:#E6E1D3;--hover:#3A2219;--outline:#8F8D84;--ink:#0F120F;--sb:#3A3E38;
+  --hh:clamp(64px,6.25vw,120px);
+  --rowh:clamp(64px,4.74vw,91px);
+  --thumb:clamp(44px,3.23vw,62px);
+  --barh:clamp(9px,.625vw,12px);
+  --ph:clamp(66px,4.06vw,78px);
+  --pg:clamp(10px,.8vw,15.3px);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--bg);scroll-behavior:smooth;scrollbar-color:var(--sb) var(--bg)}
+body{margin:0;background:var(--bg);color:var(--cream);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
+svg{display:block}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--cream);outline-offset:3px;border-radius:8px}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px}
+.b{display:block;height:9px;border-radius:5px;background:var(--grey)}
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+.skip{position:fixed;left:16px;top:-60px;z-index:100;background:var(--cream);color:var(--ink);padding:10px 16px;border-radius:24px;font-size:14px;transition:top .2s}
+.skip:focus{top:12px}
+
+/* ---------- header ---------- */
+.hdr{position:relative;z-index:40;display:grid;grid-template-columns:auto 1fr auto;align-items:center;height:var(--hh);padding:calc(var(--hh)*.283) 34px 0 32px}
+.logo{display:block;width:clamp(64px,5.42vw,104px);border-radius:6px}
+.logo svg{width:100%;height:auto}
+.nav{display:flex;justify-content:center;gap:clamp(22px,2.55vw,49px);padding-right:clamp(0px,1vw,18px)}
+.nav a{position:relative;font-size:clamp(14px,.88vw,16.8px);color:var(--nav);padding:10px 0;letter-spacing:.005em;transition:color .2s}
+.nav a::after{content:'';position:absolute;left:0;right:0;bottom:4px;height:2px;border-radius:2px;background:var(--coral);transform:scaleX(0);transform-origin:left;transition:transform .3s cubic-bezier(.3,.7,.2,1)}
+.nav a:hover{color:var(--cream)}
+.nav a:hover::after,.nav a:focus-visible::after{transform:scaleX(1)}
+.acts{grid-column:3;display:flex;align-items:center;gap:clamp(8px,1vw,20px)}
+.pw{position:relative}
+.ib{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;transition:background .2s}
+.ib:hover{background:var(--tip)}
+.ib svg{width:42px;height:42px;overflow:visible}
+#bellBtn svg{width:56px;height:56px}
+.pill{height:58px;padding:0 30px;border:2px solid var(--outline);border-radius:29px;font-size:clamp(14px,.88vw,16.8px);color:var(--nav);transition:background .25s,color .25s,border-color .25s;white-space:nowrap}
+.pill:hover{border-color:var(--cream)}
+.pill[aria-pressed="true"]{background:var(--coral);border-color:var(--coral);color:var(--ink)}
+.av{display:block;width:60px;height:60px;border-radius:50%}
+.av svg{width:100%;height:100%}
+.burger{display:none}
+.pop{position:absolute;right:0;top:calc(100% + 10px);z-index:60;min-width:270px;background:var(--tip);border-radius:14px;padding:10px;box-shadow:none}
+.pop .it{display:flex;align-items:center;gap:14px;width:100%;padding:10px;border-radius:10px;text-align:left;font-size:15px;color:var(--nav)}
+.pop .it:hover,.pop .it:focus-visible{background:#262B25}
+.pop .it svg.th{width:40px;height:40px;flex:none}
+.pop .bars{display:flex;flex-direction:column;gap:8px;flex:1}
+.pop .unread{width:9px;height:9px;border-radius:50%;background:var(--coral);flex:none}
+.pop .it.read .unread{background:transparent}
+.pop .ico{width:22px;height:22px;flex:none}
+.mnav{position:absolute;z-index:45;left:12px;right:12px;top:calc(var(--hh) + 4px);background:var(--tip);border-radius:16px;padding:12px;display:flex;flex-direction:column}
+.mnav a{font-size:22px;padding:14px 12px;border-radius:10px;color:var(--nav)}
+.mnav a:hover{background:#262B25}
+.mnav .pill{margin:10px 12px 6px;align-self:flex-start}
+
+/* ---------- player ---------- */
+.app{position:relative;display:grid;grid-template-columns:minmax(0,900fr) minmax(0,898fr);column-gap:clamp(24px,2.92vw,56px);padding:0 34px 6px 32px}
+.col-left{container-type:inline-size;min-width:0;--u:calc(100cqw / 900)}
+.stage{position:relative;aspect-ratio:900/810}
+.stage>svg.art{position:absolute;inset:0;width:100%;height:100%}
+.ov,.ov2{position:absolute;display:block;width:max(var(--min,44px),calc(var(--w) * var(--u)));height:max(var(--min,44px),calc(var(--h) * var(--u)));transform:translate(-50%,-50%);border-radius:12px;transition:scale .15s}
+.ov{left:calc((var(--x) - 32) * var(--u));top:calc((var(--y) - 120) / 810 * 100%)}
+.ov2{left:max(22px,calc((var(--x) - 32) * var(--u)));top:50%}
+.ov>svg,.ov2>svg{position:absolute;left:50%;top:50%;width:calc(var(--w) * var(--u));height:calc(var(--h) * var(--u));transform:translate(-50%,-50%);overflow:visible;pointer-events:none}
+.ov:active,.ov2:active{scale:.92}
+.playlbl text,.art text{font-family:'Inter',system-ui,sans-serif}
+.playlbl .ul{transform-box:fill-box;transform-origin:left center;transform:scaleX(0);transition:transform .35s cubic-bezier(.3,.7,.2,1)}
+.playlbl[aria-pressed="true"] .ul{transform:scaleX(1)}
+.playlbl:hover text{fill:#fff}
+.knob{cursor:grab;touch-action:none;border-radius:50%}
+.knob.drag{cursor:grabbing}
+#saveBtn .chk{opacity:0}
+#saveBtn[aria-pressed="true"] .pls{opacity:0}
+#saveBtn[aria-pressed="true"] .chk{opacity:1}
+.track-row{position:relative;height:max(44px,calc(52 * var(--u)))}
+.tbar{position:absolute;top:50%;height:max(6px,calc(9 * var(--u)));border-radius:6px;background:var(--grey);transform:translateY(-50%)}
+.tbar.l{left:calc(4 * var(--u));width:calc(56 * var(--u))}
+.tbar.r{left:calc(832 * var(--u));width:calc(61 * var(--u))}
+.seek{--p:0;--pad:calc(14 * var(--u));position:absolute;left:calc(74 * var(--u));width:calc(746 * var(--u));top:0;bottom:0;touch-action:none;cursor:pointer;border-radius:10px}
+.seek .rail,.seek .fill{position:absolute;left:var(--pad);top:50%;transform:translateY(-50%);border-radius:4px}
+.seek .rail{right:var(--pad);height:max(2px,calc(3.5 * var(--u)));background:var(--line)}
+.seek .fill{width:calc(var(--p) * (100% - 2 * var(--pad)));height:max(3px,calc(4.5 * var(--u)));background:var(--cream)}
+.seek .thumb{position:absolute;top:50%;left:calc(var(--pad) + var(--p) * (100% - 2 * var(--pad)));width:max(14px,calc(26 * var(--u)));height:max(14px,calc(26 * var(--u)));border-radius:50%;background:var(--cream);transform:translate(-50%,-50%);transition:width .15s,height .15s}
+.seek:hover .thumb,.seek.drag .thumb{width:max(18px,calc(32 * var(--u)));height:max(18px,calc(32 * var(--u)))}
+.seek .tip{position:absolute;bottom:calc(50% + max(14px,calc(22 * var(--u))));left:var(--hx,0);width:max(96px,calc(120 * var(--u)));transform:translateX(-50%);opacity:0;pointer-events:none;transition:opacity .15s}
+.seek .tip svg{width:100%;height:auto}
+.seek.tipon .tip{opacity:1}
+.ctl-row{position:relative;height:max(64px,calc(92 * var(--u)))}
+.ov2.big{--min:58px}
+.ov2.big .ring{opacity:0}
+#ppBtn .ic-pause{display:none}
+#ppBtn[data-on="1"] .ic-pause{display:inline}
+#ppBtn[data-on="1"] .ic-play{display:none}
+#likeBtn .hf{opacity:0}
+#likeBtn[aria-pressed="true"] .hf{opacity:1}
+#repeatBtn[aria-pressed="true"] path{stroke:var(--coral)}
+.ov2:hover>svg [stroke]:not(.ring){stroke:#fff}
+.ov2.big:hover>svg .disc{fill:#fff}
+
+/* ---------- right panel ---------- */
+.panel{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+.tabs{display:flex;justify-content:space-between;align-items:center;height:clamp(48px,3.125vw,60px);flex:none}
+.tab{position:relative;font-size:clamp(12.5px,.74vw,14.2px);color:var(--grey);padding:10px 2px;letter-spacing:.01em;transition:color .2s}
+.tab:hover{color:var(--nav)}
+.tab[aria-selected="true"]{color:var(--nav)}
+.tab::after{content:'';position:absolute;left:0;right:0;bottom:3px;height:2px;border-radius:2px;background:var(--coral);transform:scaleX(0);transform-origin:left;transition:transform .3s cubic-bezier(.3,.7,.2,1)}
+.tab[aria-selected="true"]::after{transform:scaleX(1)}
+.tabpanels{position:relative;flex:1;min-height:0}
+.tabpanel{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:3px;scrollbar-width:thin}
+.rows{list-style:none;margin:0;padding:0}
+.row{position:relative;height:var(--rowh)}
+.row+.row::before{content:'';position:absolute;left:0;right:0;top:0;height:1.5px;background:var(--line)}
+.row-main{position:absolute;inset:0;display:flex;align-items:center;text-align:left;border-radius:6px}
+.row-main .bg{position:absolute;inset:0 0 calc(var(--rowh) * .066);border-radius:6px;background:transparent;transition:background .25s}
+.row:first-child .row-main .bg{inset:0 0 calc(var(--rowh) * .066)}
+.row+.row .row-main .bg{inset:3px 0 2px}
+.row:hover .row-main .bg{background:var(--tip)}
+.row.active .row-main .bg{background:var(--coral)}
+.row-main svg.th{position:absolute;left:calc(var(--rowh) * .088);top:50%;width:var(--thumb);height:var(--thumb);transform:translateY(-50%);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.row:hover svg.th{transform:translateY(-50%) scale(1.08) rotate(-8deg)}
+.row-main .rb{position:absolute;left:calc(var(--rowh) * .978);right:90px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:calc(var(--barh) * 1.4)}
+.row-main .rb i{display:block;height:var(--barh);border-radius:var(--barh)}
+.row.active .rb i{background:var(--teal)!important}
+.row .pw{position:static}
+.keb{position:absolute;right:11px;top:50%;width:44px;height:44px;margin-top:-22px;border-radius:50%;display:grid;place-items:center;z-index:2}
+.keb:hover{background:rgba(248,234,203,.1)}
+.keb svg{width:6px;height:24px}
+.row .liked{position:absolute;right:62px;top:50%;width:26px;height:24px;margin-top:-12px;pointer-events:none;opacity:0;transform:scale(0)}
+.row.is-liked .liked{opacity:1;transform:scale(1)}
+.row .pop{right:8px;top:calc(50% + 20px);min-width:200px}
+@media (min-width:901px){.row:nth-last-child(-n+3) .pop{top:auto;bottom:calc(50% + 20px)}}
+.paras{padding:0 0 10px}
+.para{--p:0;--hc:var(--coral);position:relative;display:block;width:100%;height:var(--ph);margin:0 0 var(--pg);border-radius:4px;text-align:left}
+.para .hov,.para .hl,.para .ln,.para .tealbg{position:absolute;inset:0;border-radius:4px;pointer-events:none}
+.para .hov{background:var(--hover);opacity:0;transition:opacity .2s}
+.para .hov::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cream)}
+.para:hover .hov,.para:focus-visible .hov{opacity:1}
+.para .tealbg{background:var(--teal);opacity:0;transition:opacity .3s}
+.para.started .tealbg{opacity:1}
+.para .hl{right:auto;width:calc(var(--p) * 100%);background:var(--hc)}
+.para .ln i{position:absolute;height:9px;border-radius:5px;background:var(--cream)}
+.para .ln.dk{clip-path:inset(0 calc((1 - var(--p)) * 100%) 0 0)}
+.para .ln.dk i{background:var(--ink)}
+.para .ring{position:absolute;inset:-1px;border:2.6px solid var(--cream);border-radius:5px;opacity:0;pointer-events:none}
+.para .chip{position:absolute;left:var(--cx,50%);top:-14px;width:88px;height:55px;margin-left:-44px;border-radius:9px;background:var(--tip);opacity:0;transform:translateY(-6px) scale(.9);transition:opacity .15s,transform .2s;pointer-events:none;z-index:3}
+.para .chip i{position:absolute;left:21px;top:22.5px;width:46px;height:10px;border-radius:5px;background:var(--cream)}
+.para:hover .chip{opacity:1;transform:none}
+.para .now{position:absolute;right:28px;top:50%;width:26px;height:24px;margin-top:-12px;opacity:0;transform:scale(0);pointer-events:none}
+.ttl{position:relative;padding:calc(var(--pg) * 3) 0 30px}
+.ttl .dv{width:184px;height:1.5px;background:var(--line);margin-bottom:56px}
+.ttl .t1{width:min(448px,60%);height:34px;border-radius:17px;background:var(--cream);margin-bottom:46px}
+.ttl .t2{display:flex;gap:10px}
+.semi{position:absolute;width:110px;height:55px;bottom:0;right:18%;border-radius:55px 55px 0 0;background:var(--teal);transform-origin:50% 100%;opacity:0;transition:opacity .4s;pointer-events:none}
+.panel.tr .semi{opacity:1}
+.pfoot{position:relative;display:flex;align-items:center;height:clamp(48px,3.4vw,60px);margin-top:4px}
+.dots{position:absolute;left:46%;display:flex;gap:0;transform:translateX(-50%)}
+.dots button{display:grid;place-items:center;width:28px;height:32px;border-radius:8px}
+.dots i{display:block;width:10px;height:10px;border-radius:50%;background:#B8BBAE;transition:background .25s,transform .25s}
+.dots button[aria-pressed="true"] i{background:var(--coral);transform:scale(1.15)}
+
+/* ---------- map ---------- */
+.map{position:relative;height:100vh;height:100svh;overflow:hidden;border-top:1.5px solid var(--line)}
+.map-head{position:absolute;z-index:4;left:32px;right:34px;top:clamp(28px,5vh,56px);display:flex;align-items:center;gap:16px}
+.map-head .t1{width:clamp(160px,23vw,448px);height:clamp(22px,1.8vw,34px);border-radius:20px;background:var(--cream)}
+.map-head .cnt{margin-left:auto;display:flex;gap:10px;align-items:center}
+.map-head .cnt i{display:block;width:10px;height:10px;border-radius:50%;background:var(--line);transition:background .3s,transform .3s}
+.map-head .cnt i.on{background:var(--coral);transform:scale(1.2)}
+.map-cover{position:absolute;z-index:3;left:32px;top:50%;width:min(52vh,38vw,560px);aspect-ratio:1;transform:translateY(-50%);pointer-events:none}
+.map-cover .disc{position:absolute;width:56%;aspect-ratio:1;border-radius:50%;background:var(--teal);right:-20%;bottom:-6%}
+.map-cover .disc2{position:absolute;width:30%;aspect-ratio:1;border-radius:50%;background:var(--coral);left:-6%;top:-4%}
+.map-cover .mc-in{position:relative;width:100%;height:100%}
+.map-cover svg{position:relative;width:100%;height:100%}
+.strip-wrap{position:absolute;z-index:2;left:0;right:0;top:50%;transform:translateY(-46%);overflow:hidden}
+.strip{position:relative;width:max(2600px,230vw);height:clamp(300px,56vh,560px);padding-left:0;margin-left:calc(min(52vh,38vw,560px) * .62 + 32px)}
+.strip svg.sw{position:absolute;left:0;right:0;bottom:0;width:100%;height:68%}
+.mk{position:absolute;top:0;height:32%;display:flex;flex-direction:column;align-items:flex-start;transform:translateX(-31px)}
+.mk::after{content:'';position:absolute;left:30px;top:var(--thumb);width:2px;height:calc(244% - var(--thumb));background:var(--line);transition:background .3s}
+.mk button{position:relative;display:flex;align-items:center;gap:14px;padding:0;border-radius:40px;text-align:left}
+.mk svg.th{width:var(--thumb);height:var(--thumb);flex:none;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.mk .mb{display:flex;flex-direction:column;gap:9px}
+.mk .mb i{display:block;height:10px;border-radius:5px}
+.mk button:hover svg.th{transform:scale(1.12) rotate(-10deg)}
+.mk.on::after{background:var(--cream)}
+.mk.on svg.th{outline:3px solid var(--coral);outline-offset:4px;border-radius:50%}
+.map-prog{position:absolute;z-index:4;left:32px;right:34px;bottom:clamp(100px,11vh,130px);height:4px;border-radius:3px;background:var(--line)}
+.map-prog .f{position:absolute;inset:0;border-radius:3px;background:var(--cream);transform-origin:left;transform:scaleX(0)}
+.map-prog .tk{position:absolute;top:-5px;width:2px;height:14px;background:var(--line)}
+
+/* ---------- episodes ---------- */
+.eps{position:relative;padding:clamp(80px,9vw,170px) 32px clamp(80px,8vw,150px)}
+.sec-head{display:flex;align-items:center;gap:16px;max-width:1520px;margin:0 auto clamp(36px,4vw,64px)}
+.sec-head .t1{width:clamp(160px,23vw,448px);height:clamp(22px,1.8vw,34px);border-radius:20px;background:var(--cream)}
+.sec-head .t2{width:clamp(60px,6vw,125px);height:9px;border-radius:5px;background:var(--coral)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(16px,2vw,36px);max-width:1520px;margin:0 auto}
+.card{position:relative;perspective:1600px;aspect-ratio:1/1.08}
+.card-in{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .85s cubic-bezier(.7,0,.2,1)}
+.card.flipped .card-in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:16px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.front{background:var(--tip)}
+.back{transform:rotateY(180deg);display:flex;flex-direction:column;padding:clamp(22px,2.2vw,40px)}
+.flip{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;text-align:left}
+.flip .caw{position:absolute;left:17%;top:9%;width:66%;aspect-ratio:1;transition:transform .7s cubic-bezier(.34,1.56,.64,1)}
+.flip svg.ca{width:100%;height:100%}
+.flip:hover .caw,.flip:focus-visible .caw{transform:rotate(14deg) scale(1.04)}
+.flip .fb{position:absolute;left:clamp(20px,2vw,36px);right:clamp(20px,2vw,36px);bottom:clamp(20px,2vw,34px);display:flex;flex-direction:column;gap:12px}
+.flip .fb .t1{width:58%;height:clamp(16px,1.2vw,22px);border-radius:12px;background:var(--cream)}
+.flip .fb .t2{display:flex;gap:8px}
+.flip .corner{position:absolute;right:clamp(16px,1.6vw,26px);top:clamp(16px,1.6vw,26px);width:40px;height:40px;border-radius:50%;border:2px solid var(--outline);display:grid;place-items:center;transition:transform .4s cubic-bezier(.34,1.56,.64,1),border-color .2s}
+.flip:hover .corner{transform:rotate(90deg);border-color:var(--cream)}
+.flip .corner svg{width:16px;height:16px}
+.flip .ep{position:absolute;left:clamp(20px,2vw,36px);top:clamp(16px,1.6vw,26px);display:flex;gap:6px;align-items:center}
+.flip .ep i{display:block;width:10px;height:10px;border-radius:50%}
+.back .lines{display:flex;flex-direction:column;gap:clamp(12px,1.1vw,20px);flex:1}
+.back .lines .l{display:flex;gap:8px}
+.back .lines .l i{display:block;height:9px;border-radius:5px}
+.back .t1{width:62%;height:clamp(18px,1.4vw,26px);border-radius:14px;margin-bottom:clamp(14px,1.6vw,28px)}
+.back .acts2{display:flex;gap:12px;align-items:center}
+.rb2{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;border:2px solid currentColor;transition:transform .2s,background .2s}
+.rb2:hover{transform:scale(1.08)}
+.rb2 svg{width:22px;height:22px}
+.rb2.flipback{margin-left:auto}
+.rb2[aria-pressed="true"]{background:currentColor}
+.rb2[aria-pressed="true"] svg *{stroke:var(--bk);fill:var(--bk)}
+.rb2 .chk{display:none}
+.rb2.q[aria-pressed="true"] .pls{display:none}
+.rb2.q[aria-pressed="true"] .chk{display:inline}
+
+/* ---------- footer ---------- */
+.foot{position:relative;overflow:hidden;padding:clamp(80px,8vw,150px) 32px 0;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;border-top:1.5px solid var(--line)}
+.hosts{display:flex;gap:clamp(24px,5vw,96px);max-width:1520px;width:100%;margin:0 auto;flex-wrap:wrap}
+.host{display:flex;align-items:center;gap:clamp(16px,1.6vw,28px)}
+.host svg.ha{width:clamp(110px,11vw,210px);height:auto;aspect-ratio:1;transition:transform .7s cubic-bezier(.34,1.56,.64,1)}
+.host:hover svg.ha{transform:rotate(-16deg) scale(1.05)}
+.host .hb{display:flex;flex-direction:column;gap:12px}
+.host .hb .t1{width:clamp(110px,10vw,200px);height:clamp(16px,1.2vw,22px);border-radius:12px;background:var(--cream)}
+.follow{margin-top:8px;align-self:flex-start;width:52px;height:52px;border-radius:50%;background:var(--teal);display:grid;place-items:center;transition:transform .2s,background .25s}
+.follow:hover{transform:scale(1.08)}
+.follow svg{width:20px;height:20px}
+.follow .chk{display:none}
+.follow[aria-pressed="true"]{background:var(--coral)}
+.follow[aria-pressed="true"] .pls{display:none}
+.follow[aria-pressed="true"] .chk{display:inline}
+.foot-mid{max-width:1520px;width:100%;margin:clamp(60px,7vw,130px) auto 0;display:flex;align-items:flex-end;justify-content:space-between;gap:32px;flex-wrap:wrap;position:relative;z-index:2}
+.foot-mid .tb .dv{width:184px;height:1.5px;background:var(--line);margin-bottom:46px}
+.foot-mid .tb .t1{width:clamp(220px,23vw,448px);height:clamp(24px,1.8vw,34px);border-radius:20px;background:var(--cream);margin-bottom:34px}
+.foot-mid .tb .t2{display:flex;gap:10px}
+.fnav{display:flex;gap:clamp(18px,2vw,40px);flex-wrap:wrap}
+.fnav a{font-size:15px;color:var(--nav);padding:8px 0}
+.fnav a:hover{color:var(--coral)}
+.totop{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--cream);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.totop:hover{transform:translateY(-4px)}
+.totop svg{width:24px;height:24px}
+.foot-art{position:relative;flex:1;min-height:clamp(260px,34vw,560px);margin:0 -32px}
+.semi-big{position:absolute;left:50%;bottom:0;width:min(1100px,92vw);aspect-ratio:2/1;margin-left:calc(min(1100px,92vw) / -2);border-radius:1100px 1100px 0 0;background:var(--teal);transform-origin:50% 100%}
+.foot-art .cdot{position:absolute;width:clamp(56px,6vw,120px);aspect-ratio:1;border-radius:50%;background:var(--coral);left:calc(50% + min(1100px,92vw) * .36);bottom:calc(min(1100px,92vw) * .36)}
+.foot-art .cdot2{position:absolute;width:clamp(30px,3vw,60px);aspect-ratio:1;border-radius:50%;background:var(--cream);left:calc(50% - min(1100px,92vw) * .42);bottom:calc(min(1100px,92vw) * .28)}
+.foot-art .flogo{position:absolute;left:50%;bottom:clamp(28px,3vw,56px);width:clamp(90px,9vw,170px);transform:translateX(-50%)}
+.foot-art .flogo svg{width:100%;height:auto}
+
+/* ---------- floating ---------- */
+.fab{position:fixed;z-index:50;right:36px;bottom:11px;width:113px;height:106px;border-radius:50%}
+.fab svg{width:100%;height:100%;overflow:visible}
+.fab .bub{transform-box:fill-box;transform-origin:center}
+.fab[aria-expanded="true"] .bub{transform:scale(.88)}
+.chat{position:fixed;z-index:55;right:36px;bottom:128px;width:min(380px,calc(100vw - 24px));background:var(--tip);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.chat-h{display:flex;align-items:center;gap:12px}
+.chat-h .lv{width:12px;height:12px;border-radius:50%;background:var(--coral)}
+.chat-h .t1{width:140px;height:12px;border-radius:6px;background:var(--cream)}
+.chat-h .x{margin-left:auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center}
+.chat-h .x:hover{background:#262B25}
+.chat-h .x svg{width:16px;height:16px}
+.msgs{display:flex;flex-direction:column;gap:10px;max-height:280px;overflow-y:auto;padding:4px 2px;scrollbar-width:thin}
+.msg{display:flex;align-items:flex-end;gap:10px;max-width:86%}
+.msg svg.th{width:30px;height:30px;flex:none}
+.msg .bb{border-radius:16px 16px 16px 4px;padding:12px 14px;display:flex;flex-direction:column;gap:7px;background:#262B25}
+.msg .bb i{display:block;height:7px;border-radius:4px;background:var(--nav)}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.msg.me .bb{background:var(--coral);border-radius:16px 16px 4px 16px}
+.msg.me .bb i{background:var(--ink)}
+.msg .rx{width:34px;height:34px}
+.reacts{display:flex;gap:10px;border-top:1.5px solid var(--line);padding-top:12px}
+.react{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:24px;background:#262B25;font-size:15px;font-variant-numeric:tabular-nums;color:var(--nav);transition:background .2s}
+.react:hover{background:#30362F}
+.react svg{width:22px;height:22px}
+.react .n{display:inline-block;min-width:2ch;text-align:left}
+.mini{position:fixed;z-index:48;left:32px;bottom:16px;width:min(560px,calc(100vw - 200px));height:68px;border-radius:34px;background:var(--tip);display:flex;align-items:center;gap:12px;padding:0 18px 0 8px;transform:translateY(140%);opacity:0;transition:transform .45s cubic-bezier(.3,.7,.2,1),opacity .3s}
+.mini.on{transform:none;opacity:1}
+.mini .mth{width:52px;height:52px;flex:none}
+.mini .mpp{width:44px;height:44px;border-radius:50%;background:var(--cream);display:grid;place-items:center;flex:none}
+.mini .mpp svg{width:18px;height:18px}
+.mini .mpp .ic-pause{display:none}
+.mini .mpp[data-on="1"] .ic-pause{display:inline}
+.mini .mpp[data-on="1"] .ic-play{display:none}
+.mini .mt{font-size:15px;color:var(--cream);white-space:nowrap;flex:none;letter-spacing:.02em}
+.mini .mw{flex:1;min-width:0;height:44px;position:relative;cursor:pointer;touch-action:none;border-radius:8px}
+.mini .mw svg{position:absolute;left:0;right:0;top:0;width:100%;height:34px}
+.mini .mw .ml{position:absolute;left:0;right:0;bottom:4px;height:3px;border-radius:2px;background:var(--line)}
+.mini .mw .mf{position:absolute;left:0;bottom:4px;height:3px;border-radius:2px;background:var(--cream);width:calc(var(--p,0) * 100%)}
+.toast{position:fixed;z-index:70;left:50%;top:22px;display:flex;align-items:center;gap:12px;padding:12px 18px 12px 14px;border-radius:24px;background:var(--cream);transform:translate(-50%,-90px);opacity:0;pointer-events:none}
+.toast svg{width:22px;height:22px}
+.toast .tt{font-weight:700;font-size:18px;line-height:1;color:var(--ink);white-space:nowrap;letter-spacing:-.01em}  /* real words: 'EP 11 · Nu-disco', 'Liked' */
+
+/* ---------- responsive ---------- */
+@media (max-width:1240px){
+  .nav{gap:20px}
+  .ib.hide-l{display:none}
+}
+@media (max-width:900px){
+  .hdr{padding:0 12px;height:64px;--hh:64px}
+  .nav,.hide-m{display:none!important}
+  .burger{display:grid}
+  .burger svg{width:24px;height:24px}
+  .av{width:44px;height:44px}
+  #bellBtn svg{width:46px;height:46px}
+  .app{grid-template-columns:minmax(0,1fr);padding:0 12px 24px;row-gap:12px}
+  .panel{overflow:visible}
+  .tabpanels{flex:none}
+  .tabpanel{position:static;overflow:visible}
+  .semi{display:none}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fab{right:10px;bottom:10px;width:72px;height:68px}
+  .chat{right:12px;bottom:88px}
+  .mini{left:12px;bottom:12px;width:calc(100vw - 104px);height:60px;gap:8px;padding:0 10px 0 6px}
+  .mini .mth{width:46px;height:46px}
+  .mini .mt{display:none}
+  .map-head,.map-prog{left:12px;right:12px}
+  .map-prog{bottom:96px}
+  .map-cover{left:12px;width:min(46vw,34vh);top:22%}
+  .strip{margin-left:calc(min(46vw,34vh) * .5 + 12px);height:clamp(260px,46vh,420px)}
+  .strip-wrap{top:58%}
+  .eps,.foot{padding-left:12px;padding-right:12px}
+  .foot-art{margin:0 -12px}
+}
+@media (max-width:600px){
+  .ctl-row #shareBtn{--x:790}
+  .stage #speed{--x:770}
+  .row-main .rb{right:64px}
+  .row .liked{right:52px}
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .card{aspect-ratio:1/1.02}
+  .ttl .dv{margin-bottom:32px}
+  .ttl .t1{margin-bottom:30px}
+  .mk .mb{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition-duration:.01ms!important;animation:none!important}
+  .strip-wrap{overflow-x:auto;scrollbar-width:thin}
+  .map{height:auto;min-height:100svh}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#player">Skip to player</a>
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs id="sprDefs">
+    <clipPath id="artClip"><circle r="368"/></clipPath>
+    <clipPath id="thClip"><circle r="31"/></clipPath>
+    <clipPath id="logoLow"><rect x="80" y="81" width="40" height="30"/></clipPath>
+    <symbol id="logo" viewBox="34 49 108 54">
+      <circle cx="46" cy="90.5" r="10" fill="#006860"/>
+      <line x1="60" y1="60.5" x2="76" y2="94" stroke="#006860" stroke-width="19" stroke-linecap="round"/>
+      <line x1="88" y1="60.5" x2="103" y2="94" stroke="#F8EACB" stroke-width="19" stroke-linecap="round"/>
+      <line x1="88" y1="60.5" x2="103" y2="94" stroke="#F37448" stroke-width="19" stroke-linecap="round" clip-path="url(#logoLow)"/>
+      <line x1="115.5" y1="60.5" x2="130.5" y2="94" stroke="#F37448" stroke-width="19" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="logo-ink" viewBox="34 49 108 54">
+      <circle cx="46" cy="90.5" r="10" fill="#0F120F"/>
+      <line x1="60" y1="60.5" x2="76" y2="94" stroke="#0F120F" stroke-width="19" stroke-linecap="round"/>
+      <line x1="88" y1="60.5" x2="103" y2="94" stroke="#F8EACB" stroke-width="19" stroke-linecap="round"/>
+      <line x1="88" y1="60.5" x2="103" y2="94" stroke="#F37448" stroke-width="19" stroke-linecap="round" clip-path="url(#logoLow)"/>
+      <line x1="115.5" y1="60.5" x2="130.5" y2="94" stroke="#F37448" stroke-width="19" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-heart" viewBox="-22 -19 44 38"><path d="M0,-7C0,-14 -6,-17 -11,-17C-17,-17 -20,-12 -20,-7C-20,3 -8,10 0,17C8,10 20,3 20,-7C20,-12 17,-17 11,-17C6,-17 0,-14 0,-7Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heartf" viewBox="-22 -19 44 38"><path d="M0,-7C0,-14 -6,-17 -11,-17C-17,-17 -20,-12 -20,-7C-20,3 -8,10 0,17C8,10 20,3 20,-7C20,-12 17,-17 11,-17C6,-17 0,-14 0,-7Z" fill="currentColor"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4V20M4 12H20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5L9.5 17.5L19.5 6.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14L14 10M8.5 11.5L6 14A3.5 3.5 0 0 0 11 19L13.5 16.5M15.5 12.5L18 10A3.5 3.5 0 0 0 13 5L10.5 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24"><path d="M5 12A7 7 0 1 0 8 6.3M8 2.5V6.8H3.7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M4 10V14M8 6V18M12 9V15M16 4V20M20 10V14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5" fill="currentColor"/><circle cx="12" cy="12" r="2.6" fill="#0F120F"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6L18 18M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5L19.5 12L7 19.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="5.5" y="4" width="4.5" height="16" rx="1.2" fill="currentColor"/><rect x="14" y="4" width="4.5" height="16" rx="1.2" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<header class="hdr" id="top">
+  <a class="logo" href="#top" aria-label="Podcast home"><svg viewBox="0 0 108 54" aria-hidden="true" focusable="false"><use href="#logo" width="108" height="54"/></svg></a>
+  <nav class="nav" aria-label="Main">
+    <a href="#player">Listen</a>
+    <a href="#player" data-tab="tr">Transcript</a>
+    <a href="#map">Map</a>
+    <a href="#episodes">Episodes</a>
+    <a href="#hosts">Hosts</a>
+  </nav>
+  <div class="acts">
+    <div class="pw hide-m">
+      <button class="ib" id="inboxBtn" data-pop="inboxPop" aria-label="Inbox" aria-haspopup="true" aria-expanded="false" aria-controls="inboxPop">
+        <svg viewBox="1487 56 42 42" aria-hidden="true" focusable="false"><rect x="1491" y="60" width="34" height="34" rx="10" fill="none" stroke="#E6E1D3" stroke-width="2.6"/><path d="M1499.5,74L1508,82.5L1516.5,74" fill="none" stroke="#E6E1D3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="pop" id="inboxPop" hidden></div>
+    </div>
+    <div class="pw">
+      <button class="ib" id="bellBtn" data-pop="bellPop" aria-label="Notifications, 2 new" aria-haspopup="true" aria-expanded="false" aria-controls="bellPop">
+        <svg viewBox="1559 42 60 60" aria-hidden="true" focusable="false"><g id="bellG"><path d="M1571,89.5H1597L1593.5,84.5V75.5C1593.5,69.5 1589.5,64.5 1584,64.5C1578.5,64.5 1574.5,69.5 1574.5,75.5V84.5Z" fill="none" stroke="#E6E1D3" stroke-width="2.6" stroke-linejoin="round"/><circle cx="1584" cy="95" r="2.6" fill="#E6E1D3"/></g><g id="badge"><circle cx="1605" cy="62" r="14" fill="#006860"/><circle cx="1605" cy="62" r="4" fill="#F8EACB"/></g></svg>
+      </button>
+      <div class="pop" id="bellPop" hidden></div>
+    </div>
+    <button class="pill hide-m" id="subBtn" aria-pressed="false">Subscribe</button>
+    <div class="pw">
+      <button class="av" id="avBtn" data-pop="avPop" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="avPop"><svg viewBox="0 0 60 60" aria-hidden="true" focusable="false"><use href="#art-0" width="60" height="60"/></svg></button>
+      <div class="pop menu" id="avPop" role="menu" aria-label="Account" hidden>
+        <a class="it" role="menuitem" href="#episodes">Library</a>
+        <a class="it" role="menuitem" href="#player">Now playing</a>
+        <a class="it" role="menuitem" href="#hosts">Hosts</a>
+      </div>
+    </div>
+    <button class="ib burger" id="menuBtn" data-pop="mnav" aria-label="Open menu" aria-expanded="false" aria-controls="mnav">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7H21M3 12H21M3 17H15" stroke="#E6E1D3" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>
+    </button>
+  </div>
+</header>
+<nav class="mnav" id="mnav" aria-label="Mobile" hidden>
+  <a href="#player">Listen</a>
+  <a href="#player" data-tab="tr">Transcript</a>
+  <a href="#map">Map</a>
+  <a href="#episodes">Episodes</a>
+  <a href="#hosts">Hosts</a>
+  <button class="pill" id="subBtnM" aria-pressed="false">Subscribe</button>
+</nav>
+
+<main>
+<section class="app" id="player" aria-label="Player">
+  <h1 class="sr-only">EP 12</h1>
+  <div class="col-left">
+    <div class="stage">
+      <svg class="art" id="art" viewBox="32 120 900 810" aria-hidden="true" focusable="false"></svg>
+      <button class="ov" id="saveBtn" style="--x:898;--y:170;--w:44;--h:44" aria-label="Save episode to library" aria-pressed="false">
+        <svg viewBox="876 148 44 44" aria-hidden="true" focusable="false"><g class="pls"><path d="M898,154V186M882,170H914" stroke="#F8EACB" stroke-width="3" stroke-linecap="round" fill="none"/></g><g class="chk"><path d="M884,171L894,181L913,159" stroke="#F37448" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g></svg>
+      </button>
+      <button class="ov playlbl" id="playLbl" style="--x:103;--y:888;--w:146;--h:64" aria-label="Play" aria-pressed="false">
+        <svg viewBox="30 856 146 64" aria-hidden="true" focusable="false"><text x="36" y="910" font-size="57.8" fill="#F8EACB" textLength="132" lengthAdjust="spacingAndGlyphs">PLAY</text><rect class="ul" x="37" y="915" width="130" height="3.5" rx="1.75" fill="#F37448"/></svg>
+      </button>
+      <div class="ov knob" id="speed" style="--x:806;--y:887;--w:60;--h:60" role="slider" tabindex="0" aria-label="Playback speed" aria-valuemin="0.5" aria-valuemax="2" aria-valuenow="1" aria-valuetext="1 times speed">
+        <svg viewBox="776 857 60 60" aria-hidden="true" focusable="false"><g id="knobTicks"></g><circle cx="806" cy="887" r="16.5" fill="#F8EACB"/><g id="knobPtr"><line x1="806" y1="887" x2="806" y2="875" stroke="#0F120F" stroke-width="3.2" stroke-linecap="round"/></g></svg>
+      </div>
+      <button class="ov" id="spkBtn" style="--x:892;--y:887;--w:56;--h:52" aria-label="Mute" aria-pressed="false">
+        <svg viewBox="864 861 56 52" aria-hidden="true" focusable="false"><g id="spk"><path d="M868,878H879L893,866V908L879,896H868Z" fill="#F8EACB"/><g id="spkW"><path d="M901,881Q905,887 901,893" fill="none" stroke="#F8EACB" stroke-width="3" stroke-linecap="round"/><path d="M909,876Q916,887 909,898" fill="none" stroke="#F8EACB" stroke-width="3" stroke-linecap="round"/></g><g id="spkX" opacity="0"><path d="M901,881L913,893M913,881L901,893" stroke="#F37448" stroke-width="3" stroke-linecap="round"/></g></g></svg>
+      </button>
+    </div>
+    <div class="track-row">
+      <span class="tbar l" aria-hidden="true"></span>
+      <div class="seek" id="seek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="120" aria-valuenow="0" aria-valuetext="0:00 of 2:00">
+        <span class="rail"></span><span class="fill"></span><span class="thumb"></span>
+        <span class="tip" aria-hidden="true"><svg viewBox="0 0 120 66" id="tipSvg"></svg></span>
+      </div>
+      <span class="tbar r" aria-hidden="true"></span>
+    </div>
+    <div class="ctl-row">
+      <button class="ov2" id="likeBtn" style="--x:59;--w:46;--h:40" aria-label="Like episode" aria-pressed="false">
+        <svg viewBox="-23 -20 46 40" aria-hidden="true" focusable="false"><path d="M0,-7C0,-14 -6,-17 -11,-17C-17,-17 -20,-12 -20,-7C-20,3 -8,10 0,17C8,10 20,3 20,-7C20,-12 17,-17 11,-17C6,-17 0,-14 0,-7Z" fill="none" stroke="#F8EACB" stroke-width="2.9" stroke-linejoin="round" transform="scale(.92)"/><g class="hf"><path d="M0,-7C0,-14 -6,-17 -11,-17C-17,-17 -20,-12 -20,-7C-20,3 -8,10 0,17C8,10 20,3 20,-7C20,-12 17,-17 11,-17C6,-17 0,-14 0,-7Z" fill="#F37448" transform="scale(.92)"/></g></svg>
+      </button>
+      <button class="ov2" id="prevBtn" style="--x:280;--w:40;--h:42" aria-label="Previous episode">
+        <svg viewBox="259 1007 40 42" aria-hidden="true" focusable="false"><rect x="263" y="1011" width="5.5" height="34" rx="1.5" fill="#F8EACB"/><path d="M294,1012V1044L270,1028Z" fill="#F8EACB" stroke="#F8EACB" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="ov2 big" id="ppBtn" style="--x:421;--w:124;--h:124" aria-label="Play" data-on="0">
+        <svg viewBox="359 966 124 124" aria-hidden="true" focusable="false"><circle class="ring" cx="421" cy="1028" r="56" fill="none" stroke="#2C302B" stroke-width="9"/><circle class="disc" cx="421" cy="1028" r="46" fill="#F8EACB"/><g class="ic-pause"><rect x="407.5" y="1011" width="9" height="34" rx="2" fill="#0F120F"/><rect x="425.5" y="1011" width="9" height="34" rx="2" fill="#0F120F"/></g><path class="ic-play" d="M411,1010L441,1028L411,1046Z" fill="#0F120F" stroke="#0F120F" stroke-width="3" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="ov2" id="nextBtn" style="--x:563;--w:40;--h:42" aria-label="Next episode">
+        <svg viewBox="545 1007 40 42" aria-hidden="true" focusable="false"><rect x="575.5" y="1011" width="5.5" height="34" rx="1.5" fill="#F8EACB"/><path d="M550,1012V1044L574,1028Z" fill="#F8EACB" stroke="#F8EACB" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="ov2" id="shareBtn" style="--x:827;--w:44;--h:44" aria-label="Copy episode link">
+        <svg viewBox="805 1005 44 44" aria-hidden="true" focusable="false"><path d="M833,1015H817C813,1015 810,1018 810,1022V1038C810,1042 813,1045 817,1045H837C841,1045 844,1042 844,1038V1030M826,1031C826,1021 833,1015 845,1015M839,1009L845,1015L839,1021" fill="none" stroke="#F8EACB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="ov2" id="repeatBtn" style="--x:904;--w:44;--h:44" aria-label="Repeat episode" aria-pressed="false">
+        <svg viewBox="882 1006 44 44" aria-hidden="true" focusable="false"><path d="M900,1013H893C889,1013 886,1016 886,1020V1027M908,1043H915C919,1043 922,1040 922,1036V1029M913,1009L919,1013L913,1017M895,1039L889,1043L895,1047M886,1033V1036C886,1040 889,1043 893,1043M922,1023V1020C922,1016 919,1013 915,1013" fill="none" stroke="#F8EACB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <aside class="panel" id="panel" aria-label="Chapters and transcript">
+    <div class="tabs" role="tablist" aria-label="Episode content">
+      <button class="tab" role="tab" id="tabCh" aria-selected="true" aria-controls="pnCh">Chapters</button>
+      <button class="tab" role="tab" id="tabTr" aria-selected="false" aria-controls="pnTr" tabindex="-1">Transcript</button>
+    </div>
+    <div class="tabpanels">
+      <div class="tabpanel" role="tabpanel" id="pnCh" aria-labelledby="tabCh"><ol class="rows" id="rows"></ol>
+        <div class="pfoot">
+          <span class="b" style="width:83px" aria-hidden="true"></span>
+          <div class="dots">
+            <button id="dotCh" aria-label="Show chapters" aria-pressed="true"><i></i></button>
+            <button id="dotTr" aria-label="Show transcript" aria-pressed="false"><i></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="pnTr" aria-labelledby="tabTr" hidden>
+        <div class="paras" id="paras"></div>
+        <div class="ttl" aria-hidden="true"><div class="dv"></div><div class="t1"></div><div class="t2"><span class="b" style="width:246px;max-width:45%"></span><span class="b" style="width:125px;background:var(--coral)"></span></div></div>
+      </div>
+    </div>
+    <span class="semi" id="semi" aria-hidden="true"></span>
+  </aside>
+</section>
+
+<section class="map" id="map" aria-labelledby="mapH">
+  <h2 class="sr-only" id="mapH">Episode map</h2>
+  <div class="map-head" aria-hidden="true"><span class="b" style="width:83px"></span><span class="t1"></span><span class="cnt" id="mapCnt"></span></div>
+  <div class="map-cover" aria-hidden="true"><div class="mc-in"><span class="disc" id="mapDisc"></span><span class="disc2" id="mapDisc2"></span><svg viewBox="0 0 100 100" id="mapArt"><use href="#art-0" width="100" height="100"/></svg></div></div>
+  <div class="strip-wrap" id="stripWrap">
+    <div class="strip" id="strip">
+      <svg class="sw" id="stripSvg" viewBox="0 0 3000 400" preserveAspectRatio="none" aria-hidden="true" focusable="false"></svg>
+    </div>
+  </div>
+  <div class="map-prog" aria-hidden="true"><span class="f" id="mapFill"></span></div>
+</section>
+
+<section class="eps" id="episodes" aria-labelledby="epsH">
+  <h2 class="sr-only" id="epsH">More episodes</h2>
+  <div class="sec-head" data-reveal aria-hidden="true"><span class="b" style="width:83px"></span><span class="t1"></span><span class="t2"></span></div>
+  <div class="grid" id="grid"></div>
+</section>
+</main>
+
+<footer class="foot" id="hosts" aria-labelledby="hostsH">
+  <h2 class="sr-only" id="hostsH">Hosts</h2>
+  <div class="hosts" id="hostsList"></div>
+  <div class="foot-mid">
+    <div class="tb" data-reveal aria-hidden="true"><div class="dv"></div><div class="t1"></div><div class="t2"><span class="b" style="width:246px;max-width:45vw"></span><span class="b" style="width:125px;background:var(--coral)"></span></div></div>
+    <nav class="fnav" aria-label="Footer">
+      <a href="#player">Listen</a><a href="#map">Map</a><a href="#episodes">Episodes</a><a href="#hosts">Hosts</a>
+    </nav>
+    <a class="totop" href="#top" aria-label="Back to top"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 19V5M5.5 11.5L12 5L18.5 11.5" fill="none" stroke="#0F120F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </div>
+  <div class="foot-art" aria-hidden="true">
+    <span class="semi-big" id="semiBig"></span>
+    <span class="cdot" id="cdot"></span>
+    <span class="cdot2" id="cdot2"></span>
+    <span class="flogo"><svg viewBox="0 0 108 54"><use href="#logo-ink" width="108" height="54"/></svg></span>
+  </div>
+</footer>
+
+<div class="mini" id="mini" role="region" aria-label="Mini player" inert>
+  <svg class="mth" id="miniArt" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#art-0" width="100" height="100"/></svg>
+  <button class="mpp" id="miniPP" aria-label="Play" data-on="0"><svg class="ic-play" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="color:#0F120F"><use href="#i-play"/></svg><svg class="ic-pause" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="color:#0F120F"><use href="#i-pause"/></svg></button>
+  <span class="mt" aria-hidden="true">EP 12</span>
+  <div class="mw" id="miniSeek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="120" aria-valuenow="0" aria-valuetext="0:00 of 2:00">
+    <svg viewBox="0 0 240 34" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path id="miniWave" fill="#F37448"/></svg>
+    <span class="ml"></span><span class="mf"></span>
+  </div>
+</div>
+
+<button class="fab" id="fab" data-pop="chat" aria-label="Open live chat" aria-expanded="false" aria-controls="chat">
+  <svg viewBox="1771 963 113 106" aria-hidden="true" focusable="false"><circle cx="1840" cy="1025" r="44" fill="#006860"/><circle cx="1868" cy="1058" r="11" fill="#006860"/><path d="M1829,1006C1825,1018 1834,1030 1850,1034" fill="none" stroke="#F8EACB" stroke-width="3.2" stroke-linecap="round"/><g class="bub" id="fabBub"><circle cx="1798" cy="990" r="27" fill="#F37448"/><path d="M1788,993Q1794,986 1801,989M1786,1001Q1796,992 1806,996M1793,982Q1799,978 1805,982" fill="none" stroke="#F8EACB" stroke-width="2.6" stroke-linecap="round"/></g></svg>
+</button>
+<div class="chat" id="chat" role="dialog" aria-label="Live chat" hidden>
+  <div class="chat-h"><span class="lv" id="chatLive"></span><span class="t1" aria-hidden="true"></span><button class="x" id="chatClose" aria-label="Close live chat"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="color:#E6E1D3"><use href="#i-x"/></svg></button></div>
+  <div class="msgs" id="msgs" aria-live="polite"></div>
+  <div class="reacts">
+    <button class="react" data-r="heart" aria-label="Send a heart, 12 sent"><svg viewBox="0 0 44 38" aria-hidden="true" focusable="false" style="color:#F37448"><use href="#i-heartf"/></svg><span class="n">12</span></button>
+    <button class="react" data-r="wave" aria-label="Send a wave, 8 sent"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="color:#A9CCB9"><use href="#i-wave"/></svg><span class="n">8</span></button>
+    <button class="react" data-r="sun" aria-label="Send a sun, 5 sent"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="color:#F8EACB"><use href="#i-sun"/></svg><span class="n">5</span></button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="color:#0F120F"><use id="toastIco" href="#i-check"/></svg><span class="tt" id="toastTxt"></span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(() => {
+'use strict';
+gsap.registerPlugin(ScrollTrigger);
+
+/* ================= utilities ================= */
+const C = { bg:'#0F120F', coral:'#F37448', cream:'#F8EACB', teal:'#006860', lteal:'#A9CCB9', line:'#2C302B', grey:'#8E918A', tip:'#1A1E19', nav:'#E6E1D3', ink:'#0F120F' };
+const NS = 'http://www.w3.org/2000/svg';
+const q = (s, r = document) => r.querySelector(s), qa = (s, r = document) => [...r.querySelectorAll(s)];
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const set = (e, a) => { for (const k in a) e.setAttribute(k, a[k]); };
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const f1 = v => Math.round(v * 10) / 10, f2 = v => Math.round(v * 100) / 100;
+const hash = (i, j) => { let h = (Math.imul(i + 11, 374761393) + Math.imul(j + 7, 668265263)) >>> 0; h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function rng(seed) { let s = seed >>> 0; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; }
+const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+const mix = (a, b, p) => { const A = hex(a), B = hex(b); return 'rgb(' + A.map((v, i) => Math.round(lerp(v, B[i], p))).join(',') + ')'; };
+const fmt = s => { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const useSvg = (id, w, h, cls = '') => `<svg class="${cls}" viewBox="0 0 ${w} ${h}" aria-hidden="true" focusable="false"><use href="#${id}" width="${w}" height="${h}"/></svg>`;
+const mqRM = matchMedia('(prefers-reduced-motion: reduce)');
+let RM = mqRM.matches;
+mqRM.addEventListener('change', e => { RM = e.matches; });
+const mqMobile = matchMedia('(max-width: 900px)');
+
+/* ================= shared drawings (covers, thumbnails) ================= */
+const HAIR = 'M253,437C248,392 268,352 306,334C340,318 386,320 418,334C444,345 462,364 470,392L446,396C428,392 410,392 400,396C388,402 384,418 381,434C378,450 366,460 348,466L308,472C312,486 314,500 306,513C296,516 284,505 276,490C264,474 255,456 253,437Z';
+const FACE = 'M396,398C420,390 440,392 446,396L452,414C456,426 460,440 466,452L474,467L487,483L476,489L467,494C470,498 474,501 473,505L466,510C470,513 471,516 469,518L467,523C470,530 471,540 470,548L413,553L403,557C398,572 392,590 387,607L360,585L312,548L322,523L322,497L308,472L348,466C366,460 378,450 381,434C384,418 388,404 396,398Z';
+const PALS = [
+  { base: C.coral, c1: C.cream, c2: C.coral, c3: C.cream, c4: C.coral, c5: C.teal, hair: C.teal, face: C.ink },
+  { base: C.teal, c1: C.coral, c2: C.cream, c3: C.coral, c4: C.teal, c5: C.cream, hair: C.coral, face: C.ink },
+  { base: C.cream, c1: C.teal, c2: C.coral, c3: C.teal, c4: C.cream, c5: C.coral, hair: C.coral, face: C.ink },
+  { base: C.coral, c1: C.teal, c2: C.cream, c3: C.teal, c4: C.cream, c5: C.coral, hair: C.cream, face: C.ink },
+  { base: C.teal, c1: C.cream, c2: C.teal, c3: C.coral, c4: C.coral, c5: C.cream, hair: C.coral, face: C.ink },
+  { base: C.cream, c1: C.coral, c2: C.cream, c3: C.teal, c4: C.teal, c5: C.coral, hair: C.teal, face: C.ink },
+  { base: C.coral, c1: C.cream, c2: C.teal, c3: C.cream, c4: C.teal, c5: C.coral, hair: C.teal, face: C.ink }
+];
+const FLIP = [false, false, true, false, true, false, true];
+function buildArt(g, P) {
+  const o = {};
+  o.base = el('circle', { cx: 420, cy: 506, r: 372, fill: P.base }, g);
+  o.c1 = el('circle', { cx: 640, cy: 640, r: 335, fill: P.c1 }, g);
+  o.c2 = el('circle', { cx: 576.5, cy: 308.7, r: 181, fill: P.c2 }, g);
+  o.c3 = el('circle', { cx: 239, cy: 364, r: 156, fill: P.c3 }, g);
+  o.c4 = el('circle', { cx: 282, cy: 717.5, r: 155, fill: P.c4 }, g);
+  o.c5 = el('circle', { cx: 590, cy: 648, r: 159, fill: P.c5 }, g);
+  o.head = el('g', {}, g);
+  el('path', { d: FACE, fill: P.face }, o.head);
+  el('path', { d: HAIR, fill: P.hair }, o.head);
+  return o;
+}
+const sdefs = q('#sprDefs');
+PALS.forEach((P, i) => {
+  const s = el('symbol', { id: 'art-' + i, viewBox: '-368 -368 736 736' }, sdefs);
+  buildArt(el('g', { transform: `${FLIP[i] ? 'scale(-1 1) ' : ''}translate(-420 -506)` }, el('g', { 'clip-path': 'url(#artClip)' }, s)), P);
+});
+function thumbSym(kind) {
+  const s = el('symbol', { id: 'th-' + kind, viewBox: '-31 -31 62 62' }, sdefs);
+  const g = el('g', { 'clip-path': 'url(#thClip)' }, s);
+  if (kind === 'coral' || kind === 'teal') {
+    el('circle', { r: 31, fill: C[kind] }, g);
+    el('rect', { x: -8, y: -2.5, width: 16, height: 5, rx: 2.5, fill: C.cream }, g);
+  } else if (kind === 'a') {
+    el('circle', { r: 31, fill: C.coral }, g); el('circle', { cx: 10, cy: -9, r: 18, fill: C.cream }, g); el('circle', { cx: -10, cy: 10, r: 17, fill: C.teal }, g);
+  } else if (kind === 'b') {
+    el('circle', { r: 31, fill: C.coral }, g); el('circle', { cx: -5, cy: 6, r: 21, fill: C.cream }, g);
+  } else {
+    el('circle', { r: 31, fill: C.teal }, g); el('circle', { cx: -11, cy: -1, r: 23, fill: C.coral }, g); el('circle', { cx: 13, cy: 15, r: 12, fill: C.ink }, g);
+  }
+}
+['coral', 'teal', 'a', 'b', 'c'].forEach(thumbSym);
+const THUMB = k => k === 'mini' ? useSvg('art-0', 62, 62, 'th') : useSvg('th-' + k, 62, 62, 'th');
+
+/* ================= player scene (same geometry as the video) ================= */
+const art = q('#art');
+const adefs = el('defs', {}, art);
+el('circle', { cx: 420, cy: 506, r: 368 }, el('clipPath', { id: 'discClip' }, adefs));
+const c7 = el('circle', { cx: -200, cy: 308, r: 182, fill: C.teal }, art);
+const c6 = el('circle', { cx: 730, cy: 753, r: 205, fill: C.teal }, art);
+const coverRot = el('g', {}, el('g', { 'clip-path': 'url(#discClip)' }, art));
+const A = buildArt(coverRot, PALS[0]);
+const dot = el('circle', { cx: 828, cy: 214, r: 25, fill: C.teal }, art);
+const tEP = el('text', { x: 36, y: 200, 'font-size': 71.5, fill: C.cream, textLength: 88, lengthAdjust: 'spacingAndGlyphs' }, art); tEP.textContent = 'EP';
+const t12 = el('text', { x: 35, y: 268, 'font-size': 71.5, fill: C.cream, textLength: 67, lengthAdjust: 'spacingAndGlyphs' }, art); t12.textContent = '12';
+const waveDark = el('path', { fill: C.bg }, art);
+const waveCoral = el('path', { fill: C.coral }, art);
+const spk = q('#spk'), spkW = q('#spkW'), spkX = q('#spkX');
+
+/* speed dial: 7 steps from 0.5x to 2x */
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+const ticks = SPEEDS.map((_, i) => {
+  const a = (-135 + i * 45) * Math.PI / 180;
+  return el('circle', { cx: f2(806 + 25 * Math.sin(a)), cy: f2(887 - 25 * Math.cos(a)), r: 2.6, fill: '#565A53' }, q('#knobTicks'));
+});
+
+/* track tooltip */
+const tipSvg = q('#tipSvg');
+el('rect', { x: 0, y: 0, width: 120, height: 66, rx: 10, fill: C.tip }, tipSvg);
+const tipBars = [];
+for (let i = 0; i < 26; i++) tipBars.push(el('rect', { x: f1(11 + i * 3.85), y: 15 + (i % 3 === 0 ? 0 : 2), width: 2.2, height: i % 3 === 0 ? 10 : 6, rx: 1, fill: C.grey }, tipSvg));
+el('rect', { x: 37, y: 40, width: 46, height: 10, rx: 5, fill: C.cream }, tipSvg);
+
+/* ================= panel: chapters ================= */
+const DUR = 120, NCH = 8, CH = DUR / NCH, NP = 7, PL = DUR / NP;
+const ROWS = [
+  { thumb: 'mini', bars: [[333, 'teal'], [173, 'teal']] },
+  { thumb: 'coral', bars: [[434, 'cream'], [201, 'coral']] },
+  { thumb: 'a', bars: [[283, 'teal'], [132, 'teal']] },
+  { thumb: 'teal', bars: [[527, 'coral'], [158, 'cream']] },
+  { thumb: 'b', bars: [[151, 'coral'], [405, 'cream']] },
+  { thumb: 'mini', bars: [[461, 'teal'], [70, 'teal']] },
+  { thumb: 'teal', bars: [[355, 'coral'], [486, 'cream']] },
+  { thumb: 'c', bars: [[512, 'cream'], [93, 'teal']] }
+];
+const rowsEl = q('#rows');
+rowsEl.innerHTML = ROWS.map((R, i) => `
+  <li class="row${i === 0 ? ' active' : ''}" data-i="${i}">
+    <button class="row-main" aria-label="Chapter ${i + 1}, starts at ${fmt(i * CH)}" aria-current="${i === 0 ? 'true' : 'false'}">
+      <span class="bg"></span>${THUMB(R.thumb)}
+      <span class="rb">${R.bars.map(([w, c]) => `<i style="width:${f2(w / 719 * 100)}%;background:var(--${c})"></i>`).join('')}</span>
+    </button>
+    <svg class="liked" viewBox="0 0 44 38" aria-hidden="true" focusable="false" style="color:#F8EACB"><use href="#i-heartf"/></svg>
+    <div class="pw">
+      <button class="keb" data-pop="km${i}" aria-label="More options for chapter ${i + 1}" aria-haspopup="menu" aria-expanded="false" aria-controls="km${i}"><svg viewBox="0 0 6 24" aria-hidden="true" focusable="false"><circle cx="3" cy="3" r="2.7" fill="#F8EACB"/><circle cx="3" cy="12" r="2.7" fill="#F8EACB"/><circle cx="3" cy="21" r="2.7" fill="#F8EACB"/></svg></button>
+    </div>
+    <div class="pop menu" id="km${i}" role="menu" aria-label="Chapter ${i + 1} options" hidden>
+      <button class="it" role="menuitem" data-act="like"><svg class="ico" viewBox="0 0 44 38" aria-hidden="true" focusable="false" style="color:#F37448"><use href="#i-heartf"/></svg><span class="lbl">Like</span></button>
+      <button class="it" role="menuitem" data-act="queue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="color:#A9CCB9"><use href="#i-plus"/></svg>Queue</button>
+      <button class="it" role="menuitem" data-act="share"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="color:#F8EACB"><use href="#i-link"/></svg>Share</button>
+    </div>
+  </li>`).join('');
+const rowEls = qa('.row', rowsEl);
+
+/* ================= panel: transcript ================= */
+const PARA = [[1613, 1140], [1676, 1307], [1720, 1115], [1765, 1245], [1698, 1128], [1765, 1105], [1758, 1197]];
+const HLC = ['var(--coral)', 'var(--coral)', 'var(--coral)', 'var(--lteal)', 'var(--cream)', 'var(--coral)', 'var(--coral)'];
+function wordBars(x0, x1, top, seed) {
+  const r = rng(seed); let x = x0, out = '';
+  while (x < x1 - 8) {
+    const w = Math.min(x1 - x, 26 + r() * 92);
+    out += `<i style="left:${f2(x / 896 * 100)}%;width:${f2(w / 896 * 100)}%;top:calc(${top} * var(--ph))"></i>`;
+    x += w + 10;
+  }
+  return out;
+}
+q('#paras').innerHTML = PARA.map(([e1, e2], k) => {
+  const lines = wordBars(10, e1 - 989, 0.2372, 101 + k * 7) + wordBars(10, e2 - 989, 0.6859, 202 + k * 7);
+  return `<button class="para" data-k="${k}" style="--hc:${HLC[k]}" aria-label="Paragraph ${k + 1}, ${fmt(k * PL)}. Jump here">
+    <span class="hov"></span>${k === 3 ? '<span class="tealbg"></span>' : ''}<span class="hl"></span>
+    <span class="ln">${lines}</span><span class="ln dk">${lines}</span>
+    <span class="ring"></span><span class="chip"><i></i></span>
+    <svg class="now" viewBox="0 0 44 38" aria-hidden="true" focusable="false" style="color:#F8EACB"><use href="#i-heartf"/></svg>
+  </button>`;
+}).join('');
+const paraEls = qa('.para');
+
+/* ================= episode map (long waveform) ================= */
+const stripSvg = q('#stripSvg'), strip = q('#strip');
+const NS_BARS = 300;
+(() => {
+  let dc = '';
+  for (let i = 0; i < NS_BARS; i++) {
+    const x = i * 10 + 2.5, u = i / NS_BARS;
+    const env = 0.5 + 0.5 * Math.sin(u * 37 + 1.2) * Math.sin(u * 11 + 0.4);
+    const n = 0.55 + 0.45 * hash(i, 3);
+    const edge = Math.min(1, (i % (NS_BARS / NCH)) / 2.5);
+    const h = Math.max(6, (40 + 210 * env * n) * (0.35 + 0.65 * edge));
+    dc += `M${x} ${f1(270 - h)}h5v${f1(h * 1.42)}h-5z`;
+  }
+  const cp = el('clipPath', { id: 'playedClip' }, el('defs', {}, stripSvg));
+  window.__playedRect = el('rect', { x: 0, y: 0, width: 0, height: 400 }, cp);
+  el('path', { d: dc, fill: C.coral }, stripSvg);
+  el('path', { d: dc, fill: C.cream, 'clip-path': 'url(#playedClip)' }, stripSvg);
+})();
+const playedRect = window.__playedRect; delete window.__playedRect;
+const MK_COL = [['teal', 'teal'], ['cream', 'coral'], ['teal', 'teal'], ['coral', 'cream'], ['coral', 'cream'], ['teal', 'teal'], ['coral', 'cream'], ['cream', 'teal']];
+strip.insertAdjacentHTML('beforeend', ROWS.map((R, i) => `
+  <div class="mk" style="left:${f2(i / NCH * 100)}%">
+    <button data-ch="${i}" aria-label="Jump to chapter ${i + 1}, ${fmt(i * CH)}">${THUMB(R.thumb)}<span class="mb" aria-hidden="true"><i style="width:${110 + (i * 37) % 90}px;background:var(--${MK_COL[i][0]})"></i><i style="width:${50 + (i * 53) % 70}px;background:var(--${MK_COL[i][1]})"></i></span></button>
+  </div>`).join(''));
+const mkEls = qa('.mk', strip);
+q('#mapCnt').innerHTML = ROWS.map(() => '<i></i>').join('');
+const cntDots = qa('#mapCnt i');
+const mapProg = q('.map-prog');
+for (let i = 1; i < NCH; i++) { const t = document.createElement('span'); t.className = 'tk'; t.style.left = (i / NCH * 100) + '%'; mapProg.appendChild(t); }
+
+/* ================= other episodes ================= */
+const BACKS = [['var(--teal)', 'var(--cream)'], ['var(--coral)', 'var(--ink)'], ['var(--cream)', 'var(--ink)'], ['var(--teal)', 'var(--cream)'], ['var(--coral)', 'var(--ink)'], ['var(--cream)', 'var(--ink)']];
+const EPDOTS = [[C.coral, C.teal], [C.teal, C.cream], [C.cream, C.coral], [C.coral, C.cream], [C.teal, C.coral], [C.cream, C.teal]];
+q('#grid').innerHTML = BACKS.map(([bg, fg], i) => {
+  const n = 11 - i, r = rng(900 + i);
+  let lines = '';
+  for (let l = 0; l < 6; l++) { let row = '', left = 100; while (left > 14) { const w = Math.min(left, 10 + r() * 26); row += `<i style="width:${f2(w)}%;background:${fg}"></i>`; left -= w + 3; if (l === 5 && left < 60) break; } lines += `<div class="l">${row}</div>`; }
+  return `<article class="card" data-reveal-card>
+    <div class="card-in">
+      <div class="face front">
+        <button class="flip" aria-expanded="false" aria-label="Episode ${n}: show details">
+          <span class="caw" aria-hidden="true">${useSvg('art-' + (i + 1), 100, 100, 'ca')}</span>
+          <span class="ep" aria-hidden="true"><i style="background:${EPDOTS[i][0]}"></i><i style="background:${EPDOTS[i][1]}"></i></span>
+          <span class="corner" aria-hidden="true"><svg viewBox="0 0 24 24" style="color:#F8EACB"><use href="#i-plus"/></svg></span>
+          <span class="fb" aria-hidden="true"><span class="t1"></span><span class="t2"><span class="b" style="width:30%"></span><span class="b" style="width:14%;background:${EPDOTS[i][0]}"></span></span></span>
+        </button>
+      </div>
+      <div class="face back" style="background:${bg};color:${fg};--bk:${bg}" inert>
+        <span class="t1" style="background:${fg}" aria-hidden="true"></span>
+        <div class="lines" aria-hidden="true">${lines}</div>
+        <div class="acts2">
+          <button class="rb2 pl" aria-label="Play episode ${n}"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-play"/></svg></button>
+          <button class="rb2 lk" aria-pressed="false" aria-label="Like episode ${n}"><svg viewBox="0 0 44 38" aria-hidden="true" focusable="false"><use href="#i-heart"/></svg></button>
+          <button class="rb2 q" aria-pressed="false" aria-label="Add episode ${n} to queue"><svg class="pls" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg><svg class="chk" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></button>
+          <button class="rb2 flipback" aria-label="Back to episode ${n} cover"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-flip"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </article>`;
+}).join('');
+
+/* ================= hosts ================= */
+q('#hostsList').innerHTML = [5, 6].map((v, i) => `
+  <div class="host" data-reveal>
+    ${useSvg('art-' + v, 100, 100, 'ha')}
+    <div class="hb"><span class="t1" aria-hidden="true"></span><span class="b" style="width:${i ? 96 : 130}px" aria-hidden="true"></span>
+      <button class="follow" aria-pressed="false" aria-label="Follow host ${i + 1}"><svg class="pls" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="color:#F8EACB"><use href="#i-plus"/></svg><svg class="chk" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="color:#0F120F"><use href="#i-check"/></svg></button>
+    </div>
+  </div>`).join('');
+
+/* ================= dropdown menus (inbox, bell) ================= */
+const popRow = (th, w1, w2, unread, label) => `<button class="it" aria-label="${label}">${THUMB(th)}<span class="bars"><span class="b" style="width:${w1}px;background:var(--nav)"></span><span class="b" style="width:${w2}px"></span></span>${unread ? '<span class="unread"></span>' : ''}</button>`;
+q('#inboxPop').innerHTML = popRow('a', 140, 90, 1, 'Message from host 1, unread') + popRow('mini', 110, 130, 1, 'Message from host 2, unread') + popRow('c', 150, 70, 0, 'Message from a listener');
+q('#bellPop').innerHTML = popRow('teal', 150, 100, 1, 'New episode out') + popRow('b', 120, 80, 1, 'Your clip was shared') + popRow('coral', 90, 120, 0, 'Weekly digest');
+
+/* ================= playback state ================= */
+const S = { playing: false, t: 0, si: 2, speed: 1, muted: false, loop: false, level: 0, kick: 0, sb: 9, bounce: 0, rot: 0, wig: 0, tau: 0, clock: 0, spikes: [] };
+const D6 = { x: 730, y: 753 }, D7 = { x: -200 }, DOT = { m: 0 };
+let rotTw = null, endTw = null;
+const ppBtn = q('#ppBtn'), playLbl = q('#playLbl'), miniPP = q('#miniPP');
+
+function addSpike(a = 340) { if (!RM) S.spikes.push({ t0: S.clock, x0: 760, v: 1550, a, w: 115 }); }
+
+/* ================= real sound: episode (ElevenLabs Music) + UI sounds (ElevenLabs SFX) ================= */
+const TRACKS = [[12, 'UK garage', 'episode'], [11, 'Nu-disco', 'ep11'], [10, 'Warehouse techno', 'ep10'], [9, 'French house', 'ep9'],
+  [8, 'Melodic techno', 'ep8'], [7, 'Electro club', 'ep7'], [6, 'Italo disco', 'ep6']];
+let trk = 0, quiet = false;
+const aud = new Audio('audio/episode.mp3'); aud.preload = 'auto';
+function playTrack(k) {  // switch episode: its own track, from the start
+  trk = (k + TRACKS.length) % TRACKS.length;
+  const [n, style, f] = TRACKS[trk];
+  aud.src = 'audio/' + f + '.mp3';
+  if (S.playing) { quiet = true; setPlaying(false); quiet = false; }  // no pause sound between two tracks
+  S.t = 0; addSpike(); syncPanel(true);
+  t12.textContent = String(n).padStart(2, '0');  // the big EP number follows the episode
+  q('.mt').textContent = q('h1').textContent = 'EP ' + n;
+  setPlaying(true);
+  toast('EP ' + n + ' · ' + style, 'play');
+}
+const SFXV = { play: .55, pause: .5, like: .6, queue: .55, flip: .5, tick: .45 };
+const sfx = n => { if (S.muted) return; const a = new Audio('audio/' + n + '.mp3'); a.volume = SFXV[n] || .5; a.play().catch(() => {}); };
+function audSync(on) {
+  if (on) { aud.currentTime = Math.min(S.t, DUR - 0.05); aud.playbackRate = S.speed; aud.muted = S.muted; aud.play().catch(() => {}); sfx('play'); }
+  else { aud.pause(); if (!quiet) sfx('pause'); }
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.matches('.lk, #likeBtn')) sfx('like');
+  else if (t.matches('.q, #saveBtn, .follow, #subBtn, #subBtnM')) sfx('queue');
+  else if (t.matches('.flip, .flipback')) sfx('flip');
+}, true);
+
+function setPlaying(on) {
+  if (S.playing === on) return;
+  S.playing = on;
+  audSync(on);
+  if (endTw) { endTw.kill(); endTw = null; }
+  [ppBtn, miniPP].forEach(b => { b.dataset.on = on ? '1' : '0'; b.setAttribute('aria-label', on ? 'Pause' : 'Play'); });
+  playLbl.setAttribute('aria-pressed', String(on));
+  playLbl.setAttribute('aria-label', on ? 'Pause' : 'Play');
+  if (on) {
+    if (S.t >= DUR - 0.05) S.t = 0;
+    S.kick = 1; S.sb = 0;
+    if (rotTw) { rotTw.kill(); rotTw = null; }
+    if (!RM) {
+      gsap.to(D6, { x: 1150, duration: 3.4, ease: 'power2.inOut', overwrite: true });
+      gsap.to(D7, { x: 70, duration: 3.8, delay: 0.5, ease: 'power2.out', overwrite: true });
+    }
+    gsap.to(DOT, { m: 1, duration: 0.4, overwrite: true });
+    if (!RM) gsap.fromTo(q('.ring', ppBtn), { attr: { r: 48 }, opacity: 1 }, { attr: { r: 60 }, opacity: 0, duration: 0.7, ease: 'power2.out' });
+  } else {
+    const target = Math.ceil(S.rot / 360 - 0.001) * 360;
+    rotTw = RM ? null : gsap.to(S, { rot: target, duration: 1.1, ease: 'back.out(1.6)', onComplete: () => { S.rot = 0; } });
+    if (RM) S.rot = 0;
+    gsap.to(D6, { x: 730, duration: RM ? 0 : 1.2, ease: 'power3.inOut', overwrite: true });
+    gsap.to(D7, { x: -200, duration: RM ? 0 : 0.9, ease: 'power2.in', overwrite: true });
+    gsap.to(DOT, { m: 0, duration: 0.5, overwrite: true });
+    if (!RM) gsap.fromTo(q('.ring', ppBtn), { attr: { r: 50 }, opacity: 1 }, { attr: { r: 56 }, opacity: 0, duration: 0.8, ease: 'power2.out' });
+  }
+}
+const toggle = () => setPlaying(!S.playing);
+
+function seek(t, { spike = true } = {}) {
+  if (endTw) { endTw.kill(); endTw = null; }
+  S.t = clamp(t, 0, DUR - 0.01);
+  aud.currentTime = S.t;
+  if (spike) { addSpike(); if (S.playing) S.kick = Math.max(S.kick, 0.45); }
+  syncPanel(true);
+}
+function setSpeed(i, { wig = true } = {}) {
+  i = clamp(Math.round(i), 0, SPEEDS.length - 1);
+  const changed = i !== S.si;
+  S.si = i; S.speed = SPEEDS[i];
+  aud.playbackRate = S.speed; if (changed && wig) sfx('tick');
+  const k = q('#speed');
+  k.setAttribute('aria-valuenow', S.speed);
+  k.setAttribute('aria-valuetext', S.speed + ' times speed');
+  ticks.forEach((t, j) => t.setAttribute('fill', j <= i ? C.coral : '#565A53'));
+  gsap.to('#knobPtr', { rotation: -135 + i * 45, svgOrigin: '806 887', duration: RM ? 0 : 0.45, ease: 'back.out(2.2)', overwrite: true });
+  if (changed && wig) S.wig = 1;
+}
+
+/* ================= frame-by-frame render ================= */
+const NB = 150, WX = 33, WP = 6, BASE = 852;
+const hs = new Float32Array(NB);
+let heroVis = true, mapVis = false, miniOn = false;
+const iv = () => 0.48 / S.speed;
+const env = off => { const I = iv(); let d = S.sb - off; if (d < 0) d += I; return Math.min(1, d / 0.04) * Math.exp(-d * 6.5 * Math.sqrt(S.speed)); };
+
+function step(dt) {
+  S.clock += dt;
+  if (S.playing) {
+    S.t += dt * S.speed;
+    if (S.t >= DUR) {
+      if (S.loop) { S.t -= DUR; addSpike(); }
+      else {
+        S.t = DUR - 0.01; setPlaying(false);
+        endTw = gsap.to(S, { t: 0, duration: RM ? 0 : 0.9, delay: 0.35, ease: 'power2.inOut', onUpdate: () => syncPanel(true), onComplete: () => { endTw = null; } });
+      }
+    }
+  }
+  if (S.playing && !aud.paused && Math.abs(aud.currentTime - S.t) > 0.3) aud.currentTime = S.t;  // keep the sound on the visual clock
+  S.sb += dt; const I = iv(); if (S.playing && S.sb >= I) S.sb %= I;
+  const target = S.playing ? (S.muted ? 16 : 100) : 0;
+  S.level += (target - S.level) * (1 - Math.exp(-dt * (S.playing ? 7 : 4.5)));
+  S.kick *= Math.exp(-dt * 1.6);
+  const tb = S.playing && !RM ? 1 : 0;
+  S.bounce += (tb - S.bounce) * (1 - Math.exp(-dt * 5));
+  if (S.playing && !RM) S.rot += dt * 46 * S.speed;
+  S.wig = Math.max(0, S.wig - dt / 1.1);
+  S.tau += RM ? 0 : dt * (S.playing ? S.speed : 0.3);
+  if (S.spikes.length) S.spikes = S.spikes.filter(s => S.clock - s.t0 < 0.8);
+}
+
+function drawWave(Aamp, pl) {
+  const t = S.tau;
+  const sp = S.spikes.map(s => { const a = S.clock - s.t0; return [s.x0 - s.v * a, s.a * Math.min(1, a / 0.05), s.w]; });
+  const tick = t * 14, k0 = Math.floor(tick), fr = tick - k0;
+  for (let i = 0; i < NB; i++) {
+    const x = WX + i * WP;
+    const e1 = 0.5 + 0.5 * Math.sin(x * 0.021 + t * 1.9), e2 = 0.5 + 0.5 * Math.sin(x * 0.071 - t * 4.6 + 2), e3 = 0.5 + 0.5 * Math.sin(x * 0.013 - t * 0.8 + 0.7);
+    const nz = lerp(hash(i, k0), hash(i, k0 + 1), fr);
+    const shape = (0.16 + 0.84 * Math.pow(e1, 1.3) * (0.35 + 0.65 * e2)) * (0.55 + 0.45 * nz) * (0.7 + 0.3 * e3);
+    const boost = 1 + S.kick * (1.6 * Math.exp(-(((x - 45) / 75) ** 2)) + 0.5 * Math.exp(-(((x - 230) / 90) ** 2)));
+    let h = Aamp * shape * (0.62 + 0.38 * pl) * boost;
+    for (const [xc, a, w] of sp) h += a * clamp((xc + 120) / 240) * Math.exp(-(((x - xc) / w) ** 2)) * (0.45 + 0.55 * nz);
+    hs[i] = Math.max(1.5, Math.min(h, 430));
+  }
+  let dc = '', dd = '';
+  for (let i = 0; i < NB; i++) {
+    const x = WX + i * WP, h = hs[i];
+    dc += `M${x} ${f1(BASE - h)}h3.2v${f1(h * 1.42)}h-3.2z`;
+    const g = Math.min(h, i < NB - 1 ? hs[i + 1] : h) - 2;
+    if (g > 2) dd += `M${x + 3.2} ${f1(BASE - g)}h2.8v${f1(g * 1.42)}h-2.8z`;
+  }
+  waveCoral.setAttribute('d', dc);
+  waveDark.setAttribute('d', dd || 'M0 0');
+}
+
+const seekEl = q('#seek'), miniSeek = q('#miniSeek'), miniWave = q('#miniWave'), semi = q('#semi'), miniArt = q('#miniArt'), mapFill = q('#mapFill');
+let lastSec = -1;
+function draw() {
+  const p0 = env(0), p1 = env(0.07), p2 = env(0.12);
+  const E = S.bounce, Aamp = S.level * (1 + 0.9 * S.kick);
+  const pl = RM ? 0.5 : p0;
+  if (heroVis) {
+    drawWave(Aamp, pl);
+    set(coverRot, { transform: `rotate(${f2(S.rot % 360)} 420 506)` });
+    const s4 = 1 + 0.16 * E * p1, s5 = 1 + 0.11 * E * p0, s3 = 1 + 0.05 * E * p2, s2 = 1 + 0.04 * E * p0;
+    set(A.c4, { r: f2(155 * s4), cy: f2(717.5 - (s4 - 1) * 160), cx: f2(282 + (s4 - 1) * 40) });
+    set(A.c5, { r: f2(159 * s5), cy: f2(648 - (s5 - 1) * 70) });
+    set(A.c3, { r: f2(156 * s3) });
+    set(A.c2, { r: f2(181 * s2) });
+    set(A.head, { transform: `translate(0 ${f2(-6 * E * p2)})` });
+    set(c6, { cx: f2(D6.x), cy: f2(D6.y), r: f2(205 * (1 + 0.05 * E * p1)) });
+    set(c7, { cx: f2(D7.x) });
+    set(dot, { r: f2(25 * (1 + 0.22 * E * p0)), fill: mix(C.teal, C.coral, DOT.m) });
+    const lvl = clamp(Aamp / 150);
+    const w = RM ? 0 : Math.min(1, S.wig + (S.playing ? clamp(S.speed - 1) * 0.45 : 0));
+    set(spkW, { transform: `translate(893 887) rotate(${f2(w * 9 * Math.sin(S.clock * 31))}) scale(${f2(S.muted ? 1 : 1 + 0.3 * lvl * (0.4 + 0.6 * pl))}) translate(-893 -887)` });
+    set(spk, { transform: `translate(893 887) rotate(${f2(w * 5 * Math.sin(S.clock * 23 + 1))}) translate(-893 -887)` });
+    if (!mqMobile.matches) semi.style.transform = `scaleY(${f2(1 + 0.22 * E * p1)})`;
+  }
+  const P = S.t / DUR;
+  seekEl.style.setProperty('--p', P.toFixed(4));
+  const sec = Math.floor(S.t);
+  if (sec !== lastSec) {
+    lastSec = sec;
+    for (const s of [seekEl, miniSeek]) { s.setAttribute('aria-valuenow', sec); s.setAttribute('aria-valuetext', fmt(S.t) + ' of ' + fmt(DUR)); }
+  }
+  if (miniOn) {
+    miniSeek.style.setProperty('--p', P.toFixed(4));
+    miniArt.style.transform = `rotate(${f2(S.rot % 360)}deg)`;
+    let d = '';
+    for (let i = 0; i < 48; i++) {
+      const x = i * 5, nz = hash(i, Math.floor(S.tau * 10));
+      const h = Math.max(1.2, Math.min(30, (Aamp / 100) * 26 * (0.25 + 0.75 * nz) * (0.6 + 0.4 * pl)));
+      d += `M${x} ${f1(17 - h / 2)}h2.4v${f1(h)}h-2.4z`;
+    }
+    miniWave.setAttribute('d', d);
+  }
+  if (mapVis) playedRect.setAttribute('width', f1(P * 3000));
+  syncPanel(false);
+}
+
+/* current chapter and paragraph */
+let curCh = -1, curPara = -1, userScrollTr = 0;
+const pDone = new Float32Array(NP).fill(-1);
+const pnTr = q('#pnTr');
+function syncPanel(force) {
+  const ch = Math.min(NCH - 1, Math.floor(S.t / CH));
+  if (ch !== curCh || force) {
+    if (ch !== curCh) {
+      rowEls.forEach((r, i) => { r.classList.toggle('active', i === ch); q('.row-main', r).setAttribute('aria-current', String(i === ch)); });
+      mkEls.forEach((m, i) => m.classList.toggle('on', i === ch));
+      cntDots.forEach((d, i) => d.classList.toggle('on', i === ch));
+    }
+    curCh = ch;
+  }
+  const k = Math.min(NP - 1, Math.floor(S.t / PL));
+  for (let j = 0; j < NP; j++) {
+    const p = clamp((S.t - j * PL) / PL);
+    if (Math.abs(p - pDone[j]) > 0.0015 || (force && p !== pDone[j])) {
+      pDone[j] = p;
+      paraEls[j].style.setProperty('--p', p.toFixed(4));
+      paraEls[j].classList.toggle('started', p > 0);
+    }
+  }
+  if (k !== curPara) {
+    const prev = paraEls[curPara];
+    if (prev) gsap.to(q('.now', prev), { scale: 0, opacity: 0, duration: RM ? 0 : 0.2, overwrite: true });
+    curPara = k;
+    const cur = paraEls[k];
+    if (S.t > 0.05) gsap.to(q('.now', cur), { scale: 1, opacity: 1, duration: RM ? 0 : 0.45, ease: 'back.out(3)', overwrite: true });
+    if (!pnTr.hidden && pnTr.scrollHeight > pnTr.clientHeight + 4 && performance.now() - userScrollTr > 2500) {
+      const top = cur.offsetTop - 12, vis = pnTr.scrollTop;
+      if (top < vis || top + cur.offsetHeight > vis + pnTr.clientHeight) pnTr.scrollTo({ top: Math.max(0, top - pnTr.clientHeight * 0.25), behavior: RM ? 'auto' : 'smooth' });
+    }
+  }
+}
+['wheel', 'touchmove'].forEach(ev => pnTr.addEventListener(ev, () => { userScrollTr = performance.now(); }, { passive: true }));
+
+gsap.ticker.add((time, dms) => { const dt = Math.min(dms, 100) / 1000; step(dt); draw(); });
+
+/* ================= controls ================= */
+ppBtn.addEventListener('click', toggle);
+playLbl.addEventListener('click', toggle);
+miniPP.addEventListener('click', toggle);
+q('#prevBtn').addEventListener('click', () => { if (S.t > 3) seek(0); else playTrack(trk - 1); });
+q('#nextBtn').addEventListener('click', () => playTrack(trk + 1));
+q('#repeatBtn').addEventListener('click', e => { S.loop = !S.loop; e.currentTarget.setAttribute('aria-pressed', String(S.loop)); toast(S.loop ? 'Repeat on' : 'Repeat off', S.loop ? 'check' : 'x'); });
+q('#likeBtn').addEventListener('click', e => {
+  const b = e.currentTarget, on = b.getAttribute('aria-pressed') !== 'true';
+  b.setAttribute('aria-pressed', String(on));
+  if (on && !RM) gsap.fromTo(q('.hf', b), { scale: 0.2, svgOrigin: '0 0' }, { scale: 1, svgOrigin: '0 0', duration: 0.5, ease: 'back.out(3)' });
+  toast(on ? 'Liked' : 'Like removed', on ? 'heartf' : 'heart');
+});
+q('#saveBtn').addEventListener('click', e => {
+  const b = e.currentTarget, on = b.getAttribute('aria-pressed') !== 'true';
+  b.setAttribute('aria-pressed', String(on));
+  if (!RM) gsap.fromTo(qa('svg > g', b), { rotation: on ? -90 : 90, svgOrigin: '898 170' }, { rotation: 0, svgOrigin: '898 170', duration: 0.5, ease: 'back.out(2)' });
+  toast(on ? 'Saved to library' : 'Removed from library', on ? 'check' : 'x');
+});
+q('#spkBtn').addEventListener('click', e => {
+  S.muted = !S.muted;
+  aud.muted = S.muted;
+  const b = e.currentTarget;
+  b.setAttribute('aria-pressed', String(S.muted));
+  b.setAttribute('aria-label', S.muted ? 'Unmute' : 'Mute');
+  spkW.setAttribute('opacity', S.muted ? 0 : 1); spkX.setAttribute('opacity', S.muted ? 1 : 0);
+  S.wig = 1;
+});
+function copyLink() {
+  try { const p = navigator.clipboard && navigator.clipboard.writeText(location.href.split('#')[0] + '#player'); if (p) p.catch(() => {}); } catch (_) { /* clipboard unavailable */ }
+  toast('Link copied', 'link');
+}
+q('#shareBtn').addEventListener('click', copyLink);
+function setSub(on) {
+  ['#subBtn', '#subBtnM'].forEach(s => { const b = q(s); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Subscribed' : 'Subscribe'; });
+}
+['#subBtn', '#subBtnM'].forEach(s => q(s).addEventListener('click', e => { const on = e.currentTarget.getAttribute('aria-pressed') !== 'true'; setSub(on); toast(on ? 'Subscribed' : 'Unsubscribed', on ? 'check' : 'x'); }));
+
+/* playback track: drag with mouse, finger or keyboard */
+function bindSeek(elm, padRatio, tip) {
+  let drag = false;
+  const frac = x => { const r = elm.getBoundingClientRect(), pad = r.width * padRatio; return clamp((x - r.left - pad) / (r.width - 2 * pad)); };
+  const showTip = x => {
+    if (!tip) return;
+    const r = elm.getBoundingClientRect(), f = frac(x);
+    elm.style.setProperty('--hx', (x - r.left) + 'px');
+    tipBars.forEach((b, i) => b.setAttribute('fill', i / 26 < f ? C.coral : C.grey));
+    elm.classList.add('tipon');
+  };
+  elm.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    drag = true; elm.setPointerCapture(e.pointerId); elm.classList.add('drag'); elm.focus({ preventScroll: true });
+    seek(frac(e.clientX) * DUR, { spike: false }); showTip(e.clientX); e.preventDefault();
+  });
+  elm.addEventListener('pointermove', e => { if (drag) seek(frac(e.clientX) * DUR, { spike: false }); if (e.pointerType === 'mouse' || drag) showTip(e.clientX); });
+  const end = () => { if (!drag) return; drag = false; elm.classList.remove('drag'); addSpike(); if (S.playing) S.kick = Math.max(S.kick, 0.45); };
+  elm.addEventListener('pointerup', end); elm.addEventListener('pointercancel', end);
+  elm.addEventListener('lostpointercapture', () => { end(); if (tip) elm.classList.remove('tipon'); });
+  elm.addEventListener('pointerleave', () => { if (!drag && tip) elm.classList.remove('tipon'); });
+  elm.addEventListener('keydown', e => {
+    const m = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5, PageUp: 15, PageDown: -15 }[e.key];
+    if (m !== undefined) { seek(S.t + m); e.preventDefault(); }
+    else if (e.key === 'Home') { seek(0); e.preventDefault(); }
+    else if (e.key === 'End') { seek(DUR - 1); e.preventDefault(); }
+  });
+}
+bindSeek(seekEl, 14 / 746, true);
+bindSeek(miniSeek, 0, false);
+
+/* speed dial: click = next step, drag = turn, arrow keys */
+(() => {
+  const k = q('#speed');
+  let down = null, moved = false;
+  const stepFrom = (x, y) => {
+    const r = k.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    let a = Math.atan2(x - cx, cy - y) * 180 / Math.PI;
+    return clamp(Math.round((clamp(a, -150, 150) + 135) / 45), 0, SPEEDS.length - 1);
+  };
+  k.addEventListener('pointerdown', e => { if (e.button !== 0) return; down = { x: e.clientX, y: e.clientY }; moved = false; k.setPointerCapture(e.pointerId); k.classList.add('drag'); k.focus({ preventScroll: true }); e.preventDefault(); });
+  k.addEventListener('pointermove', e => { if (!down) return; if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5) moved = true; if (moved) setSpeed(stepFrom(e.clientX, e.clientY)); });
+  const up = () => { if (!down) return; if (!moved) setSpeed((S.si + 1) % SPEEDS.length); down = null; k.classList.remove('drag'); };
+  k.addEventListener('pointerup', up); k.addEventListener('pointercancel', () => { down = null; k.classList.remove('drag'); });
+  k.addEventListener('keydown', e => {
+    const m = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+    if (m) { setSpeed(S.si + m); e.preventDefault(); }
+    else if (e.key === 'Home') { setSpeed(0); e.preventDefault(); }
+    else if (e.key === 'End') { setSpeed(SPEEDS.length - 1); e.preventDefault(); }
+    else if (e.key === 'Enter' || e.key === ' ') { setSpeed((S.si + 1) % SPEEDS.length); e.preventDefault(); }
+  });
+})();
+
+/* chapters / transcript tabs */
+const tabs = [q('#tabCh'), q('#tabTr')], pans = [q('#pnCh'), pnTr], dots = [q('#dotCh'), q('#dotTr')], panel = q('#panel');
+let tabI = 0;
+function setTab(i, focus) {
+  if (i === tabI) { if (focus) tabs[i].focus(); return; }
+  tabI = i;
+  tabs.forEach((t, j) => { t.setAttribute('aria-selected', String(j === i)); t.tabIndex = j === i ? 0 : -1; });
+  dots.forEach((d, j) => d.setAttribute('aria-pressed', String(j === i)));
+  pans.forEach((p, j) => { p.hidden = j !== i; });
+  panel.classList.toggle('tr', i === 1);
+  if (focus) tabs[i].focus();
+  if (!RM) {
+    const items = i === 0 ? rowEls : [...paraEls, q('.ttl', pnTr)];
+    gsap.fromTo(items, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.42, stagger: 0.035, ease: 'power2.out', overwrite: true, clearProps: 'transform,opacity' });
+  }
+  if (i === 1) { curPara = -1; syncPanel(true); }
+}
+tabs.forEach((t, i) => {
+  t.addEventListener('click', () => setTab(i));
+  t.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { setTab(1 - tabI, true); e.preventDefault(); }
+    else if (e.key === 'Home') { setTab(0, true); e.preventDefault(); }
+    else if (e.key === 'End') { setTab(1, true); e.preventDefault(); }
+  });
+});
+dots.forEach((d, i) => d.addEventListener('click', () => setTab(i)));
+qa('a[data-tab="tr"]').forEach(a => a.addEventListener('click', () => setTab(1)));
+
+/* chapters: click = go to the chapter and play */
+rowEls.forEach((r, i) => {
+  q('.row-main', r).addEventListener('click', () => { seek(i * CH); setPlaying(true); });
+  qa('[data-act]', r).forEach(b => b.addEventListener('click', () => {
+    const act = b.dataset.act;
+    closePop(true);
+    if (act === 'like') {
+      const on = !r.classList.contains('is-liked');
+      r.classList.toggle('is-liked', on);
+      q('.lbl', b).textContent = on ? 'Unlike' : 'Like';
+      if (on && !RM) gsap.fromTo(q('.liked', r), { scale: 0 }, { scale: 1, duration: 0.5, ease: 'back.out(3)', clearProps: 'transform' });
+      toast(on ? 'Chapter liked' : 'Like removed', on ? 'heartf' : 'heart');
+    } else if (act === 'queue') toast('Added to queue', 'plus');
+    else copyLink();
+  }));
+});
+
+/* transcript: click on a timestamp = jump */
+paraEls.forEach((p, k) => {
+  p.addEventListener('pointermove', e => { const r = p.getBoundingClientRect(); p.style.setProperty('--cx', clamp(e.clientX - r.left, 50, r.width - 50) + 'px'); });
+  p.addEventListener('click', e => {
+    const r = p.getBoundingClientRect();
+    const f = e.detail === 0 ? 0 : clamp((e.clientX - r.left) / r.width, 0, 0.98);
+    seek(k * PL + f * PL);
+    if (!RM) gsap.fromTo(q('.ring', p), { opacity: 1 }, { opacity: 0, duration: 1.2, delay: 0.5, ease: 'power2.in' });
+  });
+});
+
+/* episode map: clickable markers */
+qa('.mk button').forEach(b => b.addEventListener('click', () => { seek(+b.dataset.ch * CH); setPlaying(true); toast('Playing chapter ' + (+b.dataset.ch + 1), 'play'); }));
+
+/* episode cards: they flip */
+qa('.card').forEach(card => {
+  const fb = q('.flip', card), front = q('.front', card), back = q('.back', card);
+  const flip = on => {
+    card.classList.toggle('flipped', on);
+    fb.setAttribute('aria-expanded', String(on));
+    front.inert = on; back.inert = !on;
+    setTimeout(() => (on ? q('.rb2', back) : fb).focus({ preventScroll: true }), RM ? 0 : 380);
+  };
+  fb.addEventListener('click', () => flip(true));
+  q('.flipback', card).addEventListener('click', () => flip(false));
+  q('.pl', card).addEventListener('click', () => playTrack(1 + qa('.card').indexOf(card)));
+  card.addEventListener('keydown', e => { if (e.key === 'Escape' && card.classList.contains('flipped')) { flip(false); e.stopPropagation(); } });
+  q('.lk', card).addEventListener('click', e => { const b = e.currentTarget, on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); q('use', b).setAttribute('href', on ? '#i-heartf' : '#i-heart'); if (on && !RM) gsap.fromTo(b, { scale: 0.8 }, { scale: 1, duration: 0.45, ease: 'back.out(3)', clearProps: 'transform' }); toast(on ? 'Liked' : 'Like removed', on ? 'heartf' : 'heart'); });
+  q('.q', card).addEventListener('click', e => { const b = e.currentTarget, on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); toast(on ? 'Added to queue' : 'Removed from queue', on ? 'plus' : 'x'); });
+});
+qa('.follow').forEach(b => b.addEventListener('click', () => { const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on)); if (!RM) gsap.fromTo(b, { scale: 0.85 }, { scale: 1, duration: 0.45, ease: 'back.out(3)', clearProps: 'transform' }); toast(on ? 'Following' : 'Unfollowed', on ? 'check' : 'x'); }));
+
+/* ================= panels, menus, chat ================= */
+let cur = null;
+function openPop(btn, pop, viaKey) {
+  if (cur && cur.pop === pop) { closePop(); return; }
+  closePop();
+  pop.hidden = false; btn.setAttribute('aria-expanded', 'true');
+  if (btn.id === 'menuBtn') btn.setAttribute('aria-label', 'Close menu');
+  if (btn.id === 'fab') btn.setAttribute('aria-label', 'Close live chat');
+  cur = { btn, pop };
+  if (!RM) gsap.fromTo(pop, { opacity: 0, y: pop.id === 'chat' ? 14 : -6, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.24, ease: 'power2.out', clearProps: 'transform,opacity' });
+  if (pop.id === 'bellPop') clearBadge();
+  if (pop.id === 'chat') q('#msgs').scrollTop = 1e5;
+  if (viaKey) { const f = pop.querySelector('a,button,[tabindex="0"]'); if (f) f.focus(); }
+}
+function closePop(ret) {
+  if (!cur) return;
+  const { btn, pop } = cur; cur = null;
+  pop.hidden = true; btn.setAttribute('aria-expanded', 'false');
+  if (btn.id === 'menuBtn') btn.setAttribute('aria-label', 'Open menu');
+  if (btn.id === 'fab') btn.setAttribute('aria-label', 'Open live chat');
+  if (ret) btn.focus();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-pop]');
+  if (b) { openPop(b, document.getElementById(b.dataset.pop), e.detail === 0); return; }
+  if (cur && !cur.pop.contains(e.target)) closePop();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && cur) { closePop(true); return; }
+  if (cur && (e.key === 'ArrowDown' || e.key === 'ArrowUp') && cur.pop.contains(document.activeElement)) {
+    const items = qa('a,button', cur.pop), i = items.indexOf(document.activeElement);
+    const n = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+    if (n) { n.focus(); e.preventDefault(); }
+  }
+});
+qa('#mnav a, #avPop a').forEach(a => a.addEventListener('click', () => closePop()));
+q('#chatClose').addEventListener('click', () => closePop(true));
+qa('#inboxPop .it').forEach(b => b.addEventListener('click', () => { b.classList.add('read'); b.setAttribute('aria-label', b.getAttribute('aria-label').replace(', unread', '')); }));
+qa('#bellPop .it').forEach(b => b.addEventListener('click', () => { b.classList.add('read'); closePop(true); }));
+let badge = true;
+function clearBadge() {
+  if (!badge) return; badge = false;
+  q('#bellBtn').setAttribute('aria-label', 'Notifications');
+  gsap.to('#badge', { scale: 0, svgOrigin: '1605 62', duration: RM ? 0 : 0.35, ease: 'back.in(2)', overwrite: true });
+}
+
+/* live chat */
+const msgs = q('#msgs');
+function addMsg(me, th, lens, icon) {
+  const d = document.createElement('div');
+  d.className = 'msg' + (me ? ' me' : '');
+  d.innerHTML = (me ? '' : THUMB(th)) + `<div class="bb">${icon ? `<svg class="rx" viewBox="${icon[1]}" aria-hidden="true" focusable="false" style="color:${icon[2]}"><use href="#${icon[0]}"/></svg>` : lens.map(w => `<i style="width:${w}px"></i>`).join('')}</div>`;
+  if (icon) d.insertAdjacentHTML('beforeend', `<span class="sr-only">You sent a ${icon[3]}</span>`);
+  else d.setAttribute('aria-hidden', 'true');
+  msgs.appendChild(d);
+  return d;
+}
+addMsg(false, 'a', [150, 90]); addMsg(false, 'c', [120, 170, 60]); addMsg(true, '', [130, 80]); addMsg(false, 'b', [100]);
+const RX = { heart: ['i-heartf', '0 0 44 38', C.coral, 'heart'], wave: ['i-wave', '0 0 24 24', C.ink, 'wave'], sun: ['i-sun', '0 0 24 24', C.ink, 'sun'] };
+qa('.react').forEach(b => b.addEventListener('click', () => {
+  const n = q('.n', b), v = +n.textContent + 1, r = RX[b.dataset.r];
+  n.textContent = v;
+  b.setAttribute('aria-label', `Send a ${r[3]}, ${v} sent`);
+  if (!RM) gsap.fromTo(n, { y: -10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: 'back.out(3)', clearProps: 'transform,opacity' });
+  const m = addMsg(true, '', null, [r[0], r[1], r[2] === C.coral ? C.ink : r[2], r[3]]);
+  if (!RM) gsap.from(m, { scale: 0.6, opacity: 0, transformOrigin: '100% 100%', duration: 0.4, ease: 'back.out(2.4)' });
+  msgs.scrollTop = 1e5;
+}));
+
+/* small confirmation message */
+const toastEl = q('#toast'), toastTxt = q('#toastTxt'), toastIco = q('#toastIco');
+let toastTl = null;
+function toast(txt, icon) {
+  toastTxt.textContent = txt;
+  toastIco.setAttribute('href', '#i-' + icon);
+  toastIco.parentNode.setAttribute('viewBox', icon.startsWith('heart') ? '0 0 44 38' : '0 0 24 24');
+  if (toastTl) toastTl.kill();
+  toastTl = gsap.timeline()
+    .to(toastEl, { y: 0, opacity: 1, duration: RM ? 0 : 0.3, ease: 'back.out(2)' })
+    .to(toastEl, { opacity: 0, y: -90, duration: RM ? 0 : 0.35, ease: 'power2.in' }, '+=1.5');
+}
+gsap.set(toastEl, { xPercent: -50, x: 0, y: -90, opacity: 0 });
+
+/* ================= scrolling (ScrollTrigger) ================= */
+const heroIO = new IntersectionObserver(es => es.forEach(e => { heroVis = e.isIntersecting; }), { rootMargin: '80px' });
+heroIO.observe(q('#player'));
+const mapIO = new IntersectionObserver(es => es.forEach(e => { mapVis = e.isIntersecting; }), { rootMargin: '80px' });
+mapIO.observe(q('#map'));
+const mini = q('#mini');
+function setMini(on) { if (on === miniOn) return; miniOn = on; mini.classList.toggle('on', on); mini.inert = !on; }
+ScrollTrigger.create({ trigger: '#player', start: 'bottom 45%', onEnter: () => setMini(true), onLeaveBack: () => setMini(false) });
+if (q('#player').getBoundingClientRect().bottom < innerHeight * 0.45) setMini(true);
+
+let mapST = null;
+const stripWrap = q('#stripWrap');
+const stripDist = () => Math.max(0, strip.offsetWidth + parseFloat(getComputedStyle(strip).marginLeft) - stripWrap.clientWidth + 60);
+
+const mm = gsap.matchMedia();
+mm.add('(prefers-reduced-motion: no-preference)', () => {
+  // map: pinned section, the long waveform scrolls horizontally, the cover spins
+  const tl = gsap.timeline({
+    defaults: { ease: 'none' },
+    scrollTrigger: { trigger: '#map', start: 'top top', end: () => '+=' + Math.max(stripDist(), innerHeight * 0.8), pin: true, scrub: 0.6, invalidateOnRefresh: true, anticipatePin: 1 }
+  });
+  tl.to(strip, { x: () => -stripDist() }, 0)
+    .to('#mapArt', { rotation: 360, transformOrigin: '50% 50%' }, 0)
+    .fromTo('#mapDisc', { xPercent: 0, yPercent: 0 }, { xPercent: -60, yPercent: -40 }, 0)
+    .fromTo('#mapDisc2', { xPercent: 0, yPercent: 0 }, { xPercent: 120, yPercent: 220 }, 0)
+    .to(mapFill, { scaleX: 1 }, 0);
+  mapST = tl.scrollTrigger;
+  gsap.from('.map-head', { y: 30, opacity: 0, duration: 0.7, ease: 'power3.out', scrollTrigger: { trigger: '#map', start: 'top 75%', once: true } });
+  gsap.from('.map-cover .mc-in', { scale: 0.7, opacity: 0, duration: 0.9, ease: 'back.out(1.6)', scrollTrigger: { trigger: '#map', start: 'top 70%', once: true } });
+
+  // elements entering the screen
+  qa('[data-reveal]').forEach(e => gsap.from(e, { y: 46, opacity: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: e, start: 'top 88%', once: true } }));
+  gsap.set('[data-reveal-card]', { y: 80, opacity: 0 });
+  ScrollTrigger.batch('[data-reveal-card]', { start: 'top 92%', once: true, onEnter: b => gsap.to(b, { y: 0, opacity: 1, duration: 0.8, stagger: 0.09, ease: 'power3.out' }) });
+  qa('.card svg.ca').forEach((s, i) => gsap.fromTo(s, { rotation: -20 + i * 6 }, { rotation: 20 - i * 4, ease: 'none', scrollTrigger: { trigger: s, start: 'top bottom', end: 'bottom top', scrub: 0.8 } }));
+
+  // footer: the big half-circle rises with the scroll
+  gsap.fromTo('#semiBig', { scaleY: 0.12, scaleX: 0.7 }, { scaleY: 1, scaleX: 1, ease: 'none', scrollTrigger: { trigger: '.foot-art', start: 'top bottom', end: 'bottom bottom', scrub: 0.6 } });
+  gsap.fromTo('#cdot', { y: 200, scale: 0.4 }, { y: 0, scale: 1, ease: 'none', scrollTrigger: { trigger: '.foot-art', start: 'top bottom', end: 'bottom bottom', scrub: 0.8 } });
+  gsap.fromTo('#cdot2', { y: 160 }, { y: 0, ease: 'none', scrollTrigger: { trigger: '.foot-art', start: 'top bottom', end: 'bottom bottom', scrub: 1 } });
+  // the player's teal disc slides a little when leaving the top of the page
+  gsap.to('.stage', { yPercent: -3, ease: 'none', scrollTrigger: { trigger: '#player', start: 'top top', end: 'bottom top', scrub: 0.5 } });
+
+  // small ambient animations
+  const amb = [
+    gsap.to('#fabBub', { y: -5, duration: 1.1, ease: 'sine.inOut', yoyo: true, repeat: -1 }),
+    gsap.to('#chatLive', { scale: 1.35, opacity: 0.55, duration: 0.8, ease: 'sine.inOut', yoyo: true, repeat: -1 }),
+    gsap.to('#cdot', { yPercent: -12, duration: 0.9, ease: 'sine.inOut', yoyo: true, repeat: -1 }),
+    gsap.to('#badge', { scale: 1.12, svgOrigin: '1605 62', duration: 0.7, ease: 'sine.inOut', yoyo: true, repeat: -1 })
+  ];
+  return () => { mapST = null; amb.forEach(a => a.kill()); };
+});
+
+// a chapter marker that gets keyboard focus is scrolled into view
+qa('.mk button').forEach((b, i) => b.addEventListener('focus', () => {
+  if (mapST) {
+    const y = mapST.start + (mapST.end - mapST.start) * clamp(i / NCH - 0.05);
+    if (Math.abs(scrollY - y) > 4) window.scrollTo({ top: y, behavior: 'auto' });
+  } else {
+    const m = mkEls[i]; stripWrap.scrollLeft = Math.max(0, m.offsetLeft - 60);
+  }
+}));
+
+/* ================= initial state ================= */
+setSpeed(2, { wig: false });
+syncPanel(true);
+const tlInit = () => { ScrollTrigger.refresh(); document.documentElement.dataset.ready = '1'; };
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(tlInit); else tlInit();
+window.podcast = { state: S, seek, setPlaying, setSpeed, setTab };
+})();
+</script>
+</body>
+</html>

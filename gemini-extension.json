@@ -1,0 +1,5 @@
+{
+  "name": "motion2code",
+  "version": "1.0.0",
+  "description": "Rebuild a motion design video as looping SVG + GSAP code, verified frame by frame against the source."
+}
