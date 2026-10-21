@@ -53,7 +53,7 @@ def main():
     ap.add_argument("--fps", type=float, default=24)
     ap.add_argument("--duration", type=float, help="seconds to render (default: window.anim.duration)")
     ap.add_argument("--start", type=float, default=0.0)
-    ap.add_argument("--size", help="viewport WxH (default: the first <svg viewBox>, else 1920x1080)")
+    ap.add_argument("--size", help="viewport WxH (default: the viewBox of <svg id="stage">, else the first <svg viewBox>, else 1920x1080)")
     ap.add_argument("--width", type=int, help="scale the output video to this width")
     ap.add_argument("--crf", type=int, default=16)
     ap.add_argument("--root", help="folder to serve (default: the page's folder)")

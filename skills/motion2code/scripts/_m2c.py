@@ -126,10 +126,16 @@ def launch(p):
 
 
 def stage_size(html: str | Path) -> tuple[int, int]:
-    """Stage size from the first <svg viewBox> (falls back to 1920x1080)."""
+    """Stage size from the viewBox of <svg id="stage">, else the first <svg viewBox> (falls back to 1920x1080)."""
     txt = Path(html).read_text(encoding="utf-8", errors="ignore")
-    m = re.search(r'<svg[^>]*viewBox="\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)', txt)
-    return (int(float(m.group(1))), int(float(m.group(2)))) if m else (1920, 1080)
+    vb = r"""\bviewBox=["']\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)"""
+    svgs = re.findall(r"<svg\b[^>]*>", txt, flags=re.I)
+    stage = [t for t in svgs if re.search(r"""\bid=["']stage["']""", t)]
+    for tag in stage + svgs:
+        m = re.search(vb, tag)
+        if m:
+            return int(float(m.group(1))), int(float(m.group(2)))
+    return 1920, 1080
 
 
 def parse_size(s: str | None, html: str | Path) -> tuple[int, int]:
