@@ -5,7 +5,7 @@
   python3 side_by_side.py source.mp4 anim.mp4 -o sbs.mp4 --left "AI video" --right "Code" --panel-width 640
 
 Landscape sources give a 1940x620 video (two 960x540 panels under an 80 px label band); portrait sources give
-1140x1020 (two 540x960 panels). The output lasts as long as the coded animation, so a 15.10 s source is trimmed to
+1120x1020 (two 540x960 panels). The output lasts as long as the coded animation, so a 15.10 s source is trimmed to
 the animation's 15.00 s. With --html, the right label shows the page size ("Code · SVG + GSAP · 72 KB").
 Labels are drawn with Playwright when it is installed (ffmpeg builds often lack drawtext); without it the band is
 left empty.
